@@ -56,6 +56,27 @@
             cursor: pointer;
             font-weight: bold;
         }
+        /* Papkalar / Bo'limlar uslubi */
+        .sections-nav {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .section-folder {
+            background: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            border: 2px solid #bbdefb;
+            transition: 0.3s;
+        }
+        .section-folder.active {
+            background: #1976d2;
+            color: white;
+            border-color: #0d47a1;
+        }
         #tables-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -76,8 +97,8 @@
             background: #fff3e0;
         }
         .table-card img.table-icon {
-            width: 50px;
-            height: 50px;
+            width: 55px;
+            height: 55px;
             object-fit: contain;
             margin-bottom: 5px;
         }
@@ -159,6 +180,20 @@
             cursor: pointer;
             border-radius: 4px;
         }
+        /* Real vaqt dizayni chap pastki burchak uchun */
+        #realtime-clock {
+            position: fixed;
+            bottom: 15px;
+            left: 15px;
+            background: rgba(25, 118, 210, 0.9);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 13px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            z-index: 1000;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -177,7 +212,7 @@
     <!-- Asosiy Panel -->
     <div id="main-panel" style="display: none;">
         <header>
-            <h2>Ofitsant Boshqaruv Paneli (12 ta Stol)</h2>
+            <h2>Ofitsant Boshqaruv Paneli</h2>
             <div>
                 <span id="logged-waiter-name" style="margin-right: 15px; font-weight: bold;"></span>
                 <button onclick="openHistory()" class="btn-blue" style="background:#00acc1;">Tarix</button>
@@ -186,10 +221,19 @@
         </header>
 
         <div class="container">
-            <h3>Stollar Holati</h3>
+            <!-- Bo'limlar (Xonalar va Zal papkalari) -->
+            <div class="sections-nav">
+                <div id="folder-zal" class="section-folder active" onclick="switchSection('zal')">🏛 Zal (16 ta stol)</div>
+                <div id="folder-xonalar" class="section-folder" onclick="switchSection('xonalar')">🚪 Xonalar (12 ta xona)</div>
+            </div>
+
+            <h3 id="section-heading-title">Zal Stollari</h3>
             <div id="tables-grid"></div>
         </div>
     </div>
+
+    <!-- Real vaqt chap pastki burchakda -->
+    <div id="realtime-clock">Yuklanmoqda...</div>
 
     <!-- Stol Buyurtma va Boshqaruv Modali -->
     <div id="modal-overlay">
@@ -197,7 +241,7 @@
             <h2 id="modal-title" style="margin-top:0;">Stol Boshqaruvi</h2>
             
             <div style="background: #f5f5f5; padding: 10px 15px; border-radius: 8px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px;">
-                <span style="font-weight: bold;">👥 Mijozlar (odam) soni:</span>
+                <span style="font-weight: bold;">👥 Mehmonlar (odam) soni:</span>
                 <div>
                     <button class="qty-btn" onclick="changeGuests(-1)">-</button>
                     <span id="modal-guests-val" style="margin: 0 15px; font-size: 18px; font-weight: bold;">1</span>
@@ -227,6 +271,19 @@
                 <button onclick="printCheck()" class="btn-blue" style="background: #7b1fa2; flex: 1;">Chek Chop Etish (QR)</button>
                 <button onclick="closeModal()" style="background: #757575; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer;">Yopish</button>
             </div>
+        </div>
+    </div>
+
+    <!-- QR Chek Ko'rsatish Modali -->
+    <div id="qr-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center;">
+        <div class="modal-content" style="width: 400px; text-align: center;">
+            <h3>Restoran Cheki & QR-kod</h3>
+            <div id="qr-check-content" style="text-align: left; margin: 15px 0; background: #fff; padding: 10px; border: 1px dashed #ccc; font-size: 13px;"></div>
+            <div style="margin: 15px 0;">
+                <!-- Namuna QR-kod rasmi -->
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=OshxonaCheckPaymentQR" alt="QR Kod" style="width: 130px; height: 130px;">
+            </div>
+            <button onclick="closeQrModal()" class="btn-blue">Yopish</button>
         </div>
     </div>
 
@@ -285,7 +342,7 @@
             { id: 27, category: "hamirli", name: "Beshbarmoq", price: 45000, img: "https://images.unsplash.com/photo-1496116218417-1a781b1c416c?w=100" },
             { id: 28, category: "hamirli", name: "Uygʻur shivit oshi", price: 33000, img: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=100" },
 
-            // Kaboblar (yangi qo'shilganlar bilan)
+            // Kaboblar
             { id: 29, category: "kabob", name: "Qiyma kabob", price: 15000, img: "https://images.unsplash.com/photo-1529193591184-b1d58069ecdd?w=100" },
             { id: 30, category: "kabob", name: "Qoʻy goʻshti shashligi (Klassik shashlik)", price: 20000, img: "https://images.unsplash.com/photo-1603048588665-791ca8aea617?w=100" },
             { id: 31, category: "kabob", name: "Jigar shashligi", price: 18000, img: "https://images.unsplash.com/photo-1529193591184-b1d58069ecdd?w=100" },
@@ -364,7 +421,8 @@
             { id: 98, category: "fastfood", name: "Pishloqli tayoqchalar (Cheese-sticks)", price: 20000, img: "https://images.unsplash.com/photo-1548340748-6d2b7d7da28e?w=100" }
         ];
 
-        let currentActiveTable = null;
+        let currentActiveSection = 'zal'; // 'zal' yoki 'xonalar'
+        let currentActiveTableId = null;
         let activeWaiter = localStorage.getItem('active_waiter') || null;
         let currentCategoryFilter = 'all';
 
@@ -374,8 +432,23 @@
                 document.getElementById('main-panel').style.display = 'block';
                 document.getElementById('logged-waiter-name').innerText = `Ofitsant: ${activeWaiter}`;
             }
-            renderTables();
+            renderItems();
+            startRealTimeClock();
         };
+
+        // Real vaqt soat va sana funksiyasi
+        function startRealTimeClock() {
+            function updateClock() {
+                const now = new Date();
+                const optionsDate = { year: 'numeric', month: '2-digit', day: '2-digit' };
+                const optionsTime = { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false };
+                const dateStr = now.toLocaleDateString('uz-UZ', optionsDate);
+                const timeStr = now.toLocaleTimeString('uz-UZ', optionsTime);
+                document.getElementById('realtime-clock').innerHTML = `📅 ${dateStr}<br>⏰ ${timeStr}`;
+            }
+            updateClock();
+            setInterval(updateClock, 1000);
+        }
 
         function loginWaiter() {
             let u = document.getElementById('login-user').value.trim();
@@ -387,7 +460,7 @@
                 document.getElementById('login-screen').style.display = 'none';
                 document.getElementById('main-panel').style.display = 'block';
                 document.getElementById('logged-waiter-name').innerText = `Ofitsant: ${activeWaiter}`;
-                renderTables();
+                renderItems();
             } else {
                 alert("Login yoki parol noto'g'ri!");
             }
@@ -400,35 +473,60 @@
             document.getElementById('main-panel').style.display = 'none';
         }
 
-        function renderTables() {
+        function switchSection(section) {
+            currentActiveSection = section;
+            document.getElementById('folder-zal').classList.remove('active');
+            document.getElementById('folder-xonalar').classList.remove('active');
+
+            if (section === 'zal') {
+                document.getElementById('folder-zal').classList.add('active');
+                document.getElementById('section-heading-title').innerText = 'Zal Stollari (16 ta)';
+            } else {
+                document.getElementById('folder-xonalar').classList.add('active');
+                document.getElementById('section-heading-title').innerText = 'Xonalar (12 ta)';
+            }
+            renderItems();
+        }
+
+        function renderItems() {
             const grid = document.getElementById('tables-grid');
             grid.innerHTML = '';
-            for (let i = 1; i <= 12; i++) {
-                let tableData = JSON.parse(localStorage.getItem(`table_${i}_data`)) || { busy: false, guests: 0, items: [] };
+            
+            // Zal uchun 16 ta, Xonalar uchun 12 ta
+            let count = (currentActiveSection === 'zal') ? 16 : 12;
+
+            for (let i = 1; i <= count; i++) {
+                let key = `${currentActiveSection}_item_${i}`;
+                let itemData = JSON.parse(localStorage.getItem(key)) || { busy: false, guests: 0, items: [] };
                 
-                // Stul (chair) ikonka rasmi qo'yildi
+                let titlePrefix = (currentActiveSection === 'zal') ? 'Stol #' : 'Xona #';
+
+                // Stol-stul jamlanmasi rasmi ikonka sifatida qo'yildi
                 grid.innerHTML += `
-                    <div class="table-card ${tableData.busy ? 'busy' : ''}" onclick="openTable(${i})">
-                        <img src="https://cdn-icons-png.flaticon.com/512/2932/2932845.png" class="table-icon" alt="Stul">
-                        <h4 style="margin:5px 0;">Stol #${i}</h4>
-                        <p style="font-size: 13px; margin: 0; font-weight: bold;">${tableData.busy ? `🔴 Band (${tableData.guests} kishi)` : '🟢 Bo\'sh'}</p>
+                    <div class="table-card ${itemData.busy ? 'busy' : ''}" onclick="openItemModal('${currentActiveSection}', ${i})">
+                        <img src="https://cdn-icons-png.flaticon.com/512/962/962863.png" class="table-icon" alt="Stol va O'rindiq">
+                        <h4 style="margin:5px 0;">${titlePrefix}${i}</h4>
+                        <p style="font-size: 13px; margin: 0; font-weight: bold;">${itemData.busy ? `🔴 Band (${itemData.guests} kishi)` : '🟢 Bo\'sh'}</p>
                     </div>
                 `;
             }
         }
 
-        function openTable(tableNum) {
-            currentActiveTable = tableNum;
-            document.getElementById('modal-title').innerText = `Stol #${tableNum} Boshqaruvi`;
-            let tableData = JSON.parse(localStorage.getItem(`table_${tableNum}_data`)) || { busy: false, guests: 1, items: [] };
+        function openItemModal(section, id) {
+            currentActiveTableId = { section, id };
+            let titlePrefix = (section === 'zal') ? `Stol #${id}` : `Xona #${id}`;
+            document.getElementById('modal-title').innerText = `${titlePrefix} Boshqaruvi`;
             
-            document.getElementById('modal-guests-val').innerText = tableData.guests || 1;
+            let key = `${section}_item_${id}`;
+            let itemData = JSON.parse(localStorage.getItem(key)) || { busy: false, guests: 1, items: [] };
+            
+            document.getElementById('modal-guests-val').innerText = itemData.guests || 1;
             currentCategoryFilter = 'all';
             
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
             document.querySelector('.tab-btn').classList.add('active');
 
-            renderMenuSelection(tableData.items);
+            renderMenuSelection(itemData.items);
             document.getElementById('modal-overlay').style.display = 'flex';
         }
 
@@ -442,9 +540,10 @@
             if (currentGuests < 1) currentGuests = 1;
             valSpan.innerText = currentGuests;
 
-            let tableData = JSON.parse(localStorage.getItem(`table_${currentActiveTable}_data`)) || { busy: false, guests: 1, items: [] };
-            tableData.guests = currentGuests;
-            localStorage.setItem(`table_${currentActiveTable}_data`, JSON.stringify(tableData));
+            let key = `${currentActiveTableId.section}_item_${currentActiveTableId.id}`;
+            let itemData = JSON.parse(localStorage.getItem(key)) || { busy: false, guests: 1, items: [] };
+            itemData.guests = currentGuests;
+            localStorage.setItem(key, JSON.stringify(itemData));
         }
 
         function filterModalMenu(category, event) {
@@ -452,8 +551,9 @@
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             event.target.classList.add('active');
 
-            let tableData = JSON.parse(localStorage.getItem(`table_${currentActiveTable}_data`)) || { items: [] };
-            renderMenuSelection(tableData.items);
+            let key = `${currentActiveTableId.section}_item_${currentActiveTableId.id}`;
+            let itemData = JSON.parse(localStorage.getItem(key)) || { items: [] };
+            renderMenuSelection(itemData.items);
         }
 
         function renderMenuSelection(selectedItems) {
@@ -487,23 +587,24 @@
         }
 
         window.changeQty = function(dishId, delta) {
-            let tableData = JSON.parse(localStorage.getItem(`table_${currentActiveTable}_data`)) || { busy: false, guests: parseInt(document.getElementById('modal-guests-val').innerText), items: [] };
-            let existing = tableData.items.find(i => i.id === dishId);
+            let key = `${currentActiveTableId.section}_item_${currentActiveTableId.id}`;
+            let itemData = JSON.parse(localStorage.getItem(key)) || { busy: false, guests: parseInt(document.getElementById('modal-guests-val').innerText), items: [] };
+            let existing = itemData.items.find(i => i.id === dishId);
 
             if (existing) {
                 existing.qty += delta;
                 if (existing.qty <= 0) {
-                    tableData.items = tableData.items.filter(i => i.id !== dishId);
+                    itemData.items = itemData.items.filter(i => i.id !== dishId);
                 }
             } else if (delta > 0) {
                 let dish = fullMenu.find(d => d.id === dishId);
                 if (dish) {
-                    tableData.items.push({ id: dish.id, name: dish.name, price: dish.price, qty: 1 });
+                    itemData.items.push({ id: dish.id, name: dish.name, price: dish.price, qty: 1 });
                 }
             }
 
-            localStorage.setItem(`table_${currentActiveTable}_data`, JSON.stringify(tableData));
-            renderMenuSelection(tableData.items);
+            localStorage.setItem(key, JSON.stringify(itemData));
+            renderMenuSelection(itemData.items);
         }
 
         function updateOrderSummaryUI(items) {
@@ -524,56 +625,73 @@
 
         function sendOrderToAdmin() {
             let guests = parseInt(document.getElementById('modal-guests-val').innerText);
-            let tableData = JSON.parse(localStorage.getItem(`table_${currentActiveTable}_data`)) || { items: [] };
+            let key = `${currentActiveTableId.section}_item_${currentActiveTableId.id}`;
+            let itemData = JSON.parse(localStorage.getItem(key)) || { items: [] };
             
-            if(tableData.items.length === 0) {
+            if(itemData.items.length === 0) {
                 alert("Iltimos, avval buyurtmaga taom qo'shing!");
                 return;
             }
 
-            tableData.busy = true;
-            tableData.guests = guests;
-            tableData.waiter = activeWaiter;
-            tableData.status = 'Tayyorlanyapti';
+            itemData.busy = true;
+            itemData.guests = guests;
+            itemData.waiter = activeWaiter;
+            itemData.status = 'Tayyorlanyapti';
 
-            localStorage.setItem(`table_${currentActiveTable}_data`, JSON.stringify(tableData));
+            localStorage.setItem(key, JSON.stringify(itemData));
 
             let allOrders = JSON.parse(localStorage.getItem('admin_orders')) || [];
-            allOrders.push({ table: currentActiveTable, ...tableData, time: new Date().toLocaleTimeString() });
+            allOrders.push({ 
+                type: currentActiveTableId.section, 
+                number: currentActiveTableId.id, 
+                ...itemData, 
+                time: new Date().toLocaleTimeString() 
+            });
             localStorage.setItem('admin_orders', JSON.stringify(allOrders));
 
             alert("Buyurtma Admin paneliga yuborildi!");
             closeModal();
-            renderTables();
+            renderItems();
         }
 
         function printCheck() {
-            let tableData = JSON.parse(localStorage.getItem(`table_${currentActiveTable}_data`));
-            if (!tableData || tableData.items.length === 0) {
+            let key = `${currentActiveTableId.section}_item_${currentActiveTableId.id}`;
+            let itemData = JSON.parse(localStorage.getItem(key));
+            if (!itemData || itemData.items.length === 0) {
                 alert("Chek chiqarish uchun buyurtma mavjud emas!");
                 return;
             }
             
-            let totalAmount = tableData.items.reduce((sum, i) => sum + (i.qty * i.price), 0);
+            let totalAmount = itemData.items.reduce((sum, i) => sum + (i.qty * i.price), 0);
+            let locName = (currentActiveTableId.section === 'zal') ? `Stol #${currentActiveTableId.id}` : `Xona #${currentActiveTableId.id}`;
 
             let history = JSON.parse(localStorage.getItem('service_history')) || [];
             history.push({
-                table: currentActiveTable,
+                location: locName,
                 waiter: activeWaiter,
                 time: new Date().toLocaleString(),
-                items: tableData.items,
-                guests: tableData.guests,
-                total: totalAmount // Jami to'lov miqdori tarixga qo'shildi
+                items: itemData.items,
+                guests: itemData.guests,
+                total: totalAmount
             });
             localStorage.setItem('service_history', JSON.stringify(history));
 
-            alert(`Stol #${currentActiveTable} uchun QR-kodli chek chop etildi va inkassa apparatiga yuborildi!`);
+            // Ofitsantga chek va QR-kodni ko'rsatish
+            let checkHtml = `<b>Joy:</b> ${locName}<br><b>Ofitsant:</b> ${activeWaiter}<br><b>Vaqt:</b> ${new Date().toLocaleString()}<br><hr style="border:0; border-top:1px dashed #aaa">`;
+            itemData.items.forEach(i => {
+                checkHtml += `${i.name} x ${i.qty} = ${(i.qty * i.price).toLocaleString()} so'm<br>`;
+            });
+            checkHtml += `<hr style="border:0; border-top:1px dashed #aaa"><b>Jami to'lov: ${totalAmount.toLocaleString()} so'm</b>`;
             
-            // Diqqat: Ofitsant yopish/chek chiqarishni bosganda stol darhol bo'shamaydi. 
-            // Stol faqat admin tomonidan to'lov qabul qilingach tozalanadi. 
-            // Bu yerda faqat buyurtma yakuniy to'lovga tayyor holatga o'tadi, stol bandligicha qoladi.
+            document.getElementById('qr-check-content').innerHTML = checkHtml;
+            document.getElementById('qr-modal').style.display = 'flex';
+            
             closeModal();
-            renderTables();
+            renderItems();
+        }
+
+        function closeQrModal() {
+            document.getElementById('qr-modal').style.display = 'none';
         }
 
         function openHistory() {
@@ -583,11 +701,11 @@
             if (history.length === 0) {
                 container.innerHTML = '<p>Hozircha tarix bo\'sh.</p>';
             } else {
-                history.reverse().forEach(h => {
+                history.slice().reverse().forEach(h => {
                     let sumText = h.total ? ` | To'lov: <b>${h.total.toLocaleString()} so'm</b>` : '';
                     container.innerHTML += `
                         <div style="border-bottom: 1px solid #ccc; padding: 8px 0;">
-                            <strong>Stol #${h.table}</strong> | Ofitsant: ${h.waiter} | Vaqt: ${h.time} | Mehmonlar: ${h.guests} ta${sumText}
+                            <strong>${h.location}</strong> | Ofitsant: ${h.waiter} | Vaqt: ${h.time} | Mehmonlar: ${h.guests} ta${sumText}
                         </div>
                     `;
                 });

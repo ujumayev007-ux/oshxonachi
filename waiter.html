@@ -756,67 +756,89 @@
             summaryContainer.innerHTML = html;
         }
 
-        function sendOrderToAdmin() {
-            let guests = parseInt(document.getElementById('modal-guests-val').innerText);
-            let key = `${currentActiveTableId.section}_item_${currentActiveTableId.id}`;
-            let itemData = JSON.parse(localStorage.getItem(key)) || { items: [] };
-            
-            if(itemData.items.length === 0) {
-                alert("Iltimos, avval buyurtmaga taom qo'shing!");
-                return;
+       function sendOrderToAdmin() {
+    if (!currentTableId) return;
+    if (currentOrderItems.length === 0) {
+        alert("Iltimos, buyurtmaga taom qo'shing!");
+        return;
+    }
+
+    // Admin paneli barcha formatlarni tushunishi uchun qo'shaloq xususiyatlar kiritildi
+    const orderObj = {
+        id: 'order_' + currentTableId + '_' + Date.now(),
+        tableNumber: currentTableId,
+        table: currentTableId,
+        waiterName: loggedInWaiter,
+        waiter: loggedInWaiter,
+        items: currentOrderItems.map(item => ({
+            name: item.name,
+            title: item.name,
+            qty: item.qty,
+            count: item.qty,
+            price: item.price,
+            sale_price: item.price,
+            internal_price: Math.floor(item.price * 0.7)
+        })),
+        cart: currentOrderItems.map(item => ({
+            name: item.name,
+            title: item.name,
+            qty: item.qty,
+            count: item.qty,
+            price: item.price,
+            sale_price: item.price,
+            internal_price: Math.floor(item.price * 0.7)
+        })),
+        status: 'yangi',
+        paymentType: 'naqd',
+        isPrinted: false,
+        isPaid: false,
+        time: new Date().toLocaleTimeString()
+    };
+
+    // LocalStorage'dagi barcha tegishli kalitlarga yozib yuboriladi
+    let waiterOrders = JSON.parse(localStorage.getItem('waiter_orders')) || [];
+    waiterOrders.push(orderObj);
+    localStorage.setItem('waiter_orders', JSON.stringify(waiterOrders));
+
+    let generalOrders = JSON.parse(localStorage.getItem('orders')) || [];
+    generalOrders.push(orderObj);
+    localStorage.setItem('orders', JSON.stringify(generalOrders));
+
+    alert("Buyurtma admin paneliga muvaffaqiyatli yuborildi!");
+    closeModal();
+}
+
+function printCheck() {
+    if (!currentTableId) return;
+    if (currentOrderItems.length === 0) {
+        alert("Chek chiqarish uchun buyurtma mavjud emas!");
+        return;
+    }
+
+    // Chek chiqarilganda admin panelida to'lov tugmalari faollashishi uchun isPrinted true qilinadi
+    ['waiter_orders', 'orders', 'active_orders'].forEach(key => {
+        let orders = JSON.parse(localStorage.getItem(key)) || [];
+        orders = orders.map(o => {
+            if (String(o.tableNumber || o.table) === String(currentTableId) && o.status !== 'tolandi') {
+                o.isPrinted = true;
             }
+            return o;
+        });
+        localStorage.setItem(key, JSON.stringify(orders));
+    });
 
-            itemData.busy = true;
-            itemData.guests = guests;
-            itemData.waiter = activeWaiter;
-            itemData.status = 'Tayyorlanyapti';
-
-            localStorage.setItem(key, JSON.stringify(itemData));
-
-            let allOrders = JSON.parse(localStorage.getItem('admin_orders')) || [];
-            allOrders.push({ 
-                type: currentActiveTableId.section, 
-                number: currentActiveTableId.id, 
-                ...itemData, 
-                time: new Date().toLocaleTimeString() 
-            });
-            localStorage.setItem('admin_orders', JSON.stringify(allOrders));
-
-            alert(`Buyurtma Admin paneliga yuborildi! (Ofitsiant: ${activeWaiter})`);
-            closeModal();
-            renderItems();
-        }
-
-        function printCheck() {
-            let key = `${currentActiveTableId.section}_item_${currentActiveTableId.id}`;
-            let itemData = JSON.parse(localStorage.getItem(key));
-            if (!itemData || itemData.items.length === 0) {
-                alert("Chek chiqarish uchun buyurtma mavjud emas!");
-                return;
-            }
-            
-            let totalAmount = itemData.items.reduce((sum, i) => sum + (i.qty * i.price), 0);
-            let locName = (currentActiveTableId.section === 'zal') ? `Stol #${currentActiveTableId.id}` : `Xona #${currentActiveTableId.id}`;
-
-            let history = JSON.parse(localStorage.getItem('service_history')) || [];
-            history.push({
-                location: locName,
-                waiter: activeWaiter,
-                time: new Date().toLocaleString(),
-                items: itemData.items,
-                guests: itemData.guests,
-                total: totalAmount
-            });
-            localStorage.setItem('service_history', JSON.stringify(history));
-
-            let checkHtml = `<b>Joy:</b> ${locName}<br><b>Ofitsiant:</b> ${activeWaiter}<br><b>Vaqt:</b> ${new Date().toLocaleString()}<br><hr style="border:0; border-top:1px dashed #aaa">`;
-            itemData.items.forEach(i => {
-                checkHtml += `${i.name} x ${i.qty} = ${(i.qty * i.price).toLocaleString()} so'm<br>`;
-            });
-            checkHtml += `<hr style="border:0; border-top:1px dashed #aaa"><b>Jami to'lov: ${totalAmount.toLocaleString()} so'm</b>`;
-            
-            document.getElementById('qr-check-content').innerHTML = checkHtml;
-            document.getElementById('qr-modal').style.display = 'flex';
+    let checkHtml = `<b>Stol #${currentTableId}</b><br>Ofitsiant: ${loggedInWaiter}<br><hr style="margin: 5px 0;">`;
+    let total = 0;
+    currentOrderItems.forEach(i => {
+        let sum = i.price * i.qty;
+        total += sum;
+        checkHtml += `${i.name} - ${i.qty} ta x ${i.price.toLocaleString()} = ${sum.toLocaleString()} so'm<br>`;
+    });
+    checkHtml += `<hr style="margin: 5px 0;"><b>Jami: ${total.toLocaleString()} so'm</b>`;
+    
+    document.getElementById('qr-check-content').innerHTML = checkHtml;
+    document.getElementById('qr-modal').style.display = 'flex';
+}
             
             closeModal();
             renderItems();

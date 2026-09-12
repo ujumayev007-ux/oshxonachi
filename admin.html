@@ -103,11 +103,41 @@
             justify-content: space-between;
             align-items: center;
         }
+        /* Avtotugallash (Autocomplete) uchun uslublar */
+        .autocomplete-container {
+            position: relative;
+            flex: 1;
+        }
+        .autocomplete-items {
+            position: absolute;
+            border: 1px solid #90caf9;
+            border-bottom: none;
+            border-top: none;
+            z-index: 99;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background-color: #fff;
+            max-height: 150px;
+            overflow-y: auto;
+            border-radius: 0 0 4px 4px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .autocomplete-items div {
+            padding: 8px 10px;
+            cursor: pointer;
+            border-bottom: 1px solid #e1f5fe;
+            font-size: 14px;
+        }
+        .autocomplete-items div:hover {
+            background-color: #e3f2fd;
+            color: #0d47a1;
+        }
     </style>
 </head>
 <body>
 
-    <!-- ASOSIY PANEL (Login olib tashlandi) -->
+    <!-- ASOSIY PANEL -->
     <div id="admin-main-content">
         <header>
             <h1>Restoran Admin Paneli</h1>
@@ -153,10 +183,13 @@
             <h2>Ombor zaxiralari va mahsulot qo'shish</h2>
             <div style="margin-bottom: 20px; background: #f5f5f5; padding: 15px; border-radius: 8px;">
                 <h3 style="font-size: 16px; color: #0d47a1; margin-bottom: 10px;">Yangi mahsulot qo'shish yoki mavjudini to'ldirish</h3>
-                <div style="display: flex; gap: 10px;">
-                    <input type="text" id="new-item-name" placeholder="Mahsulot nomi (masalan: Go'sht, Tuz, Suv)">
-                    <input type="number" id="new-item-qty" placeholder="Miqdori">
-                    <input type="text" id="new-item-unit" placeholder="Birligi (g, ml, dona, l)">
+                <div style="display: flex; gap: 10px; position: relative;">
+                    <div class="autocomplete-container">
+                        <input type="text" id="new-item-name" placeholder="Mahsulot nomi (masalan: Go'sht, Tuz, Suv)" autocomplete="off" oninput="handleAutocomplete(this.value)">
+                        <div id="autocomplete-list" class="autocomplete-items"></div>
+                    </div>
+                    <input type="number" id="new-item-qty" placeholder="Miqdori" style="width: 120px;">
+                    <input type="text" id="new-item-unit" placeholder="Birligi (g, ml, dona, l)" style="width: 140px;">
                     <button class="btn btn-blue" onclick="addWarehouseItem()" style="white-space: nowrap;">Qo'shish / Yangilash</button>
                 </div>
             </div>
@@ -187,6 +220,12 @@
     <script>
         window.onload = function() {
             renderAll();
+            // Sahifaning istalgan joyiga bosilganda avtotugallash ro'yxatini yopish
+            document.addEventListener("click", function (e) {
+                if (!e.target.closest('.autocomplete-container')) {
+                    closeAllAutocomplete();
+                }
+            });
         }
 
         let defaultMenu = [
@@ -471,6 +510,36 @@
             }
         }
 
+        // Avtotugallash (Autocomplete) mantiqi
+        function handleAutocomplete(val) {
+            const listEl = document.getElementById('autocomplete-list');
+            listEl.innerHTML = "";
+            if (!val) {
+                return;
+            }
+            
+            const matchVal = val.toLowerCase();
+            const filtered = warehouseDatabase.filter(item => item.name.toLowerCase().includes(matchVal));
+
+            filtered.forEach(item => {
+                const div = document.createElement('div');
+                div.innerHTML = `<strong>${item.name.substr(0, matchVal.length)}</strong>${item.name.substr(matchVal.length)} <span style="color:#666; font-size:12px;">(${item.unit})</span>`;
+                div.addEventListener('click', function() {
+                    document.getElementById('new-item-name').value = item.name;
+                    document.getElementById('new-item-unit').value = item.unit;
+                    closeAllAutocomplete();
+                });
+                listEl.appendChild(div);
+            });
+        }
+
+        function closeAllAutocomplete() {
+            const listEl = document.getElementById('autocomplete-list');
+            if (listEl) {
+                listEl.innerHTML = "";
+            }
+        }
+
         function addWarehouseItem() {
             const name = document.getElementById('new-item-name').value.trim();
             const qty = Number(document.getElementById('new-item-qty').value);
@@ -488,6 +557,7 @@
                 document.getElementById('new-item-name').value = '';
                 document.getElementById('new-item-qty').value = '';
                 document.getElementById('new-item-unit').value = '';
+                closeAllAutocomplete();
                 alert("Mahsulot omborga qo'shildi!");
             } else {
                 alert("Iltimos, mahsulot nomi va miqdorini to'g'ri kiriting!");

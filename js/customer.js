@@ -119,6 +119,9 @@ let currentCategory = 'all';
 // Savatcha va holatni saqlash (F5 qilinganda o'chib ketmaydi)
 let cart = JSON.parse(localStorage.getItem('customer_cart')) || {};
 
+// BroadcastChannel orqali ofitsantlar bilan bog'lanish kanali
+const waiterChannel = new BroadcastChannel('waiter_call_channel');
+
 // Sahifa yuklanganda menyuni va stollarni chiqarish
 window.onload = function() {
     renderMenu();
@@ -130,7 +133,6 @@ window.onload = function() {
 function filterMenu(category, event) {
     currentCategory = category;
     
-    // Aktiv tugma uslubini o'zgartirish (agar HTMLda tugmalarga .tab-btn klassi berilgan bo'lsa)
     document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
     if (event && event.target) {
         event.target.classList.add('active');
@@ -145,7 +147,6 @@ function renderMenu() {
     
     container.innerHTML = '';
     
-    // Tanlangan kategoriyaga qarab saralash
     const filteredItems = currentCategory === 'all' 
         ? menuItems 
         : menuItems.filter(item => item.category === currentCategory);
@@ -258,8 +259,16 @@ function renderTables() {
     }
 }
 
+// O'ZGARTILGAN QISM: Ofitsantga real vaqt rejimida ovozli va stoli ko'rinadigan chaqiruv yuborish
 function callWaiter(tableNum) {
-    alert(`Stol #${tableNum} uchun ofitsant chaqirildi! Signal yuborildi.`);
+    // Ofitsant paneliga xabar yuborish
+    waiterChannel.postMessage({
+        type: 'WAITER_CALL',
+        table: tableNum,
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    });
+
+    alert(`Stol #${tableNum} uchun ofitsant chaqirildi! Xabar yuborildi.`);
     closeWaiterModal();
 }
 

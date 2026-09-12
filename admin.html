@@ -686,9 +686,10 @@
 
                 const orderId = order.id !== undefined ? order.id : (order.tableNumber !== undefined ? order.tableNumber : (order.table !== undefined ? order.table : index));
                 const status = order.status || 'yangi';
-                // Stol raqamini aniq va ajralib turadigan qilib olish
                 const tableNo = order.tableNumber || order.table || 'Nomaʼlum';
                 const waiter = order.waiterName || order.waiter || 'Ofitsant';
+                
+                // Ofitsant chek chiqarish tugmasini bosganda isPrinted = true bo'ladi
                 const isPrinted = order.isPrinted || false;
 
                 let paymentButtonHTML = "";
@@ -711,7 +712,6 @@
                 return `
                     <div class="order-card">
                         <div>
-                            <!-- Stol raqami va ofitsant ismi qismiga urg'u berildi -->
                             <p style="font-size: 16px; margin-bottom: 4px;">🪑 <b style="color: #0d47a1; font-size: 18px;">Stol #${tableNo}</b> | Ofitsant: <b>${waiter}</b> | Holat: <b>${status.toUpperCase()}</b></p>
                             <p><b>Buyurtma:</b> ${itemsList}</p>
                             ${paymentButtonHTML}
@@ -732,7 +732,7 @@
                 if (String(currentId) === String(orderId)) {
                     o.status = 'tolandi';
                     o.paymentType = paymentType;
-                    o.isPaid = true; // Stolni bo'shatish uchun qabul qilingan belgi
+                    o.isPaid = true; 
                 }
                 return o;
             });

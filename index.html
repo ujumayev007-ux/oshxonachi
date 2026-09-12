@@ -4,39 +4,131 @@
     <meta charset="UTF-8">
     <title>Restoran Menyusi — Oshxonachi</title>
     <link rel="stylesheet" href="css/style.css">
+    <style>
+        body {
+            background-color: #e3f2fd;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding-bottom: 80px;
+        }
+        header {
+            background: #1976d2;
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 0 15px;
+        }
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .cart-floating {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #ff9800;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 30px;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            font-weight: bold;
+            z-index: 99;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 400px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .table-btn {
+            background: #fff;
+            border: 2px solid #1976d2;
+            padding: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: center;
+            font-weight: bold;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+        .table-btn:hover {
+            background: #e3f2fd;
+        }
+    </style>
 </head>
 <body>
     <header>
         <h2>Restoran Menyusi</h2>
-        <button onclick="openWaiterModal()" style="background: #ff9800;">🔔 Ofitsantni chaqirish</button>
+        <button onclick="openWaiterModal()" style="background: #ff5722; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-weight: bold;">🔔 Ofitsantni chaqirish</button>
     </header>
 
     <div class="container">
         <div id="menu-container" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px;">
-            <!-- Taomlar dinamik chiqadi -->
+            <!-- Taomlar rasmlari va plus/minus tugmalari bilan dinamik chiqadi -->
         </div>
 
         <div style="margin-top: 40px;" class="card">
             <h3>Fikr-mulohaza (Otziv) qoldirish</h3>
-            <select id="review-type" onchange="toggleNameInput()">
+            <select id="review-type" onchange="toggleNameInput()" style="width:100%; padding: 8px; margin: 5px 0;">
                 <option value="anonim">Anonim qolsin</option>
                 <option value="named">Ism-sharifimni yozaman</option>
             </select>
-            <input type="text" id="reviewer-name" placeholder="Ismingiz" style="padding: 8px; margin: 5px 0; width: 100%; display:none;">
-            <textarea id="review-text" placeholder="Fikr va taklifingizni yozing..." style="width:100%; padding: 8px; margin: 5px 0;"></textarea>
-            <button onclick="submitReview()">Yuborish</button>
+            <input type="text" id="reviewer-name" placeholder="Ismingiz" style="padding: 8px; margin: 5px 0; width: 100%; display:none; box-sizing: border-box;">
+            <textarea id="review-text" placeholder="Fikr va taklifingizni yozing..." style="width:100%; padding: 8px; margin: 5px 0; box-sizing: border-box;"></textarea>
+            <button onclick="submitReview()" style="background: #1976d2; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;">Yuborish</button>
         </div>
     </div>
 
-    <div class="cart-floating" onclick="submitOrder()">
-        🛒 Buyurtma berish (<span id="cart-count">0</span> ta | <span id="cart-total">0</span> so'm)
+    <!-- Savatcha floating tugmasi -->
+    <div class="cart-floating" onclick="openCartModal()">
+        🛒 Savatcha (<span id="cart-count">0</span> ta | <span id="cart-total">0</span> so'm)
     </div>
 
-    <!-- Ofitsant chaqirish modali -->
-    <div id="waiter-modal" style="display:none; position:fixed; top:30%; left:35%; background:white; padding:20px; border-radius:10px; box-shadow:0 0 15px rgba(0,0,0,0.3); z-index:100;">
-        <h3>Stol raqamingizni tanlang:</h3>
-        <div id="tables-list" style="display:grid; grid-template-columns: repeat(3, 1fr); gap:10px; margin-top:10px;"></div>
-        <button onclick="closeWaiterModal()" style="margin-top:15px; background:#f44336; width:100%;">Yopish</button>
+    <!-- Savatcha modali (Faqat mijoz uchun, avtomatik buyurtma ketmaydi) -->
+    <div id="cart-modal" class="modal">
+        <div class="modal-content">
+            <h3>Tanlangan mahsulotlar</h3>
+            <div id="cart-items-list" style="margin: 15px 0; max-height: 200px; overflow-y: auto;">
+                <!-- Tanlangan mahsulotlar ro'yxati -->
+            </div>
+            <p><b>Umumiy summa: <span id="modal-cart-total">0</span> so'm</b></p>
+            <p style="font-size: 11px; color: #666;">* Bu yerda faqat sizning shaxsiy hisob-kitobingiz ko'rsatiladi.</p>
+            <button onclick="closeCartModal()" style="background: #f44336; color: white; border: none; padding: 10px; width: 100%; border-radius: 5px; cursor: pointer; margin-top: 10px;">Yopish</button>
+        </div>
+    </div>
+
+    <!-- Ofitsant chaqirish modali (Stol rasmlari bilan) -->
+    <div id="waiter-modal" class="modal">
+        <div class="modal-content">
+            <h3>Stol raqamingizni tanlang:</h3>
+            <div id="tables-list" style="display:grid; grid-template-columns: repeat(3, 1fr); gap:10px; margin-top:15px;">
+                <!-- Stol rasmlari dinamik chiqadi -->
+            </div>
+            <button onclick="closeWaiterModal()" style="margin-top:15px; background:#f44336; color: white; border: none; padding: 10px; width: 100%; border-radius: 5px; cursor: pointer;">Yopish</button>
+        </div>
     </div>
 
     <script src="js/config.js"></script>

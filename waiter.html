@@ -74,11 +74,11 @@
             font-size: 13px;
             font-weight: bold;
             color: #333;
-            line-height: 1.2;
+            line-height: 1.4;
         }
 
         .header-center {
-            margin-left: 140px; /* Soat uchun joy tashlab turish */
+            margin-left: 170px; /* Soat uchun kengroq joy tashlandi */
             display: flex;
             gap: 10px;
         }
@@ -209,7 +209,7 @@
     <!-- Asosiy Panel -->
     <div id="main-panel">
         <div class="header">
-            <!-- Chap yuqori burchakdagi real vaqt soati -->
+            <!-- Chap yuqori burchakdagi real vaqt soati va maxsus ikonkalari -->
             <div id="realtime-clock" class="top-left-clock"></div>
 
             <div class="header-center">
@@ -243,11 +243,15 @@
                 <button class="qty-btn" onclick="changeGuests(1)">+</button>
             </div>
 
-            <div style="margin-bottom: 10px;">
+            <div style="margin-bottom: 10px;" id="menu-categories-tabs">
                 <button class="tab-btn active" onclick="filterModalMenu('all', event)">Barchasi</button>
-                <button class="tab-btn" onclick="filterModalMenu('milliy', event)">Milliy taomlar</button>
-                <button class="tab-btn" onclick="filterModalMenu('fastfood', event)">Fast Food</button>
-                <button class="tab-btn" onclick="filterModalMenu('ichimliklar', event)">Ichimliklar</button>
+                <button class="tab-btn" onclick="filterModalMenu('Osh', event)">Osh</button>
+                <button class="tab-btn" onclick="filterModalMenu('Suyuq ovqatlar', event)">Suyuq ovqatlar</button>
+                <button class="tab-btn" onclick="filterModalMenu('Quyuq taomlar', event)">Quyuq taomlar</button>
+                <button class="tab-btn" onclick="filterModalMenu('Hamirli taomlar', event)">Hamirli taomlar</button>
+                <button class="tab-btn" onclick="filterModalMenu('Kaboblar', event)">Kaboblar</button>
+                <button class="tab-btn" onclick="filterModalMenu('Somsalar', event)">Somsalar</button>
+                <button class="tab-btn" onclick="filterModalMenu('Fast Food', event)">Fast Food</button>
             </div>
 
             <div id="menu-selection-list" style="max-height: 250px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; border-radius: 6px;">
@@ -284,46 +288,129 @@
     </div>
 
     <script>
+        // 4 ta ofitsiant bazasi va parollari
         const waitersDB = [
             { login: "valijon", pass: "1234", name: "Valijon" },
-            { login: "sherzod", pass: "1234", name: "Sherzod" }
+            { login: "sherzod", pass: "1234", name: "Sherzod" },
+            { login: "jasur", pass: "1234", name: "Jasur" },
+            { login: "bekzod", pass: "1234", name: "Bekzod" }
         ];
 
+        // To'liq menyu ro'yxati (kategoriyalarga ajratilgan)
         const fullMenu = [
-            // Milliy taomlar
-            { id: 1, category: "milliy", name: "Osh (Palov)", price: 35000, img: "https://images.unsplash.com/photo-1633964913295-ceb43826e7c9?w=100" },
-            { id: 2, category: "milliy", name: "Manti", price: 6000, img: "https://images.unsplash.com/photo-1541658016709-82535e94bc69?w=100" },
-            { id: 3, category: "milliy", name: "Somsa (Tandir)", price: 8000, img: "https://images.unsplash.com/photo-1601050690597-df0568f70950?w=100" },
-            { id: 4, category: "milliy", name: "Shashlik (Go'sht)", price: 15000, img: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=100" },
-            { id: 5, category: "milliy", name: "Norin", price: 40000, img: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=100" },
-            { id: 6, category: "milliy", name: "Lag'mon", price: 30000, img: "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=100" },
+            // Osh
+            { id: 1, category: "Osh", name: "Toshkent oshi (Toʻy oshi)", price: 35000, img: "https://images.unsplash.com/photo-1633964913295-ceb43826e7c9?w=100" },
+            { id: 2, category: "Osh", name: "Samarqand oshi", price: 38000, img: "https://images.unsplash.com/photo-1633964913295-ceb43826e7c9?w=100" },
+            { id: 3, category: "Osh", name: "Buxoro oshi (Sochqi oshi)", price: 40000, img: "https://images.unsplash.com/photo-1633964913295-ceb43826e7c9?w=100" },
+            { id: 4, category: "Osh", name: "Fargʻona oshi", price: 35000, img: "https://images.unsplash.com/photo-1633964913295-ceb43826e7c9?w=100" },
+            { id: 5, category: "Osh", name: "Devzira oshi", price: 45000, img: "https://images.unsplash.com/photo-1633964913295-ceb43826e7c9?w=100" },
+
+            // Suyuq ovqatlar
+            { id: 10, category: "Suyuq ovqatlar", name: "Qaynatma shoʻrva", price: 25000, img: "https://images.unsplash.com/photo-1547592180-85f173990554?w=100" },
+            { id: 11, category: "Suyuq ovqatlar", name: "Mastava", price: 22000, img: "https://images.unsplash.com/photo-1547592180-85f173990554?w=100" },
+            { id: 12, category: "Suyuq ovqatlar", name: "Noʻxat shoʻrva (Moʻxaldak)", price: 24000, img: "https://images.unsplash.com/photo-1547592180-85f173990554?w=100" },
+            { id: 13, category: "Suyuq ovqatlar", name: "Moshxorda", price: 22000, img: "https://images.unsplash.com/photo-1547592180-85f173990554?w=100" },
+            { id: 14, category: "Suyuq ovqatlar", name: "Kalla-pacha", price: 35000, img: "https://images.unsplash.com/photo-1547592180-85f173990554?w=100" },
+            { id: 15, category: "Suyuq ovqatlar", name: "Chuchvara shoʻrva", price: 23000, img: "https://images.unsplash.com/photo-1547592180-85f173990554?w=100" },
+            { id: 16, category: "Suyuq ovqatlar", name: "Koʻza shoʻrva", price: 30000, img: "https://images.unsplash.com/photo-1547592180-85f173990554?w=100" },
+            { id: 17, category: "Suyuq ovqatlar", name: "Shirguruch", price: 18000, img: "https://images.unsplash.com/photo-1547592180-85f173990554?w=100" },
+
+            // Quyuq taomlar
+            { id: 20, category: "Quyuq taomlar", name: "Bifsteks", price: 38000, img: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=100" },
+            { id: 21, category: "Quyuq taomlar", name: "Bistrogonav (Bef-stroganov)", price: 40000, img: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=100" },
+            { id: 22, category: "Quyuq taomlar", name: "Jarkor (Jarkoye)", price: 35000, img: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=100" },
+            { id: 23, category: "Quyuq taomlar", name: "Lagʻman (Qovurma lagʻman)", price: 32000, img: "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=100" },
+            { id: 24, category: "Quyuq taomlar", name: "Dimlama", price: 30000, img: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=100" },
+            { id: 25, category: "Quyuq taomlar", name: "Tabaka joʻjasi (S-tabaka)", price: 45000, img: "https://images.unsplash.com/photo-1626777552726-4a6b54c97e46?w=100" },
+            { id: 26, category: "Quyuq taomlar", name: "Norin (Qozon norin)", price: 42000, img: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=100" },
+
+            // Hamirli taomlar
+            { id: 30, category: "Hamirli taomlar", name: "Manti (Goʻshtli va piyozli)", price: 6000, img: "https://images.unsplash.com/photo-1541658016709-82535e94bc69?w=100" },
+            { id: 31, category: "Hamirli taomlar", name: "Chuchvara (Qaynatilgan yoki qovurilgan)", price: 25000, img: "https://images.unsplash.com/photo-1541658016709-82535e94bc69?w=100" },
+            { id: 32, category: "Hamirli taomlar", name: "Choʻzma lagʻmon", price: 32000, img: "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=100" },
+            { id: 33, category: "Hamirli taomlar", name: "Qovurma lagʻmon (Qovurma soʻy)", price: 34000, img: "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=100" },
+            { id: 34, category: "Hamirli taomlar", name: "Uygʻur lagʻmoni", price: 35000, img: "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=100" },
+            { id: 35, category: "Hamirli taomlar", name: "Norin", price: 40000, img: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=100" },
+            { id: 36, category: "Hamirli taomlar", name: "Beshbarmoq", price: 45000, img: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=100" },
+            { id: 37, category: "Hamirli taomlar", name: "Uygʻur shivit oshi", price: 38000, img: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=100" },
+
+            // Kaboblar
+            { id: 40, category: "Kaboblar", name: "Qiyma kabob", price: 16000, img: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=100" },
+            { id: 41, category: "Kaboblar", name: "Qoʻy goʻshti shashligi (Klassik shashlik)", price: 20000, img: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=100" },
+            { id: 42, category: "Kaboblar", name: "Jigar shashligi", price: 18000, img: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=100" },
+            { id: 43, category: "Kaboblar", name: "Qozon kabob", price: 45000, img: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=100" },
+            { id: 44, category: "Kaboblar", name: "Tandir kabob", price: 50000, img: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=100" },
+            { id: 45, category: "Kaboblar", name: "Jiz kabob", price: 48000, img: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=100" },
+            { id: 46, category: "Kaboblar", name: "Napalyon", price: 22000, img: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=100" },
+            { id: 47, category: "Kaboblar", name: "O’rama", price: 20000, img: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=100" },
+            { id: 48, category: "Kaboblar", name: "Norin kabob", price: 40000, img: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=100" },
+            { id: 49, category: "Kaboblar", name: "Toyloq (Uygʻurcha) kabob", price: 25000, img: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=100" },
+            { id: 50, category: "Kaboblar", name: "Bedana kabob", price: 30000, img: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=100" },
+            { id: 51, category: "Kaboblar", name: "Tovuq shashligi (File kabob)", price: 17000, img: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=100" },
+            { id: 52, category: "Kaboblar", name: "Lula-kabob", price: 19000, img: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=100" },
+            { id: 53, category: "Kaboblar", name: "Karsak kabob", price: 21000, img: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=100" },
+            { id: 54, category: "Kaboblar", name: "Qovurma shashlik", price: 22000, img: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=100" },
+            { id: 55, category: "Kaboblar", name: "Quyruq kabob (Dumba kabob)", price: 24000, img: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=100" },
+            { id: 56, category: "Kaboblar", name: "Bifshteks kabob", price: 25000, img: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=100" },
+            { id: 57, category: "Kaboblar", name: "Tabaka kabob", price: 42000, img: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=100" },
+            { id: 58, category: "Kaboblar", name: "Ovoza kabob", price: 26000, img: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=100" },
+            { id: 59, category: "Kaboblar", name: "Sabzavotli kabob", price: 12000, img: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=100" },
+            { id: 60, category: "Kaboblar", name: "Qanotcha shashligi (Tovuq qanoti)", price: 16000, img: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=100" },
+            { id: 61, category: "Kaboblar", name: "Piyozli kabob", price: 10000, img: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=100" },
+            { id: 62, category: "Kaboblar", name: "Qovurgʻa kabob (Ribs)", price: 35000, img: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=100" },
+            { id: 63, category: "Kaboblar", name: "Kavkazcha shashlik (Kars)", price: 23000, img: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=100" },
+            { id: 64, category: "Kaboblar", name: "Baliq kabob", price: 35000, img: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=100" },
+            { id: 65, category: "Kaboblar", name: "Mushroom (Qoʻziqorin) kabob", price: 15000, img: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=100" },
+            { id: 66, category: "Kaboblar", name: "Gilos kabob (Mevali kabob)", price: 20000, img: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=100" },
+            { id: 67, category: "Kaboblar", name: "Asalli shashlik", price: 22000, img: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=100" },
+            { id: 68, category: "Kaboblar", name: "Achchiq (Laza) shashlik", price: 20000, img: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=100" },
+            { id: 69, category: "Kaboblar", name: "Minora kabob", price: 40000, img: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=100" },
+            { id: 70, category: "Kaboblar", name: "Kletchatka kabob", price: 18000, img: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=100" },
+            { id: 71, category: "Kaboblar", name: "Jigar-dumba kabob", price: 21000, img: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=100" },
+
+            // Somsalar
+            { id: 80, category: "Somsalar", name: "Tandir somsa", price: 10000, img: "https://images.unsplash.com/photo-1601050690597-df0568f70950?w=100" },
+            { id: 81, category: "Somsalar", name: "Qatlama (varaqi) somsa", price: 9000, img: "https://images.unsplash.com/photo-1601050690597-df0568f70950?w=100" },
+            { id: 82, category: "Somsalar", name: "Koʻk somsa", price: 7000, img: "https://images.unsplash.com/photo-1601050690597-df0568f70950?w=100" },
+            { id: 83, category: "Somsalar", name: "Qovoqli somsa", price: 7000, img: "https://images.unsplash.com/photo-1601050690597-df0568f70950?w=100" },
+            { id: 84, category: "Somsalar", name: "Kartoshkali somsa", price: 7000, img: "https://images.unsplash.com/photo-1601050690597-df0568f70950?w=100" },
+            { id: 85, category: "Somsalar", name: "G‘umma somsa (Qovurma somsa)", price: 8000, img: "https://images.unsplash.com/photo-1601050690597-df0568f70950?w=100" },
+            { id: 86, category: "Somsalar", name: "Go‘shtli-kartoshkali somsa", price: 8000, img: "https://images.unsplash.com/photo-1601050690597-df0568f70950?w=100" },
+            { id: 87, category: "Somsalar", name: "Pishloqli somsa", price: 9000, img: "https://images.unsplash.com/photo-1601050690597-df0568f70950?w=100" },
+            { id: 88, category: "Somsalar", name: "Tovuqli somsa", price: 8500, img: "https://images.unsplash.com/photo-1601050690597-df0568f70950?w=100" },
+            { id: 89, category: "Somsalar", name: "Qiyma somsa", price: 8500, img: "https://images.unsplash.com/photo-1601050690597-df0568f70950?w=100" },
+            { id: 90, category: "Somsalar", name: "Moshli somsa", price: 7500, img: "https://images.unsplash.com/photo-1601050690597-df0568f70950?w=100" },
+            { id: 91, category: "Somsalar", name: "Zig‘ir somsa", price: 10000, img: "https://images.unsplash.com/photo-1601050690597-df0568f70950?w=100" },
+            { id: 92, category: "Somsalar", name: "Asal solingan shirin somsa", price: 8000, img: "https://images.unsplash.com/photo-1601050690597-df0568f70950?w=100" },
+            { id: 93, category: "Somsalar", name: "Qora zira (yoki kunjutli) somsa", price: 9000, img: "https://images.unsplash.com/photo-1601050690597-df0568f70950?w=100" },
+            { id: 94, category: "Somsalar", name: "Katta to‘y somsasi", price: 60000, img: "https://images.unsplash.com/photo-1601050690597-df0568f70950?w=100" },
+            { id: 95, category: "Somsalar", name: "Piyozli somsa (piyoz-dumba)", price: 7500, img: "https://images.unsplash.com/photo-1601050690597-df0568f70950?w=100" },
+            { id: 96, category: "Somsalar", name: "Qo‘ziqorinli somsa", price: 8500, img: "https://images.unsplash.com/photo-1601050690597-df0568f70950?w=100" },
+            { id: 97, category: "Somsalar", name: "Uyg‘urcha somsa", price: 11000, img: "https://images.unsplash.com/photo-1601050690597-df0568f70950?w=100" },
+            { id: 98, category: "Somsalar", name: "Jigar somsasi", price: 9000, img: "https://images.unsplash.com/photo-1601050690597-df0568f70950?w=100" },
+            { id: 99, category: "Somsalar", name: "Sutli xamirdan tayyorlangan somsa", price: 9500, img: "https://images.unsplash.com/photo-1601050690597-df0568f70950?w=100" },
+
             // Fast Food
-            { id: 79, category: "fastfood", name: "Lavash", price: 32000, img: "https://images.unsplash.com/photo-1626777552726-4a6b54c97e46?w=100" },
-            { id: 80, category: "fastfood", name: "Gamburger", price: 30000, img: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=100" },
-            { id: 81, category: "fastfood", name: "Cheeseburger", price: 33000, img: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=100" },
-            { id: 82, category: "fastfood", name: "Shaurma (Doner)", price: 28000, img: "https://images.unsplash.com/photo-1626777552726-4a6b54c97e46?w=100" },
-            { id: 83, category: "fastfood", name: "Hot-dog", price: 15000, img: "https://images.unsplash.com/photo-1619740455993-9e612b1af08a?w=100" },
-            { id: 84, category: "fastfood", name: "Kartoshka fri", price: 12000, img: "https://images.unsplash.com/photo-1573080496219-bb080dd4f877?w=100" },
-            { id: 85, category: "fastfood", name: "Pitsa (30 sm / 25 sm / 20 sm)", price: 65000, img: "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=100" },
-            { id: 86, category: "fastfood", name: "Klab-sendvich", price: 28000, img: "https://images.unsplash.com/photo-1528735602780-2552fd46c7af?w=100" },
-            { id: 87, category: "fastfood", name: "Xaggi (Haggi)", price: 34000, img: "https://images.unsplash.com/photo-1626777552726-4a6b54c97e46?w=100" },
-            { id: 88, category: "fastfood", name: "Tovuq nuggetslari", price: 22000, img: "https://images.unsplash.com/photo-1562967914-608f82629710?w=100" },
-            { id: 89, category: "fastfood", name: "Tovuq tenderslari (Tenders)", price: 25000, img: "https://images.unsplash.com/photo-1562967914-608f82629710?w=100" },
-            { id: 90, category: "fastfood", name: "Chikken burger", price: 29000, img: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=100" },
-            { id: 91, category: "fastfood", name: "Fransuzcha hot-dog", price: 18000, img: "https://images.unsplash.com/photo-1619740455993-9e612b1af08a?w=100" },
-            { id: 92, category: "fastfood", name: "Piyoz halqalari (Onion rings)", price: 14000, img: "https://images.unsplash.com/photo-1639024471283-03518883512d?w=100" },
-            { id: 93, category: "fastfood", name: "Burrito", price: 31000, img: "https://images.unsplash.com/photo-1626777552726-4a6b54c97e46?w=100" },
-            { id: 94, category: "fastfood", name: "Tako", price: 29000, img: "https://images.unsplash.com/photo-1565299585323-38d6b0865b47?w=100" },
-            { id: 95, category: "fastfood", name: "Panini", price: 26000, img: "https://images.unsplash.com/photo-1528735602780-2552fd46c7af?w=100" },
-            { id: 96, category: "fastfood", name: "Wok lapshasi", price: 35000, img: "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=100" },
-            { id: 97, category: "fastfood", name: "Korn-dog", price: 16000, img: "https://images.unsplash.com/photo-1619740455993-9e612b1af08a?w=100" },
-            { id: 98, category: "fastfood", name: "Pishloqli tayoqchalar (Cheese-sticks)", price: 20000, img: "https://images.unsplash.com/photo-1548340748-6d2b7d7da28e?w=100" },
-            // Ichimliklar
-            { id: 101, category: "ichimliklar", name: "Qora choy", price: 3000, img: "https://images.unsplash.com/photo-1576092768241-dec231879fc3?w=100" },
-            { id: 102, category: "ichimliklar", name: "Ko'k choy", price: 3000, img: "https://images.unsplash.com/photo-1576092768241-dec231879fc3?w=100" },
-            { id: 103, category: "ichimliklar", name: "Coca-Cola (1L)", price: 12000, img: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=100" },
-            { id: 104, category: "ichimliklar", name: "Fanta (1L)", price: 12000, img: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=100" },
-            { id: 105, category: "ichimliklar", name: "Limonli choy", price: 5000, img: "https://images.unsplash.com/photo-1576092768241-dec231879fc3?w=100" }
+            { id: 110, category: "Fast Food", name: "Lavash", price: 32000, img: "https://images.unsplash.com/photo-1626777552726-4a6b54c97e46?w=100" },
+            { id: 111, category: "Fast Food", name: "Gamburger", price: 30000, img: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=100" },
+            { id: 112, category: "Fast Food", name: "Cheeseburger", price: 33000, img: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=100" },
+            { id: 113, category: "Fast Food", name: "Shaurma (Doner)", price: 28000, img: "https://images.unsplash.com/photo-1626777552726-4a6b54c97e46?w=100" },
+            { id: 114, category: "Fast Food", name: "Hot-dog", price: 15000, img: "https://images.unsplash.com/photo-1619740455993-9e612b1af08a?w=100" },
+            { id: 115, category: "Fast Food", name: "Kartoshka fri", price: 12000, img: "https://images.unsplash.com/photo-1573080496219-bb080dd4f877?w=100" },
+            { id: 116, category: "Fast Food", name: "Pitsa (30 sm / 25 sm / 20 sm)", price: 65000, img: "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=100" },
+            { id: 117, category: "Fast Food", name: "Klab-sendvich", price: 28000, img: "https://images.unsplash.com/photo-1528735602780-2552fd46c7af?w=100" },
+            { id: 118, category: "Fast Food", name: "Xaggi (Haggi)", price: 34000, img: "https://images.unsplash.com/photo-1626777552726-4a6b54c97e46?w=100" },
+            { id: 119, category: "Fast Food", name: "Tovuq nuggetslari", price: 22000, img: "https://images.unsplash.com/photo-1562967914-608f82629710?w=100" },
+            { id: 120, category: "Fast Food", name: "Tovuq tenderslari (Tenders)", price: 25000, img: "https://images.unsplash.com/photo-1562967914-608f82629710?w=100" },
+            { id: 121, category: "Fast Food", name: "Chikken burger", price: 29000, img: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=100" },
+            { id: 122, category: "Fast Food", name: "Fransuzcha hot-dog", price: 18000, img: "https://images.unsplash.com/photo-1619740455993-9e612b1af08a?w=100" },
+            { id: 123, category: "Fast Food", name: "Piyoz halqalari (Onion rings)", price: 14000, img: "https://images.unsplash.com/photo-1639024471283-03518883512d?w=100" },
+            { id: 124, category: "Fast Food", name: "Burrito", price: 31000, img: "https://images.unsplash.com/photo-1626777552726-4a6b54c97e46?w=100" },
+            { id: 125, category: "Fast Food", name: "Tako", price: 29000, img: "https://images.unsplash.com/photo-1565299585323-38d6b0865b47?w=100" },
+            { id: 126, category: "Fast Food", name: "Panini", price: 26000, img: "https://images.unsplash.com/photo-1528735602780-2552fd46c7af?w=100" },
+            { id: 127, category: "Fast Food", name: "Wok lapshasi", price: 35000, img: "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=100" },
+            { id: 128, category: "Fast Food", name: "Korn-dog", price: 16000, img: "https://images.unsplash.com/photo-1619740455993-9e612b1af08a?w=100" },
+            { id: 129, category: "Fast Food", name: "Pishloqli tayoqchalar (Cheese-sticks)", price: 20000, img: "https://images.unsplash.com/photo-1548340748-6d2b7d7da28e?w=100" }
         ];
 
         let currentActiveSection = 'zal'; // 'zal' yoki 'xonalar'
@@ -341,7 +428,7 @@
             startRealTimeClock();
         };
 
-        // Real vaqt soat va sana funksiyasi
+        // Real vaqt soat, sana va maxsus ikonkalari funksiyasi
         function startRealTimeClock() {
             function updateClock() {
                 const now = new Date();
@@ -349,7 +436,18 @@
                 const optionsTime = { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false };
                 const dateStr = now.toLocaleDateString('uz-UZ', optionsDate);
                 const timeStr = now.toLocaleTimeString('uz-UZ', optionsTime);
-                document.getElementById('realtime-clock').innerHTML = `📅 ${dateStr}<br>⏰ ${timeStr}`;
+                
+                // So'ralgan maxsus ikonkalarni HTML formatda joylash
+                document.getElementById('realtime-clock').innerHTML = `
+                    <div style="display: flex; align-items: center; gap: 5px; margin-bottom: 2px;">
+                        <img src="https://cdn-icons-png.flaticon.com/256/19029/19029065.png" style="width: 14px; height: 14px; object-fit: contain;" alt="Kalendar">
+                        <span>${dateStr}</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 5px;">
+                        <img src="https://thumbs.dreamstime.com/b/food-icons-infographic-clock-flat-design-fitness-diet-calorie-counter-concept-vector-illustration-63065497.jpg" style="width: 14px; height: 14px; object-fit: contain;" alt="Soat">
+                        <span>${timeStr}</span>
+                    </div>
+                `;
             }
             updateClock();
             setInterval(updateClock, 1000);
@@ -397,7 +495,6 @@
             const grid = document.getElementById('tables-grid');
             grid.innerHTML = '';
             
-            // Zal uchun 16 ta, Xonalar uchun 12 ta
             let count = (currentActiveSection === 'zal') ? 16 : 12;
 
             for (let i = 1; i <= count; i++) {
@@ -406,10 +503,12 @@
                 
                 let titlePrefix = (currentActiveSection === 'zal') ? 'Stol #' : 'Xona #';
 
-                // Talabga ko'ra: Zal uchun stol-o'rindiq, Xonalar uchun uycha rasmi qo'yildi
+                // Talabga ko'ra maxsus rasmlar qo'yildi:
+                // 1. Stol uchun: https://cdn-icons-png.flaticon.com/512/7067/7067120.png
+                // 2. Xona uchun: https://cdn-icons-png.flaticon.com/512/7845/7845744.png
                 let iconSrc = (currentActiveSection === 'zal') 
-                    ? 'https://cdn-icons-png.flaticon.com/512/962/962863.png' 
-                    : 'https://cdn-icons-png.flaticon.com/512/619/619153.png';
+                    ? 'https://cdn-icons-png.flaticon.com/512/7067/7067120.png' 
+                    : 'https://cdn-icons-png.flaticon.com/512/7845/7845744.png';
 
                 grid.innerHTML += `
                     <div class="table-card ${itemData.busy ? 'busy' : ''}" onclick="openItemModal('${currentActiveSection}', ${i})">
@@ -544,7 +643,7 @@
 
             itemData.busy = true;
             itemData.guests = guests;
-            itemData.waiter = activeWaiter;
+            itemData.waiter = activeWaiter; // Qaysi ofitsant buyurtma bergani saqlanadi
             itemData.status = 'Tayyorlanyapti';
 
             localStorage.setItem(key, JSON.stringify(itemData));
@@ -558,7 +657,7 @@
             });
             localStorage.setItem('admin_orders', JSON.stringify(allOrders));
 
-            alert("Buyurtma Admin paneliga yuborildi!");
+            alert(`Buyurtma Admin paneliga yuborildi! (Ofitsant: ${activeWaiter})`);
             closeModal();
             renderItems();
         }

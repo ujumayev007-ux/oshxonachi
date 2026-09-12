@@ -412,13 +412,11 @@
             let generalOrders = JSON.parse(localStorage.getItem('orders')) || [];
             
             let combined = [...waiterOrders, ...activeOrders, ...adminOrders, ...generalOrders];
-            
             let uniqueMap = new Map();
             combined.forEach(o => {
                 let key = o.id !== undefined ? o.id : (o.tableNumber !== undefined ? o.tableNumber : (o.table !== undefined ? o.table : (o.time + (o.tableNumber || ''))));
                 uniqueMap.set(key, o);
             });
-            
             ordersDatabase = Array.from(uniqueMap.values());
         }
 

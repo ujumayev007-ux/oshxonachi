@@ -1,13 +1,13 @@
 // Kengaytirilgan menyu ma'lumotlari (kategoriyalarga bo'lingan holda)
 const menuItems = [
-    // Osh
+    // -osh
     { id: 1, name: "Toshkent oshi (To'y oshi)", price: 35000, category: "osh", image: "https://images.unsplash.com/photo-1633964913295-ceb43826e7c9?w=300" },
     { id: 2, name: "Samarqand oshi", price: 38000, category: "osh", image: "https://images.unsplash.com/photo-1544025162-d76694265947?w=300" },
     { id: 3, name: "Buxoro oshi (\"Sochqi oshi\")", price: 37000, category: "osh", image: "https://images.unsplash.com/photo-1633964913295-ceb43826e7c9?w=300" },
     { id: 4, name: "Farg'ona oshi", price: 36000, category: "osh", image: "https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=300" },
     { id: 5, name: "Devzira oshi", price: 42000, category: "osh", image: "https://images.unsplash.com/photo-1544025162-d76694265947?w=300" },
 
-    // Suyuq ovqatlar
+    // -supli
     { id: 6, name: "Qaynatma sho'rva", price: 28000, category: "supli", image: "https://images.unsplash.com/photo-1547592180-85f173990554?w=300" },
     { id: 7, name: "Mastava", price: 22000, category: "supli", image: "https://images.unsplash.com/photo-1547592180-85f173990554?w=300" },
     { id: 8, name: "No'xat sho'rva (Mo'xaldak)", price: 26000, category: "supli", image: "https://images.unsplash.com/photo-1547592180-85f173990554?w=300" },
@@ -17,7 +17,7 @@ const menuItems = [
     { id: 12, name: "Ko'za sho'rva", price: 32000, category: "supli", image: "https://images.unsplash.com/photo-1547592180-85f173990554?w=300" },
     { id: 13, name: "Shirguruch", price: 20000, category: "supli", image: "https://images.unsplash.com/photo-1586190848861-99aa4a171e90?w=300" },
 
-    // -Quyuq taomlar
+    // -asosiy
     { id: 14, name: "Bifsteks", price: 40000, category: "asosiy", image: "https://images.unsplash.com/photo-1558030006-450675393462?w=300" },
     { id: 15, name: "Bistrogonav (Bef-stroganov)", price: 38000, category: "asosiy", image: "https://images.unsplash.com/photo-1534939561126-855b8675edd7?w=300" },
     { id: 16, name: "Jarkor (Jarkoye)", price: 34000, category: "asosiy", image: "https://images.unsplash.com/photo-1544025162-d76694265947?w=300" },
@@ -26,7 +26,7 @@ const menuItems = [
     { id: 19, name: "Tabaka jo'jasi (S-tabaka)", price: 35000, category: "asosiy", image: "https://images.unsplash.com/photo-1626509809489-44535b43d37a?w=300" },
     { id: 20, name: "Norin (Qozon norin)", price: 38000, category: "asosiy", image: "https://images.unsplash.com/photo-1633964913295-ceb43826e7c9?w=300" },
 
-    // -Hamirli ovqatlar
+    // -hamirli
     { id: 21, name: "Manti (Go'shtli va piyozli)", price: 32000, category: "hamirli", image: "https://images.unsplash.com/photo-1496116218417-1a781b1c416c?w=300" },
     { id: 22, name: "Chuchvara (Qaynatilgan yoki qovurilgan)", price: 28000, category: "hamirli", image: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=300" },
     { id: 23, name: "Cho'zma lag'mon", price: 36000, category: "hamirli", image: "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=300" },
@@ -36,7 +36,7 @@ const menuItems = [
     { id: 27, name: "Beshbarmoq", price: 45000, category: "hamirli", image: "https://images.unsplash.com/photo-1633964913295-ceb43826e7c9?w=300" },
     { id: 28, name: "Uyg'ur shivit oshi", price: 36000, category: "hamirli", image: "https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=300" },
 
-    // Kaboblar
+    // -kabob
     { id: 29, name: "Qiyma kabob", price: 18000, category: "kabob", image: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=300" },
     { id: 30, name: "Qo'y go'shti shashligi (Klassik shashlik)", price: 22000, category: "kabob", image: "https://images.unsplash.com/photo-1603048588665-791ca8aea617?w=300" },
     { id: 31, name: "Jigar shashligi", price: 20000, category: "kabob", image: "https://images.unsplash.com/photo-1529692236671-f1f6cf9683ba?w=300" },
@@ -68,7 +68,7 @@ const menuItems = [
     { id: 57, name: "Kletchatka kabob", price: 18000, category: "kabob", image: "https://images.unsplash.com/photo-1603048588665-791ca8aea617?w=300" },
     { id: 58, name: "Jigar-dumba kabob", price: 21000, category: "kabob", image: "https://images.unsplash.com/photo-1529692236671-f1f6cf9683ba?w=300" },
 
-    // Somsalar
+    // -somsa
     { id: 59, name: "Tandir somsa", price: 12000, category: "somsa", image: "https://images.unsplash.com/photo-1626777552726-4a6b54c97e46?w=300" },
     { id: 60, name: "Qatlama (varaqi) somsa", price: 10000, category: "somsa", image: "https://images.unsplash.com/photo-1626777552726-4a6b54c97e46?w=300" },
     { id: 61, name: "Ko'k somsa", price: 8000, category: "somsa", image: "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=300" },
@@ -90,12 +90,12 @@ const menuItems = [
     { id: 77, name: "Jigar somsasi", price: 11000, category: "somsa", image: "https://images.unsplash.com/photo-1626777552726-4a6b54c97e46?w=300" },
     { id: 78, name: "Sutli xamirdan tayyorlangan somsa", price: 11000, category: "somsa", image: "https://images.unsplash.com/photo-1626777552726-4a6b54c97e46?w=300" },
 
-    // Fast Food
+    // -fastfood
     { id: 79, name: "Lavash", price: 30000, category: "fastfood", image: "https://images.unsplash.com/photo-1626777552726-4a6b54c97e46?w=300" },
-    { id: 80, name: "Hamburger", price: 28000, category: "fastfood", image: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=300" },
+    { id: 80, name: "Gamburger", price: 28000, category: "fastfood", image: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=300" },
     { id: 81, name: "Cheeseburger", price: 30000, category: "fastfood", image: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=300" },
     { id: 82, name: "Shaurma (Doner)", price: 27000, category: "fastfood", image: "https://images.unsplash.com/photo-1626777552726-4a6b54c97e46?w=300" },
-    { id: 83, name: "Hot-dog", price: 18000, category: "fastfood", image: "https://images.unsplash.com/photo-1619740455993-9e612b1af08a?w=300" },
+    { id: 83, name: "Xot-dog", price: 18000, category: "fastfood", image: "https://images.unsplash.com/photo-1619740455993-9e612b1af08a?w=300" },
     { id: 84, name: "Kartoshka fri", price: 15000, category: "fastfood", image: "https://images.unsplash.com/photo-1576107232684-1279f3908591?w=300" },
     { id: 85, name: "Pitsa (30 sm / 25 sm / 20 sm)", price: 65000, category: "fastfood", image: "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=300" },
     { id: 86, name: "Klab-sendvich", price: 25000, category: "fastfood", image: "https://images.unsplash.com/photo-1528735602780-2552fd46c7af?w=300" },
@@ -106,7 +106,7 @@ const menuItems = [
     { id: 91, name: "Fransuzcha hot-dog", price: 20000, category: "fastfood", image: "https://images.unsplash.com/photo-1619740455993-9e612b1af08a?w=300" },
     { id: 92, name: "Piyoz halqalari (Onion rings)", price: 16000, category: "fastfood", image: "https://images.unsplash.com/photo-1639024471283-03518883512d?w=300" },
     { id: 93, name: "Burrito", price: 32000, category: "fastfood", image: "https://images.unsplash.com/photo-1626777552726-4a6b54c97e46?w=300" },
-    { id: 94, name: "Taco", price: 30000, category: "fastfood", image: "https://images.unsplash.com/photo-1565299585323-38d6b0865b47?w=300" },
+    { id: 94, name: "Tako", price: 30000, category: "fastfood", image: "https://images.unsplash.com/photo-1565299585323-38d6b0865b47?w=300" },
     { id: 95, name: "Panini", price: 24000, category: "fastfood", image: "https://images.unsplash.com/photo-1528735602780-2552fd46c7af?w=300" },
     { id: 96, name: "Wok lapshasi", price: 35000, category: "fastfood", image: "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=300" },
     { id: 97, name: "Korn-dog", price: 18000, category: "fastfood", image: "https://images.unsplash.com/photo-1619740455993-9e612b1af08a?w=300" },

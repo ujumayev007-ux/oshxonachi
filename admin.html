@@ -270,7 +270,6 @@
         <div id="menu" class="section-content">
             <h2>Menyu va narxlar</h2>
             
-            <!-- Yangi taom yoki ichimlik qo'shish qismi -->
             <div style="margin-bottom: 20px; background: #f5f5f5; padding: 15px; border-radius: 8px;">
                 <h3 style="font-size: 16px; color: #0d47a1; margin-bottom: 10px;">Yangi taom yoki ichimlik qo'shish</h3>
                 <div style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr auto; gap: 10px; align-items: center;">
@@ -291,7 +290,6 @@
                 </div>
             </div>
 
-            <!-- Menuni qidirish paneli -->
             <div style="margin-bottom: 15px;">
                 <input type="text" id="menu-search-input" placeholder="Taom yoki ichimlik nomi bo'yicha qidirish..." oninput="renderMenu()">
             </div>
@@ -396,7 +394,6 @@
                     <p style="margin-bottom: 10px;">Eng ko'p sotilgan taom: <b id="top-item">-</b></p>
                     <p>Ofitsantlar faolligi va band stollar holati doimiy nazoratda.</p>
                 </div>
-                <!-- Rangli Chart uchun konteyner -->
                 <div style="background: #ffffff; padding: 15px; border-radius: 8px; border: 1px solid #e0e0e0; height: 300px;">
                     <canvas id="statsChart"></canvas>
                 </div>
@@ -515,21 +512,29 @@
             saveData();
         }
 
+        // Ofitsant va Admin paneli ma'lumotlarini to'g'ri sinxronizatsiya qiluvchi funksiya
         function loadOrdersFromStorage() {
-            let waiterOrders = JSON.parse(localStorage.getItem('waiter_orders')) || [];
             let activeOrders = JSON.parse(localStorage.getItem('active_orders')) || [];
+            let waiterOrders = JSON.parse(localStorage.getItem('waiter_orders')) || [];
+            let orders = JSON.parse(localStorage.getItem('orders')) || [];
             let adminOrders = JSON.parse(localStorage.getItem('admin_orders')) || [];
-            let generalOrders = JSON.parse(localStorage.getItem('orders')) || [];
             
-            let combined = [...waiterOrders, ...activeOrders, ...adminOrders, ...generalOrders];
+            let combined = [...activeOrders, ...waiterOrders, ...orders, ...adminOrders];
             let uniqueMap = new Map();
+
             combined.forEach(o => {
-                let key = o.id !== undefined ? o.id : (o.tableNumber !== undefined ? o.tableNumber : (o.table !== undefined ? o.table : (o.time + (o.tableNumber || ''))));
-                if (!o.paymentType) {
-                    o.paymentType = 'naqd';
+                let key = o.id !== undefined ? o.id : (o.tableNumber !== undefined ? o.tableNumber : (o.table !== undefined ? o.table : (o.time || Math.random())));
+                
+                // Agar avvalgi qiymat mavjud bo'lsa, isPrinted yoki status kabi muhim o'zgarishlarni saqlab qolamiz
+                if (uniqueMap.has(key)) {
+                    let existing = uniqueMap.get(key);
+                    existing.isPrinted = existing.isPrinted || o.isPrinted;
+                    existing.status = o.status === 'tolandi' ? 'tolandi' : (existing.status || o.status);
+                } else {
+                    uniqueMap.set(key, o);
                 }
-                uniqueMap.set(key, o);
             });
+
             ordersDatabase = Array.from(uniqueMap.values());
         }
 
@@ -690,7 +695,7 @@
                 const waiter = order.waiterName || order.waiter || 'Ofitsant';
                 
                 // Ofitsant chek chiqarish tugmasini bosganda isPrinted = true bo'ladi
-                const isPrinted = order.isPrinted || false;
+                const isPrinted = order.isPrinted === true || order.isPrinted === "true";
 
                 let paymentButtonHTML = "";
                 if (isPrinted && status !== 'tolandi') {
@@ -743,7 +748,7 @@
         }
 
         function syncOrdersToStorage() {
-            ['waiter_orders', 'active_orders', 'admin_orders', 'orders'].forEach(key => {
+            ['active_orders', 'waiter_orders', 'orders', 'admin_orders'].forEach(key => {
                 let data = JSON.parse(localStorage.getItem(key)) || [];
                 if (Array.isArray(data)) {
                     data = data.map((o, index) => {
@@ -903,19 +908,13 @@
             localStorage.setItem('admin_orders', JSON.stringify(ordersDatabase));
         }
 
+        // Har 1 soniyada ofitsant panelidan kelayotgan o'zgarishlarni avtomatik tekshirib yangilash
         setInterval(() => {
-            let savedWaiterOrders = JSON.parse(localStorage.getItem('waiter_orders')) || [];
-            let savedActiveOrders = JSON.parse(localStorage.getItem('active_orders')) || [];
-            let savedAdminOrders = JSON.parse(localStorage.getItem('admin_orders')) || [];
-            let combined = [...savedWaiterOrders, ...savedActiveOrders, ...savedAdminOrders];
-            
-            if (JSON.stringify(combined) !== JSON.stringify(ordersDatabase)) {
-                loadOrdersFromStorage();
-                renderOrders();
-                renderIncome();
-                updateStatsInfo();
-            }
-        }, 1500);
+            loadOrdersFromStorage();
+            renderOrders();
+            renderIncome();
+            updateStatsInfo();
+        }, 1000);
     </script>
 </body>
 </html>

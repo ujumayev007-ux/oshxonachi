@@ -553,8 +553,8 @@
 
                 const orderId = order.id !== undefined ? order.id : (order.tableNumber !== undefined ? order.tableNumber : (order.table !== undefined ? order.table : index));
                 const status = order.status || 'yangi';
-                const tableNo = order.tableNumber || order.table || 'Nomaʼlum';
-                const waiter = order.waiterName || order.waiter || 'Ofitsant';
+                const tableNo = order.tableNumber || order.table || order.stol || order.stolRaqami || order.tableNo || 'Nomaʼlum';
+                const waiter = order.waiterName || order.waiter || order.ofitsant || 'Ofitsant';
 
                 return `
                     <div class="order-card">
@@ -566,7 +566,7 @@
                         <div>
                             <button class="btn" style="background: #ffb74d;" onclick="changeOrderStatus('${orderId}', 'qabul_qilindi')">Qabul qildim</button>
                             <button class="btn" style="background: #4fc3f7;" onclick="changeOrderStatus('${orderId}', 'tayyorlanyapti')">Tayyorlanyapti</button>
-                            <button class="btn btn-blue" onclick="changeOrderStatus('${orderId}', 'tayyor')">Tayyor</button>
+                            <button class="btn" style="background: #0288d1; color: white;" onclick="changeOrderStatus('${orderId}', 'tayyor')">Tayyor</button>
                         </div>
                     </div>
                 `;

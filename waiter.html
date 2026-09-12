@@ -5,193 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ofitsiant Panel - Restoran</title>
     <style>
-        * {
-            box-sizing: border-box;
-        }
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            background-color: #f4f6f9;
-        }
-        /* Login ekrani */
-        #login-screen {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            background: linear-gradient(135deg, #1e3c72, #2a5298);
-        }
-        .login-box {
-            background: white;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-            width: 320px;
-            text-align: center;
-        }
-        .login-box input {
-            width: 100%;
-            padding: 10px;
-            margin: 10px 0;
-            border: 1px solid #ccc;
-            border-radius: 6px;
-        }
-        .login-box button {
-            width: 100%;
-            padding: 10px;
-            background: #2a5298;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-        .login-box button:hover {
-            background: #1e3c72;
-        }
-
-        /* Asosiy panel */
-        #main-panel {
-            display: none;
-            padding: 20px;
-        }
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: white;
-            padding: 15px 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            position: relative;
-        }
-        
-        /* Soat va sana chap yuqori burchakda */
-        .top-left-clock {
-            position: absolute;
-            top: 15px;
-            left: 20px;
-            font-size: 13px;
-            font-weight: bold;
-            color: #333;
-            line-height: 1.4;
-        }
-
-        .header-center {
-            margin-left: 170px; /* Soat uchun kengroq joy tashlandi */
-            display: flex;
-            gap: 10px;
-        }
-        .folder-btn {
-            padding: 8px 16px;
-            border: none;
-            background: #e0e0e0;
-            cursor: pointer;
-            border-radius: 6px;
-            font-weight: bold;
-            transition: 0.2s;
-        }
-        .folder-btn.active {
-            background: #2a5298;
-            color: white;
-        }
-
-        .header-right {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        /* Grid va Kartochkalar dizayni */
-        .grid-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-            gap: 15px;
-            margin-top: 20px;
-        }
-        .table-card {
-            background: white;
-            border: 2px solid #ddd;
-            border-radius: 10px;
-            padding: 15px;
-            text-align: center;
-            cursor: pointer;
-            transition: 0.2s;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-        }
-        .table-card:hover {
-            transform: translateY(-3px);
-            border-color: #2a5298;
-        }
-        .table-card.busy {
-            background-color: #ffe6e6;
-            border-color: #ff4d4d;
-        }
-        .table-icon {
-            width: 40px;
-            height: 40px;
-            object-fit: contain;
-            margin-bottom: 5px;
-        }
-
-        /* Modal oyna */
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.5);
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-        }
-        .modal-content {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            width: 600px;
-            max-width: 90%;
-            max-height: 90vh;
-            overflow-y: auto;
-        }
-        .menu-item-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 10px;
-            border-bottom: 1px solid #eee;
-            padding-bottom: 8px;
-        }
-        .menu-item-img {
-            width: 40px;
-            height: 40px;
-            object-fit: cover;
-            border-radius: 6px;
-        }
-        .qty-btn {
-            padding: 2px 8px;
-            background: #ddd;
-            border: none;
-            cursor: pointer;
-            font-weight: bold;
-            border-radius: 4px;
-        }
-        .qty-btn:hover {
-            background: #ccc;
-        }
-        .tab-btn {
-            padding: 6px 12px;
-            border: none;
-            background: #eee;
-            cursor: pointer;
-            border-radius: 4px;
-            margin-right: 5px;
-            margin-bottom: 5px;
-            font-size: 13px;
-        }
-        .tab-btn.active {
-            background: #2a5298;
-            color: white;
-        }
+        * { box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; margin: 0; background-color: #f4f6f9; }
+        #login-screen { display: flex; justify-content: center; align-items: center; height: 100vh; background: linear-gradient(135deg, #1e3c72, #2a5298); }
+        .login-box { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); width: 320px; text-align: center; }
+        .login-box input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 6px; }
+        .login-box button { width: 100%; padding: 10px; background: #2a5298; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        #main-panel { display: none; padding: 20px; }
+        .header { display: flex; justify-content: space-between; align-items: center; background: white; padding: 15px 20px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .grid-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 15px; margin-top: 20px; }
+        .table-card { background: white; border: 2px solid #ddd; border-radius: 10px; padding: 15px; text-align: center; cursor: pointer; transition: 0.2s; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .table-card.busy { background-color: #ffe6e6; border-color: #ff4d4d; }
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000; }
+        .modal-content { background: white; padding: 20px; border-radius: 10px; width: 500px; max-width: 90%; max-height: 90vh; overflow-y: auto; }
+        .qty-btn { padding: 2px 8px; background: #ddd; border: none; cursor: pointer; font-weight: bold; border-radius: 4px; }
     </style>
 </head>
 <body>
@@ -200,8 +27,8 @@
     <div id="login-screen">
         <div class="login-box">
             <h2>Ofitsiant Tizimi</h2>
-            <input type="text" id="login-user" placeholder="Login">
-            <input type="password" id="login-pass" placeholder="Parol">
+            <input type="text" id="login-user" placeholder="Login (masalan: Akmal)" value="Akmal">
+            <input type="password" id="login-pass" placeholder="Parol (masalan: 112233)" value="112233">
             <button onclick="loginWaiter()">Kirish</button>
         </div>
     </div>
@@ -209,59 +36,24 @@
     <!-- Asosiy Panel -->
     <div id="main-panel">
         <div class="header">
-            <!-- Chap yuqori burchakdagi real vaqt soati va maxsus ikonkalari -->
-            <div id="realtime-clock" class="top-left-clock"></div>
-
-            <div class="header-center">
-                <button id="folder-zal" class="folder-btn active" onclick="switchSection('zal')">Zal</button>
-                <button id="folder-xonalar" class="folder-btn" onclick="switchSection('xonalar')">Xonalar</button>
-            </div>
-
-            <div class="header-right">
-                <span id="logged-waiter-name" style="font-weight: bold;"></span>
-                <button onclick="openHistory()" style="padding: 6px 12px; background: #ff9800; color: white; border: none; border-radius: 5px; cursor: pointer;">Tarix</button>
-                <button onclick="logoutWaiter()" style="padding: 6px 12px; background: #e74c3c; color: white; border: none; border-radius: 5px; cursor: pointer;">Chiqish</button>
-            </div>
+            <div>Xush kelibsiz, <b id="logged-waiter-name"></b></div>
+            <button onclick="logoutWaiter()" style="padding: 6px 12px; background: #e74c3c; color: white; border: none; border-radius: 5px; cursor: pointer;">Chiqish</button>
         </div>
-
-        <h2 id="section-heading-title" style="margin-top: 25px;">Zal Stollari (16 ta)</h2>
+        <h2 style="margin-top: 25px;">Zal Stollari</h2>
         <div id="tables-grid" class="grid-container"></div>
     </div>
 
-    <!-- Stol / Xona Boshqaruv Modali -->
+    <!-- Stol Boshqaruv Modali -->
     <div id="modal-overlay" class="modal-overlay">
         <div class="modal-content">
             <div style="display: flex; justify-content: space-between; align-items: center;">
-                <h3 id="modal-title" style="margin: 0;">Boshqaruv</h3>
+                <h3 id="modal-title">Stol</h3>
                 <button onclick="closeModal()" style="border: none; background: none; font-size: 20px; cursor: pointer;">&times;</button>
             </div>
 
-            <div style="margin: 15px 0; display: flex; align-items: center; gap: 10px;">
-                <span>Mehmonlar soni:</span>
-                <button class="qty-btn" onclick="changeGuests(-1)">-</button>
-                <span id="modal-guests-val" style="font-weight: bold; font-size: 16px;">1</span>
-                <button class="qty-btn" onclick="changeGuests(1)">+</button>
-            </div>
+            <div id="menu-selection-list" style="margin: 15px 0; max-height: 200px; overflow-y: auto; border: 1px solid #ddd; padding: 10px;"></div>
 
-            <div style="margin-bottom: 10px;" id="menu-categories-tabs">
-                <button class="tab-btn active" onclick="filterModalMenu('all', event)">Barchasi</button>
-                <button class="tab-btn" onclick="filterModalMenu('Osh', event)">Osh</button>
-                <button class="tab-btn" onclick="filterModalMenu('Suyuq ovqatlar', event)">Suyuq ovqatlar</button>
-                <button class="tab-btn" onclick="filterModalMenu('Quyuq taomlar', event)">Quyuq taomlar</button>
-                <button class="tab-btn" onclick="filterModalMenu('Hamirli taomlar', event)">Hamirli taomlar</button>
-                <button class="tab-btn" onclick="filterModalMenu('Kaboblar', event)">Kaboblar</button>
-                <button class="tab-btn" onclick="filterModalMenu('Somsalar', event)">Somsalar</button>
-                <button class="tab-btn" onclick="filterModalMenu('Fast Food', event)">Fast Food</button>
-                <button class="tab-btn" onclick="filterModalMenu('Ichimliklar', event)">Ichimliklar</button>
-            </div>
-
-            <div id="menu-selection-list" style="max-height: 250px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; border-radius: 6px;">
-                <!-- Menyu ro'yxati dinamik chiqadi -->
-            </div>
-
-            <div style="margin-top: 15px; background: #f9f9f9; padding: 10px; border-radius: 6px;" id="current-order-summary">
-                <!-- Buyurtmalar yig'indisi -->
-            </div>
+            <div style="background: #f9f9f9; padding: 10px;" id="current-order-summary"></div>
 
             <div style="margin-top: 20px; display: flex; justify-content: flex-end; gap: 10px;">
                 <button onclick="printCheck()" style="padding: 8px 15px; background: #ff9800; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">Chek chiqarish</button>
@@ -270,396 +62,56 @@
         </div>
     </div>
 
-    <!-- QR / Check Modali -->
-    <div id="qr-modal" class="modal-overlay">
-        <div class="modal-content" style="width: 350px; text-align: center;">
-            <h3>Chek</h3>
-            <div id="qr-check-content" style="text-align: left; margin: 15px 0; font-size: 14px;"></div>
-            <button onclick="closeQrModal()" style="padding: 8px 20px; background: #2a5298; color: white; border: none; border-radius: 5px; cursor: pointer;">Yopish</button>
-        </div>
-    </div>
-
-    <!-- Tarix Modali -->
-    <div id="history-modal" class="modal-overlay">
-        <div class="modal-content">
-            <h3>Xizmat tarixi</h3>
-            <div id="history-list" style="max-height: 300px; overflow-y: auto; margin: 15px 0;"></div>
-            <button onclick="closeHistory()" style="padding: 8px 15px; background: #2a5298; color: white; border: none; border-radius: 5px; cursor: pointer;">Yopish</button>
-        </div>
-    </div>
-
     <script>
-        // Ofitsiant bazasi va parollari
-        const waitersDB = [
-            { login: "Akmal", pass: "112233", name: "Akmal" },
-            { login: "Bek", pass: "223344", name: "Bek" },
-            { login: "Lola", pass: "334455", name: "Lola" },
-            { login: "Guli", pass: "445566", name: "Guli" }
+        let currentWaiter = "";
+        let currentTable = null;
+        let activeCart = [];
+
+        const menuItems = [
+            { id: 1, name: "Toshkent oshi", price: 35000 },
+            { id: 2, name: "Qaynatma shoʻrva", price: 25000 },
+            { id: 3, name: "Coca-Cola 0.5L", price: 10000 }
         ];
-
-        // To'liq menyu ro'yxati (kategoriyalarga ajratilgan)
-        const fullMenu = [
-            // Osh
-            { id: 1, category: "Osh", name: "Toshkent oshi (Toʻy oshi)", price: 35000, img: "https://images.unsplash.com/photo-1633964913295-ceb43826e7c9?w=100" },
-            { id: 2, category: "Osh", name: "Samarqand oshi", price: 38000, img: "https://images.unsplash.com/photo-1633964913295-ceb43826e7c9?w=100" },
-            { id: 3, category: "Osh", name: "Buxoro oshi (\"Sochqi oshi\")", price: 40000, img: "https://images.unsplash.com/photo-1633964913295-ceb43826e7c9?w=100" },
-            { id: 4, category: "Osh", name: "Fargʻona oshi", price: 35000, img: "https://images.unsplash.com/photo-1633964913295-ceb43826e7c9?w=100" },
-            { id: 5, category: "Osh", name: "Devzira oshi", price: 45000, img: "https://images.unsplash.com/photo-1633964913295-ceb43826e7c9?w=100" },
-
-            // Suyuq ovqatlar
-            { id: 10, category: "Suyuq ovqatlar", name: "Qaynatma shoʻrva", price: 25000, img: "https://images.unsplash.com/photo-1547592180-85f173990554?w=100" },
-            { id: 11, category: "Suyuq ovqatlar", name: "Mastava", price: 22000, img: "https://images.unsplash.com/photo-1547592180-85f173990554?w=100" },
-            { id: 12, category: "Suyuq ovqatlar", name: "Noʻxat shoʻrva (Moʻxaldak)", price: 24000, img: "https://images.unsplash.com/photo-1547592180-85f173990554?w=100" },
-            { id: 13, category: "Suyuq ovqatlar", name: "Moshxorda", price: 22000, img: "https://images.unsplash.com/photo-1547592180-85f173990554?w=100" },
-            { id: 14, category: "Suyuq ovqatlar", name: "Kalla-pacha", price: 35000, img: "https://images.unsplash.com/photo-1547592180-85f173990554?w=100" },
-            { id: 15, category: "Suyuq ovqatlar", name: "Chuchvara shoʻrva", price: 23000, img: "https://images.unsplash.com/photo-1547592180-85f173990554?w=100" },
-            { id: 16, category: "Suyuq ovqatlar", name: "Koʻza shoʻrva", price: 30000, img: "https://images.unsplash.com/photo-1547592180-85f173990554?w=100" },
-            { id: 17, category: "Suyuq ovqatlar", name: "Shirguruch", price: 18000, img: "https://images.unsplash.com/photo-1547592180-85f173990554?w=100" },
-
-            // Quyuq taomlar
-            { id: 20, category: "Quyuq taomlar", name: "Bifsteks", price: 38000, img: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=100" },
-            { id: 21, category: "Quyuq taomlar", name: "Bistrogonav (Bef-stroganov)", price: 40000, img: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=100" },
-            { id: 22, category: "Quyuq taomlar", name: "Jarkor (Jarkoye)", price: 35000, img: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=100" },
-            { id: 23, category: "Quyuq taomlar", name: "Lagʻman (Qovurma lagʻman)", price: 32000, img: "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=100" },
-            { id: 24, category: "Quyuq taomlar", name: "Dimlama", price: 30000, img: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=100" },
-            { id: 25, category: "Quyuq taomlar", name: "Tabaka joʻjasi (S-tabaka)", price: 45000, img: "https://images.unsplash.com/photo-1626777552726-4a6b54c97e46?w=100" },
-            { id: 26, category: "Quyuq taomlar", name: "Norin (Qozon norin)", price: 42000, img: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=100" },
-
-            // Hamirli taomlar
-            { id: 30, category: "Hamirli taomlar", name: "Manti (Goʻshtli va piyozli)", price: 6000, img: "https://images.unsplash.com/photo-1541658016709-82535e94bc69?w=100" },
-            { id: 31, category: "Hamirli taomlar", name: "Chuchvara (Qaynatilgan yoki qovurilgan)", price: 25000, img: "https://images.unsplash.com/photo-1541658016709-82535e94bc69?w=100" },
-            { id: 32, category: "Hamirli taomlar", name: "Choʻzma lagʻmon", price: 32000, img: "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=100" },
-            { id: 33, category: "Hamirli taomlar", name: "Qovurma lagʻmon (Qovurma soʻy)", price: 34000, img: "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=100" },
-            { id: 34, category: "Hamirli taomlar", name: "Uygʻur lagʻmoni", price: 35000, img: "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=100" },
-            { id: 35, category: "Hamirli taomlar", name: "Norin", price: 40000, img: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=100" },
-            { id: 36, category: "Hamirli taomlar", name: "Beshbarmoq", price: 45000, img: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=100" },
-            { id: 37, category: "Hamirli taomlar", name: "Uygʻur shivit oshi", price: 38000, img: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=100" },
-
-            // Kaboblar
-            { id: 40, category: "Kaboblar", name: "Qiyma kabob", price: 16000, img: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=100" },
-            { id: 41, category: "Kaboblar", name: "Qoʻy goʻshti shashligi (Klassik shashlik)", price: 20000, img: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=100" },
-            { id: 42, category: "Kaboblar", name: "Jigar shashligi", price: 18000, img: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=100" },
-            { id: 43, category: "Kaboblar", name: "Qozon kabob", price: 45000, img: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=100" },
-            { id: 44, category: "Kaboblar", name: "Tandir kabob", price: 50000, img: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=100" },
-            { id: 45, category: "Kaboblar", name: "Jiz kabob", price: 48000, img: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=100" },
-            { id: 46, category: "Kaboblar", name: "Napalyon", price: 22000, img: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=100" },
-            { id: 47, category: "Kaboblar", name: "O’rama", price: 20000, img: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=100" },
-            { id: 48, category: "Kaboblar", name: "Norin kabob", price: 40000, img: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=100" },
-            { id: 49, category: "Kaboblar", name: "Toyloq (Uygʻurcha) kabob", price: 25000, img: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=100" },
-            { id: 50, category: "Kaboblar", name: "Bedana kabob", price: 30000, img: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=100" },
-            { id: 51, category: "Kaboblar", name: "Tovuq shashligi (File kabob)", price: 17000, img: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=100" },
-            { id: 52, category: "Kaboblar", name: "Lula-kabob", price: 19000, img: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=100" },
-            { id: 53, category: "Kaboblar", name: "Karsak kabob", price: 21000, img: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=100" },
-            { id: 54, category: "Kaboblar", name: "Qovurma shashlik", price: 22000, img: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=100" },
-            { id: 55, category: "Kaboblar", name: "Quyruq kabob (Dumba kabob)", price: 24000, img: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=100" },
-            { id: 56, category: "Kaboblar", name: "Bifshteks kabob", price: 25000, img: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=100" },
-            { id: 57, category: "Kaboblar", name: "Tabaka kabob", price: 42000, img: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=100" },
-            { id: 58, category: "Kaboblar", name: "Ovoza kabob", price: 26000, img: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=100" },
-            { id: 59, category: "Kaboblar", name: "Sabzavotli kabob", price: 12000, img: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=100" },
-            { id: 60, category: "Kaboblar", name: "Qanotcha shashligi (Tovuq qanoti)", price: 16000, img: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=100" },
-            { id: 61, category: "Kaboblar", name: "Piyozli kabob", price: 10000, img: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=100" },
-            { id: 62, category: "Kaboblar", name: "Qovurgʻa kabob (Ribs)", price: 35000, img: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=100" },
-            { id: 63, category: "Kaboblar", name: "Kavkazcha shashlik (Kars)", price: 23000, img: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=100" },
-            { id: 64, category: "Kaboblar", name: "Baliq kabob", price: 35000, img: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=100" },
-            { id: 65, category: "Kaboblar", name: "Mushroom (Qoʻziqorin) kabob", price: 15000, img: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=100" },
-            { id: 66, category: "Kaboblar", name: "Gilos kabob (Mevali kabob)", price: 20000, img: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=100" },
-            { id: 67, category: "Kaboblar", name: "Asalli shashlik", price: 22000, img: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=100" },
-            { id: 68, category: "Kaboblar", name: "Achchiq (Laza) shashlik", price: 20000, img: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=100" },
-            { id: 69, category: "Kaboblar", name: "Minora kabob", price: 40000, img: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=100" },
-            { id: 70, category: "Kaboblar", name: "Kletchatka kabob", price: 18000, img: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=100" },
-            { id: 71, category: "Kaboblar", name: "Jigar-dumba kabob", price: 21000, img: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=100" },
-
-            // Somsalar
-            { id: 80, category: "Somsalar", name: "Tandir somsa", price: 10000, img: "https://images.unsplash.com/photo-1601050690597-df0568f70950?w=100" },
-            { id: 81, category: "Somsalar", name: "Qatlama (varaqi) somsa", price: 9000, img: "https://images.unsplash.com/photo-1601050690597-df0568f70950?w=100" },
-            { id: 82, category: "Somsalar", name: "Koʻk somsa", price: 7000, img: "https://images.unsplash.com/photo-1601050690597-df0568f70950?w=100" },
-            { id: 83, category: "Somsalar", name: "Qovoqli somsa", price: 7000, img: "https://images.unsplash.com/photo-1601050690597-df0568f70950?w=100" },
-            { id: 84, category: "Somsalar", name: "Kartoshkali somsa", price: 7000, img: "https://images.unsplash.com/photo-1601050690597-df0568f70950?w=100" },
-            { id: 85, category: "Somsalar", name: "G‘umma somsa (Qovurma somsa)", price: 8000, img: "https://images.unsplash.com/photo-1601050690597-df0568f70950?w=100" },
-            { id: 86, category: "Somsalar", name: "Go‘shtli-kartoshkali somsa", price: 8000, img: "https://images.unsplash.com/photo-1601050690597-df0568f70950?w=100" },
-            { id: 87, category: "Somsalar", name: "Pishloqli somsa", price: 9000, img: "https://images.unsplash.com/photo-1601050690597-df0568f70950?w=100" },
-            { id: 88, category: "Somsalar", name: "Tovuqli somsa", price: 8500, img: "https://images.unsplash.com/photo-1601050690597-df0568f70950?w=100" },
-            { id: 89, category: "Somsalar", name: "Qiyma somsa", price: 8500, img: "https://images.unsplash.com/photo-1601050690597-df0568f70950?w=100" },
-            { id: 90, category: "Somsalar", name: "Moshli somsa", price: 7500, img: "https://images.unsplash.com/photo-1601050690597-df0568f70950?w=100" },
-            { id: 91, category: "Somsalar", name: "Zig‘ir somsa", price: 10000, img: "https://images.unsplash.com/photo-1601050690597-df0568f70950?w=100" },
-            { id: 92, category: "Somsalar", name: "Asal solingan shirin somsa", price: 8000, img: "https://images.unsplash.com/photo-1601050690597-df0568f70950?w=100" },
-            { id: 93, category: "Somsalar", name: "Qora zira (yoki kunjutli) somsa", price: 9000, img: "https://images.unsplash.com/photo-1601050690597-df0568f70950?w=100" },
-            { id: 94, category: "Somsalar", name: "Katta to‘y somsasi", price: 60000, img: "https://images.unsplash.com/photo-1601050690597-df0568f70950?w=100" },
-            { id: 95, category: "Somsalar", name: "Piyozli somsa (piyoz-dumba)", price: 7500, img: "https://images.unsplash.com/photo-1601050690597-df0568f70950?w=100" },
-            { id: 96, category: "Somsalar", name: "Qo‘ziqorinli somsa", price: 8500, img: "https://images.unsplash.com/photo-1601050690597-df0568f70950?w=100" },
-            { id: 97, category: "Somsalar", name: "Uyg‘urcha somsa", price: 11000, img: "https://images.unsplash.com/photo-1601050690597-df0568f70950?w=100" },
-            { id: 98, category: "Somsalar", name: "Jigar somsasi", price: 9000, img: "https://images.unsplash.com/photo-1601050690597-df0568f70950?w=100" },
-            { id: 99, category: "Somsalar", name: "Sutli xamirdan tayyorlangan somsa", price: 9500, img: "https://images.unsplash.com/photo-1601050690597-df0568f70950?w=100" },
-
-            // Fast Food
-            { id: 110, category: "Fast Food", name: "Lavash", price: 32000, img: "https://images.unsplash.com/photo-1626777552726-4a6b54c97e46?w=100" },
-            { id: 111, category: "Fast Food", name: "Gamburger", price: 30000, img: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=100" },
-            { id: 112, category: "Fast Food", name: "Cheeseburger", price: 33000, img: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=100" },
-            { id: 113, category: "Fast Food", name: "Shaurma (Doner)", price: 28000, img: "https://images.unsplash.com/photo-1626777552726-4a6b54c97e46?w=100" },
-            { id: 114, category: "Fast Food", name: "Hot-dog", price: 15000, img: "https://images.unsplash.com/photo-1619740455993-9e612b1af08a?w=100" },
-            { id: 115, category: "Fast Food", name: "Kartoshka fri", price: 12000, img: "https://images.unsplash.com/photo-1573080496219-bb080dd4f877?w=100" },
-            { id: 116, category: "Fast Food", name: "Pitsa (30 sm / 25 sm / 20 sm)", price: 65000, img: "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=100" },
-            { id: 117, category: "Fast Food", name: "Klab-sendvich", price: 28000, img: "https://images.unsplash.com/photo-1528735602780-2552fd46c7af?w=100" },
-            { id: 118, category: "Fast Food", name: "Xaggi (Haggi)", price: 34000, img: "https://images.unsplash.com/photo-1626777552726-4a6b54c97e46?w=100" },
-            { id: 119, category: "Fast Food", name: "Tovuq nuggetslari", price: 22000, img: "https://images.unsplash.com/photo-1562967914-608f82629710?w=100" },
-            { id: 120, category: "Fast Food", name: "Tovuq tenderslari (Tenders)", price: 25000, img: "https://images.unsplash.com/photo-1562967914-608f82629710?w=100" },
-            { id: 121, category: "Fast Food", name: "Chikken burger", price: 29000, img: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=100" },
-            { id: 122, category: "Fast Food", name: "Fransuzcha hot-dog", price: 18000, img: "https://images.unsplash.com/photo-1619740455993-9e612b1af08a?w=100" },
-            { id: 123, category: "Fast Food", name: "Piyoz halqalari (Onion rings)", price: 14000, img: "https://images.unsplash.com/photo-1639024471283-03518883512d?w=100" },
-            { id: 124, category: "Fast Food", name: "Burrito", price: 31000, img: "https://images.unsplash.com/photo-1626777552726-4a6b54c97e46?w=100" },
-            { id: 125, category: "Fast Food", name: "Tako", price: 29000, img: "https://images.unsplash.com/photo-1565299585323-38d6b0865b47?w=100" },
-            { id: 126, category: "Fast Food", name: "Panini", price: 26000, img: "https://images.unsplash.com/photo-1528735602780-2552fd46c7af?w=100" },
-            { id: 127, category: "Fast Food", name: "Wok lapshasi", price: 35000, img: "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=100" },
-            { id: 128, category: "Fast Food", name: "Korn-dog", price: 16000, img: "https://images.unsplash.com/photo-1619740455993-9e612b1af08a?w=100" },
-            { id: 129, category: "Fast Food", name: "Pishloqli tayoqchalar (Cheese-sticks)", price: 20000, img: "https://images.unsplash.com/photo-1548340748-6d2b7d7da28e?w=100" },
-
-            // Ichimliklar
-            { id: 140, category: "Ichimliklar", name: "Coca-Cola (klassik) - 0.33L", price: 7000, img: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=100" },
-            { id: 141, category: "Ichimliklar", name: "Coca-Cola (klassik) - 0.5L", price: 10000, img: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=100" },
-            { id: 142, category: "Ichimliklar", name: "Coca-Cola (klassik) - 1L", price: 15000, img: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=100" },
-            { id: 143, category: "Ichimliklar", name: "Coca-Cola (klassik) - 1.5L", price: 18000, img: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=100" },
-            { id: 144, category: "Ichimliklar", name: "Coca-Cola (klassik) - 2.0L", price: 22000, img: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=100" },
-
-            { id: 145, category: "Ichimliklar", name: "Coca-Cola Zero - 0.33L", price: 7000, img: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=100" },
-            { id: 146, category: "Ichimliklar", name: "Coca-Cola Zero - 0.5L", price: 10000, img: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=100" },
-            { id: 147, category: "Ichimliklar", name: "Coca-Cola Zero - 1L", price: 15000, img: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=100" },
-            { id: 148, category: "Ichimliklar", name: "Coca-Cola Zero - 1.5L", price: 18000, img: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=100" },
-            { id: 149, category: "Ichimliklar", name: "Coca-Cola Zero - 2.0L", price: 22000, img: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=100" },
-
-            { id: 150, category: "Ichimliklar", name: "Fanta (apelsin) - 0.33L", price: 7000, img: "https://images.unsplash.com/photo-1624823466480-8212cbb5be31?w=100" },
-            { id: 151, category: "Ichimliklar", name: "Fanta (apelsin) - 0.5L", price: 10000, img: "https://images.unsplash.com/photo-1624823466480-8212cbb5be31?w=100" },
-            { id: 152, category: "Ichimliklar", name: "Fanta (apelsin) - 1L", price: 15000, img: "https://images.unsplash.com/photo-1624823466480-8212cbb5be31?w=100" },
-            { id: 153, category: "Ichimliklar", name: "Fanta (apelsin) - 1.5L", price: 18000, img: "https://images.unsplash.com/photo-1624823466480-8212cbb5be31?w=100" },
-            { id: 154, category: "Ichimliklar", name: "Fanta (apelsin) - 2.0L", price: 22000, img: "https://images.unsplash.com/photo-1624823466480-8212cbb5be31?w=100" },
-
-            { id: 155, category: "Ichimliklar", name: "Sprite - 0.33L", price: 7000, img: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=100" },
-            { id: 156, category: "Ichimliklar", name: "Sprite - 0.5L", price: 10000, img: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=100" },
-            { id: 157, category: "Ichimliklar", name: "Sprite - 1L", price: 15000, img: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=100" },
-            { id: 158, category: "Ichimliklar", name: "Sprite - 1.5L", price: 18000, img: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=100" },
-            { id: 159, category: "Ichimliklar", name: "Sprite - 2.0L", price: 22000, img: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=100" },
-
-            { id: 160, category: "Ichimliklar", name: "Pepsi - 0.33L", price: 7000, img: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=100" },
-            { id: 161, category: "Ichimliklar", name: "Pepsi - 0.5L", price: 10000, img: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=100" },
-            { id: 162, category: "Ichimliklar", name: "Pepsi - 1L", price: 15000, img: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=100" },
-            { id: 163, category: "Ichimliklar", name: "Pepsi - 1.5L", price: 18000, img: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=100" },
-            { id: 164, category: "Ichimliklar", name: "Pepsi - 2.0L", price: 22000, img: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=100" },
-
-            { id: 165, category: "Ichimliklar", name: "7Up - 0.33L", price: 7000, img: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=100" },
-            { id: 166, category: "Ichimliklar", name: "7Up - 0.5L", price: 10000, img: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=100" },
-            { id: 167, category: "Ichimliklar", name: "7Up - 1L", price: 15000, img: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=100" },
-            { id: 168, category: "Ichimliklar", name: "7Up - 1.5L", price: 18000, img: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=100" },
-            { id: 169, category: "Ichimliklar", name: "7Up - 2.0L", price: 22000, img: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=100" },
-
-            { id: 170, category: "Ichimliklar", name: "Mirinda - 0.33L", price: 7000, img: "https://images.unsplash.com/photo-1624823466480-8212cbb5be31?w=100" },
-            { id: 171, category: "Ichimliklar", name: "Mirinda - 0.5L", price: 10000, img: "https://images.unsplash.com/photo-1624823466480-8212cbb5be31?w=100" },
-            { id: 172, category: "Ichimliklar", name: "Mirinda - 1L", price: 15000, img: "https://images.unsplash.com/photo-1624823466480-8212cbb5be31?w=100" },
-            { id: 173, category: "Ichimliklar", name: "Mirinda - 1.5L", price: 18000, img: "https://images.unsplash.com/photo-1624823466480-8212cbb5be31?w=100" },
-            { id: 174, category: "Ichimliklar", name: "Mirinda - 2.0L", price: 22000, img: "https://images.unsplash.com/photo-1624823466480-8212cbb5be31?w=100" },
-
-            { id: 175, category: "Ichimliklar", name: "Mountain Dew - 0.33L", price: 7000, img: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=100" },
-            { id: 176, category: "Ichimliklar", name: "Mountain Dew - 0.5L", price: 10000, img: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=100" },
-            { id: 177, category: "Ichimliklar", name: "Mountain Dew - 1L", price: 15000, img: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=100" },
-            { id: 178, category: "Ichimliklar", name: "Mountain Dew - 1.5L", price: 18000, img: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=100" },
-            { id: 179, category: "Ichimliklar", name: "Mountain Dew - 2.0L", price: 22000, img: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=100" },
-
-            { id: 180, category: "Ichimliklar", name: "Schweppes (Tonic / Bitter Lemon) - 0.33L", price: 8000, img: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=100" },
-            { id: 181, category: "Ichimliklar", name: "Schweppes (Tonic / Bitter Lemon) - 0.5L", price: 12000, img: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=100" },
-            { id: 182, category: "Ichimliklar", name: "Schweppes (Tonic / Bitter Lemon) - 1L", price: 17000, img: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=100" },
-
-            { id: 183, category: "Ichimliklar", name: "Limonad klassik (stakan yoki grafinda)", price: 15000, img: "https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?w=100" },
-            { id: 184, category: "Ichimliklar", name: "Mojito (alkogolsiz, shaftoli yoki qulupnayli)", price: 20000, img: "https://images.unsplash.com/photo-1551024709-8f23befc6f87?w=100" },
-
-            { id: 185, category: "Ichimliklar", name: "Tarhun (klassik yashil gazli ichimlik) - 0.5L", price: 9000, img: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=100" },
-            { id: 186, category: "Ichimliklar", name: "Tarhun (klassik yashil gazli ichimlik) - 1L", price: 14000, img: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=100" },
-            { id: 187, category: "Ichimliklar", name: "Tarhun (klassik yashil gazli ichimlik) - 1.5L", price: 17000, img: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=100" },
-
-            { id: 188, category: "Ichimliklar", name: "Baykal (mahalliy o‘tli gazli ichimlik) - 0.5L", price: 9000, img: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=100" },
-            { id: 189, category: "Ichimliklar", name: "Baykal (mahalliy o‘tli gazli ichimlik) - 1L", price: 14000, img: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=100" },
-            { id: 190, category: "Ichimliklar", name: "Baykal (mahalliy o‘tli gazli ichimlik) - 1.5L", price: 17000, img: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=100" },
-
-            { id: 191, category: "Ichimliklar", name: "Dushes (nok ta'mli gazli ichimlik) - 0.5L", price: 9000, img: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=100" },
-            { id: 192, category: "Ichimliklar", name: "Dushes (nok ta'mli gazli ichimlik) - 1L", price: 14000, img: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=100" },
-            { id: 193, category: "Ichimliklar", name: "Dushes (nok ta'mli gazli ichimlik) - 1.5L", price: 17000, img: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=100" },
-
-            { id: 194, category: "Ichimliklar", name: "Red Bull (energetik ichimlik) - 0.25L", price: 18000, img: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=100" },
-            { id: 195, category: "Ichimliklar", name: "Red Bull (energetik ichimlik) - 0.5L", price: 30000, img: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=100" },
-
-            { id: 196, category: "Ichimliklar", name: "Flash Up (energetik ichimlik) - 0.45L", price: 12000, img: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=100" },
-            { id: 197, category: "Ichimliklar", name: "Flash Up (energetik ichimlik) - 0.5L", price: 13000, img: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=100" },
-
-            { id: 198, category: "Ichimliklar", name: "Adrenaline Rush (energetik ichimlik) - 0.25L", price: 17000, img: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=100" },
-            { id: 199, category: "Ichimliklar", name: "Adrenaline Rush (energetik ichimlik) - 0.5L", price: 28000, img: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=100" },
-
-            // Suvlar
-            { id: 200, category: "Ichimliklar", name: "Suv (Gazli) - 0.33L (Bliss, Hydrolife, Borjomi)", price: 5000, img: "https://images.unsplash.com/photo-1548839140-29a749e1cf4d?w=100" },
-            { id: 201, category: "Ichimliklar", name: "Suv (Gazli) - 0.5L (Bliss, Hydrolife, Borjomi)", price: 7000, img: "https://images.unsplash.com/photo-1548839140-29a749e1cf4d?w=100" },
-            { id: 202, category: "Ichimliklar", name: "Suv (Gazli) - 1.0L (Bliss, Hydrolife, Borjomi)", price: 10000, img: "https://images.unsplash.com/photo-1548839140-29a749e1cf4d?w=100" },
-            { id: 203, category: "Ichimliklar", name: "Suv (Gazli) - 1.5L (Bliss, Hydrolife, Borjomi)", price: 13000, img: "https://images.unsplash.com/photo-1548839140-29a749e1cf4d?w=100" },
-
-            { id: 204, category: "Ichimliklar", name: "Suv (Gazsiz / Oddiy) - 0.33L (Nestle, Montella, Hydrolife)", price: 4000, img: "https://images.unsplash.com/photo-1548839140-29a749e1cf4d?w=100" },
-            { id: 205, category: "Ichimliklar", name: "Suv (Gazsiz / Oddiy) - 0.5L (Nestle, Montella, Hydrolife)", price: 6000, img: "https://images.unsplash.com/photo-1548839140-29a749e1cf4d?w=100" },
-            { id: 206, category: "Ichimliklar", name: "Suv (Gazsiz / Oddiy) - 1.0L (Nestle, Montella, Hydrolife)", price: 9000, img: "https://images.unsplash.com/photo-1548839140-29a749e1cf4d?w=100" },
-            { id: 207, category: "Ichimliklar", name: "Suv (Gazsiz / Oddiy) - 1.5L (Nestle, Montella, Hydrolife)", price: 12000, img: "https://images.unsplash.com/photo-1548839140-29a749e1cf4d?w=100" },
-            { id: 208, category: "Ichimliklar", name: "Suv (Gazsiz / Oddiy) - 2.0L (Nestle, Montella, Hydrolife)", price: 15000, img: "https://images.unsplash.com/photo-1548839140-29a749e1cf4d?w=100" },
-
-            // Soklar
-            { id: 210, category: "Ichimliklar", name: "Olma soki (Joy, Den Soka yoki tabiiy) — stakanda / 1L paket", price: 18000, img: "https://images.unsplash.com/photo-1600271886742-f049cd451bba?w=100" },
-            { id: 211, category: "Ichimliklar", name: "Apelsin soki — stakanda / 1L paket", price: 18000, img: "https://images.unsplash.com/photo-1613478223719-2ab802602423?w=100" },
-            { id: 212, category: "Ichimliklar", name: "Olcha soki — stakanda / 1L paket", price: 18000, img: "https://images.unsplash.com/photo-1527661591475-527312dd65f5?w=100" },
-            { id: 213, category: "Ichimliklar", name: "Shaftoli soki — stakanda / 1L paket", price: 18000, img: "https://images.unsplash.com/photo-1595981267035-7b04ca54a82d?w=100" },
-            { id: 214, category: "Ichimliklar", name: "Anor soki (tabiiy yoki qadoqlangan) — stakanda / 1L paket", price: 25000, img: "https://images.unsplash.com/photo-1615485290382-441e4d049cb5?w=100" },
-            { id: 215, category: "Ichimliklar", name: "Multifrukt soki — stakanda / 1L paket", price: 18000, img: "https://images.unsplash.com/photo-1540420773420-3366772f4999?w=100" },
-            { id: 216, category: "Ichimliklar", name: "Tropik meva soki — stakanda / 1L paket", price: 18000, img: "https://images.unsplash.com/photo-1540420773420-3366772f4999?w=100" },
-            { id: 217, category: "Ichimliklar", name: "Ananas soki — stakanda / 1L paket", price: 20000, img: "https://images.unsplash.com/photo-1550258987-190a2d41a8ba?w=100" },
-            { id: 218, category: "Ichimliklar", name: "Pomidor soki (tuz va murch bilan) — stakanda / 1L paket", price: 16000, img: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=100" },
-
-            // Choylar
-            { id: 220, category: "Ichimliklar", name: "Koʻk choy (klassik choynakda)", price: 5000, img: "https://images.unsplash.com/photo-1576092768241-dec231879fc3?w=100" },
-            { id: 221, category: "Ichimliklar", name: "Qora choy (klassik choynakda)", price: 5000, img: "https://images.unsplash.com/photo-1576092768241-dec231879fc3?w=100" },
-            { id: 222, category: "Ichimliklar", name: "Limonli qora choy", price: 8000, img: "https://images.unsplash.com/photo-1576092768241-dec231879fc3?w=100" },
-            { id: 223, category: "Ichimliklar", name: "Limonli koʻk choy", price: 8000, img: "https://images.unsplash.com/photo-1576092768241-dec231879fc3?w=100" },
-            { id: 224, category: "Ichimliklar", name: "Imbir va limonli choy", price: 12000, img: "https://images.unsplash.com/photo-1544787219-7f47ccb76574?w=100" },
-            { id: 225, category: "Ichimliklar", name: "Mevali choy (mevali assorti)", price: 15000, img: "https://images.unsplash.com/photo-1544787219-7f47ccb76574?w=100" },
-            { id: 226, category: "Ichimliklar", name: "Muzli choy (Ice Tea - Shaftoli) — 0.5L", price: 10000, img: "https://images.unsplash.com/photo-1556679343-c7306c1976bc?w=100" },
-            { id: 227, category: "Ichimliklar", name: "Muzli choy (Ice Tea - Shaftoli) — 1L", price: 18000, img: "https://images.unsplash.com/photo-1556679343-c7306c1976bc?w=100" },
-            { id: 228, category: "Ichimliklar", name: "Muzli choy (Ice Tea - Limon) — 0.5L", price: 10000, img: "https://images.unsplash.com/photo-1556679343-c7306c1976bc?w=100" },
-            { id: 229, category: "Ichimliklar", name: "Muzli choy (Ice Tea - Limon) — 1L", price: 18000, img: "https://images.unsplash.com/photo-1556679343-c7306c1976bc?w=100" },
-            { id: 230, category: "Ichimliklar", name: "Koʻk choy yalpiz bilan", price: 7000, img: "https://images.unsplash.com/photo-1576092768241-dec231879fc3?w=100" },
-            { id: 231, category: "Ichimliklar", name: "Asalli va limonga boy isituvchi choy", price: 14000, img: "https://images.unsplash.com/photo-1544787219-7f47ccb76574?w=100" },
-
-            // Milliy, Salqin va Tabiiy Ichimliklar
-            { id: 240, category: "Ichimliklar", name: "Ayron (muzdek, ko‘katli) — stakanda / 0.5L, 1L", price: 10000, img: "https://images.unsplash.com/photo-1628556270448-4d6d7b4dcb12?w=100" },
-            { id: 241, category: "Ichimliklar", name: "Muzqaymoqli kokteyl (Milkshake - vanilli)", price: 18000, img: "https://images.unsplash.com/photo-1572490122747-3968b75cc699?w=100" },
-            { id: 242, category: "Ichimliklar", name: "Shokoladli milkshake", price: 20000, img: "https://images.unsplash.com/photo-1572490122747-3968b75cc699?w=100" },
-            { id: 243, category: "Ichimliklar", name: "Qulupnayli milkshake", price: 20000, img: "https://images.unsplash.com/photo-1572490122747-3968b75cc699?w=100" },
-            { id: 244, category: "Ichimliklar", name: "Tabiiy apelsin fresh", price: 25000, img: "https://images.unsplash.com/photo-1613478223719-2ab802602423?w=100" },
-            { id: 245, category: "Ichimliklar", name: "Tabiiy olma fresh", price: 20000, img: "https://images.unsplash.com/photo-1600271886742-f049cd451bba?w=100" },
-            { id: 246, category: "Ichimliklar", name: "Tabiiy sabzi fresh", price: 18000, img: "https://images.unsplash.com/photo-1540420773420-3366772f4999?w=100" },
-            { id: 247, category: "Ichimliklar", name: "Greyprut fresh", price: 28000, img: "https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?w=100" },
-            { id: 248, category: "Ichimliklar", name: "Kompot (quritilgan mevalardan yoki olchali, uy uslubida) — stakanda / grafinda", price: 12000, img: "https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?w=100" },
-            { id: 249, category: "Ichimliklar", name: "Mors (reza mevali salqin ichimlik) — stakanda / grafinda", price: 14000, img: "https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?w=100" },
-            { id: 250, category: "Ichimliklar", name: "Kofe (Americano)", price: 12000, img: "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=100" },
-            { id: 251, category: "Ichimliklar", name: "Kofe (Cappuccino)", price: 15000, img: "https://images.unsplash.com/photo-1572442388796-11668a67e53d?w=100" }
-        ];
-
-        let currentActiveSection = 'zal'; // 'zal' yoki 'xonalar'
-        let currentActiveTableId = null;
-        let activeWaiter = localStorage.getItem('active_waiter') || null;
-        let currentCategoryFilter = 'all';
-
-        window.onload = function() {
-            if (activeWaiter) {
-                document.getElementById('login-screen').style.display = 'none';
-                document.getElementById('main-panel').style.display = 'block';
-                document.getElementById('logged-waiter-name').innerText = `Ofitsiant: ${activeWaiter}`;
-            }
-            renderItems();
-            startRealTimeClock();
-        };
-
-        // Real vaqt soat, sana va maxsus ikonkalari funksiyasi
-        function startRealTimeClock() {
-            function updateClock() {
-                const now = new Date();
-                const optionsDate = { year: 'numeric', month: '2-digit', day: '2-digit' };
-                const optionsTime = { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false };
-                const dateStr = now.toLocaleDateString('uz-UZ', optionsDate);
-                const timeStr = now.toLocaleTimeString('uz-UZ', optionsTime);
-                
-                document.getElementById('realtime-clock').innerHTML = `
-                    <div style="display: flex; align-items: center; gap: 5px; margin-bottom: 2px;">
-                        <img src="https://cdn-icons-png.flaticon.com/256/19029/19029065.png" style="width: 14px; height: 14px; object-fit: contain;" alt="Kalendar">
-                        <span>${dateStr}</span>
-                    </div>
-                    <div style="display: flex; align-items: center; gap: 5px;">
-                        <img src="https://thumbs.dreamstime.com/b/food-icons-infographic-clock-flat-design-fitness-diet-calorie-counter-concept-vector-illustration-63065497.jpg" style="width: 14px; height: 14px; object-fit: contain;" alt="Soat">
-                        <span>${timeStr}</span>
-                    </div>
-                `;
-            }
-            updateClock();
-            setInterval(updateClock, 1000);
-        }
 
         function loginWaiter() {
-            let u = document.getElementById('login-user').value.trim();
-            let p = document.getElementById('login-pass').value.trim();
-            let found = waitersDB.find(w => w.login === u && w.pass === p);
-            if (found) {
-                activeWaiter = found.name;
-                localStorage.setItem('active_waiter', activeWaiter);
+            const user = document.getElementById('login-user').value.trim();
+            if(user) {
+                currentWaiter = user;
+                document.getElementById('logged-waiter-name').innerText = user;
                 document.getElementById('login-screen').style.display = 'none';
                 document.getElementById('main-panel').style.display = 'block';
-                document.getElementById('logged-waiter-name').innerText = `Ofitsiant: ${activeWaiter}`;
-                renderItems();
-            } else {
-                alert("Login yoki parol noto'g'ri!");
+                renderTables();
             }
         }
 
         function logoutWaiter() {
-            localStorage.removeItem('active_waiter');
-            activeWaiter = null;
-            document.getElementById('login-screen').style.display = 'flex';
-            document.getElementById('main-panel').style.display = 'none';
+            location.reload();
         }
 
-        function switchSection(section) {
-            currentActiveSection = section;
-            document.getElementById('folder-zal').classList.remove('active');
-            document.getElementById('folder-xonalar').classList.remove('active');
-
-            if (section === 'zal') {
-                document.getElementById('folder-zal').classList.add('active');
-                document.getElementById('section-heading-title').innerText = 'Zal Stollari (16 ta)';
-            } else {
-                document.getElementById('folder-xonalar').classList.add('active');
-                document.getElementById('section-heading-title').innerText = 'Xonalar (12 ta)';
-            }
-            renderItems();
-        }
-
-        function renderItems() {
+        function renderTables() {
             const grid = document.getElementById('tables-grid');
-            grid.innerHTML = '';
+            let tablesStatus = JSON.parse(localStorage.getItem('tables_status')) || {};
             
-            let count = (currentActiveSection === 'zal') ? 16 : 12;
-
-            for (let i = 1; i <= count; i++) {
-                let key = `${currentActiveSection}_item_${i}`;
-                let itemData = JSON.parse(localStorage.getItem(key)) || { busy: false, guests: 0, items: [] };
-                
-                let titlePrefix = (currentActiveSection === 'zal') ? 'Stol #' : 'Xona #';
-
-                let iconSrc = (currentActiveSection === 'zal') 
-                    ? 'https://cdn-icons-png.flaticon.com/512/7067/7067120.png' 
-                    : 'https://cdn-icons-png.flaticon.com/512/7845/7845744.png';
-
+            grid.innerHTML = "";
+            for(let i = 1; i <= 12; i++) {
+                let isBusy = tablesStatus[i] && tablesStatus[i].isBusy;
                 grid.innerHTML += `
-                    <div class="table-card ${itemData.busy ? 'busy' : ''}" onclick="openItemModal('${currentActiveSection}', ${i})">
-                        <img src="${iconSrc}" class="table-icon" alt="Ikonka">
-                        <h4 style="margin:5px 0;">${titlePrefix}${i}</h4>
-                        <p style="font-size: 13px; margin: 0; font-weight: bold;">${itemData.busy ? `🔴 Band (${itemData.guests} kishi)` : '🟢 Bo\'sh'}</p>
+                    <div class="table-card ${isBusy ? 'busy' : ''}" onclick="openTable(${i})">
+                        <h4>Stol #${i}</h4>
+                        <p>${isBusy ? 'Band' : 'Bo\'sh'}</p>
                     </div>
                 `;
             }
         }
 
-        function openItemModal(section, id) {
-            currentActiveTableId = { section, id };
-            let titlePrefix = (section === 'zal') ? `Stol #${id}` : `Xona #${id}`;
-            document.getElementById('modal-title').innerText = `${titlePrefix} Boshqaruvi`;
+        function openTable(tableNum) {
+            currentTable = tableNum;
+            document.getElementById('modal-title').innerText = `Stol #${tableNum} Boshqaruvi`;
+            let tablesStatus = JSON.parse(localStorage.getItem('tables_status')) || {};
+            activeCart = (tablesStatus[tableNum] && tablesStatus[tableNum].items) ? tablesStatus[tableNum].items : [];
             
-            let key = `${section}_item_${id}`;
-            let itemData = JSON.parse(localStorage.getItem(key)) || { busy: false, guests: 1, items: [] };
-            
-            document.getElementById('modal-guests-val').innerText = itemData.guests || 1;
-            currentCategoryFilter = 'all';
-            
-            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-            document.querySelector('.tab-btn').classList.add('active');
-
-            renderMenuSelection(itemData.items);
+            renderModalMenu();
+            renderSummary();
             document.getElementById('modal-overlay').style.display = 'flex';
         }
 
@@ -667,186 +119,81 @@
             document.getElementById('modal-overlay').style.display = 'none';
         }
 
-        function changeGuests(delta) {
-            let valSpan = document.getElementById('modal-guests-val');
-            let currentGuests = parseInt(valSpan.innerText) + delta;
-            if (currentGuests < 1) currentGuests = 1;
-            valSpan.innerText = currentGuests;
-
-            let key = `${currentActiveTableId.section}_item_${currentActiveTableId.id}`;
-            let itemData = JSON.parse(localStorage.getItem(key)) || { busy: false, guests: 1, items: [] };
-            itemData.guests = currentGuests;
-            localStorage.setItem(key, JSON.stringify(itemData));
+        function renderModalMenu() {
+            const list = document.getElementById('menu-selection-list');
+            list.innerHTML = menuItems.map(item => `
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <span>${item.name} (${item.price} so'm)</span>
+                    <button class="qty-btn" onclick="addToCart(${item.id})">+</button>
+                </div>
+            `).join('');
         }
 
-        function filterModalMenu(category, event) {
-            currentCategoryFilter = category;
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            event.target.classList.add('active');
-
-            let key = `${currentActiveTableId.section}_item_${currentActiveTableId.id}`;
-            let itemData = JSON.parse(localStorage.getItem(key)) || { items: [] };
-            renderMenuSelection(itemData.items);
-        }
-
-        function renderMenuSelection(selectedItems) {
-            let container = document.getElementById('menu-selection-list');
-            container.innerHTML = '';
-
-            let filteredMenu = currentCategoryFilter === 'all' 
-                ? fullMenu 
-                : fullMenu.filter(item => item.category === currentCategoryFilter);
-
-            filteredMenu.forEach(dish => {
-                let existing = selectedItems.find(i => i.id === dish.id);
-                let qty = existing ? existing.qty : 0;
-
-                container.innerHTML += `
-                    <div class="menu-item-row">
-                        <img src="${dish.img}" class="menu-item-img" alt="${dish.name}">
-                        <div style="flex-grow: 1; margin-left: 12px;">
-                            <strong>${dish.name}</strong><br>
-                            <span style="color: #666; font-size: 13px;">${dish.price.toLocaleString()} so'm</span>
-                        </div>
-                        <div>
-                            <button class="qty-btn" onclick="changeQty(${dish.id}, -1)">-</button>
-                            <span id="qty_${dish.id}" style="margin: 0 10px; font-weight: bold;">${qty}</span>
-                            <button class="qty-btn" onclick="changeQty(${dish.id}, 1)">+</button>
-                        </div>
-                    </div>
-                `;
-            });
-            updateOrderSummaryUI(selectedItems);
-        }
-
-        window.changeQty = function(dishId, delta) {
-            let key = `${currentActiveTableId.section}_item_${currentActiveTableId.id}`;
-            let itemData = JSON.parse(localStorage.getItem(key)) || { busy: false, guests: parseInt(document.getElementById('modal-guests-val').innerText), items: [] };
-            let existing = itemData.items.find(i => i.id === dishId);
-
-            if (existing) {
-                existing.qty += delta;
-                if (existing.qty <= 0) {
-                    itemData.items = itemData.items.filter(i => i.id !== dishId);
-                }
-            } else if (delta > 0) {
-                let dish = fullMenu.find(d => d.id === dishId);
-                if (dish) {
-                    itemData.items.push({ id: dish.id, name: dish.name, price: dish.price, qty: 1 });
-                }
+        function addToCart(itemId) {
+            let item = menuItems.find(m => m.id === itemId);
+            let exist = activeCart.find(c => c.id === itemId);
+            if(exist) {
+                exist.qty += 1;
+            } else {
+                activeCart.push({ id: item.id, name: item.name, price: item.price, qty: 1 });
             }
-
-            localStorage.setItem(key, JSON.stringify(itemData));
-            renderMenuSelection(itemData.items);
+            renderSummary();
         }
 
-        function updateOrderSummaryUI(items) {
-            let summaryContainer = document.getElementById('current-order-summary');
-            if (items.length === 0) {
-                summaryContainer.innerHTML = '<p style="color: #777; font-style: italic; margin: 0; font-size: 13px;">Hozircha buyurtma bo\'sh</p>';
-                return;
-            }
-            let html = '<ul style="padding-left: 20px; margin: 0 0 8px 0; font-size: 14px;">';
-            let total = 0;
-            items.forEach(i => {
-                html += `<li>${i.name} - ${i.qty} ta x ${i.price.toLocaleString()} so'm = <b>${(i.qty * i.price).toLocaleString()} so'm</b></li>`;
-                total += i.qty * i.price;
-            });
-            html += `</ul><div style="text-align: right; font-size: 15px;">Umumiy summa: <b>${total.toLocaleString()} so'm</b></div>`;
-            summaryContainer.innerHTML = html;
+        function renderSummary() {
+            const summary = document.getElementById('current-order-summary');
+            let total = activeCart.reduce((sum, i) => sum + (i.price * i.qty), 0);
+            summary.innerHTML = `<b>Buyurtmalar:</b><br>` + 
+                activeCart.map(i => `${i.name} x ${i.qty} = ${i.price * i.qty} so'm`).join('<br>') + 
+                `<br><b>Jami: ${total.toLocaleString()} so'm</b>`;
         }
 
         function sendOrderToAdmin() {
-            let guests = parseInt(document.getElementById('modal-guests-val').innerText);
-            let key = `${currentActiveTableId.section}_item_${currentActiveTableId.id}`;
-            let itemData = JSON.parse(localStorage.getItem(key)) || { items: [] };
-            
-            if(itemData.items.length === 0) {
-                alert("Iltimos, avval buyurtmaga taom qo'shing!");
+            if(activeCart.length === 0) {
+                alert("Savatcha bo'sh!");
                 return;
             }
 
-            itemData.busy = true;
-            itemData.guests = guests;
-            itemData.waiter = activeWaiter;
-            itemData.status = 'Tayyorlanyapti';
+            let waiterOrders = JSON.parse(localStorage.getItem('waiter_orders')) || [];
+            let existingOrderIndex = waiterOrders.findIndex(o => o.tableNumber === currentTable && o.status !== 'tolandi');
 
-            localStorage.setItem(key, JSON.stringify(itemData));
+            let orderData = {
+                tableNumber: currentTable,
+                waiterName: currentWaiter,
+                items: activeCart,
+                status: 'yangi',
+                isPrinted: false
+            };
 
-            let allOrders = JSON.parse(localStorage.getItem('admin_orders')) || [];
-            allOrders.push({ 
-                type: currentActiveTableId.section, 
-                number: currentActiveTableId.id, 
-                ...itemData, 
-                time: new Date().toLocaleTimeString() 
-            });
-            localStorage.setItem('admin_orders', JSON.stringify(allOrders));
+            if(existingOrderIndex >= 0) {
+                waiterOrders[existingOrderIndex] = orderData;
+            } else {
+                waiterOrders.push(orderData);
+            }
 
-            alert(`Buyurtma Admin paneliga yuborildi! (Ofitsiant: ${activeWaiter})`);
+            localStorage.setItem('waiter_orders', JSON.stringify(waiterOrders));
+
+            // Stolni band qilish
+            let tablesStatus = JSON.parse(localStorage.getItem('tables_status')) || {};
+            tablesStatus[currentTable] = { isBusy: true, items: activeCart };
+            localStorage.setItem('tables_status', JSON.stringify(tablesStatus));
+
+            alert("Buyurtma adminga yuborildi!");
             closeModal();
-            renderItems();
+            renderTables();
         }
 
         function printCheck() {
-            let key = `${currentActiveTableId.section}_item_${currentActiveTableId.id}`;
-            let itemData = JSON.parse(localStorage.getItem(key));
-            if (!itemData || itemData.items.length === 0) {
-                alert("Chek chiqarish uchun buyurtma mavjud emas!");
-                return;
-            }
+            let waiterOrders = JSON.parse(localStorage.getItem('waiter_orders')) || [];
+            let order = waiterOrders.find(o => o.tableNumber === currentTable && o.status !== 'tolandi');
             
-            let totalAmount = itemData.items.reduce((sum, i) => sum + (i.qty * i.price), 0);
-            let locName = (currentActiveTableId.section === 'zal') ? `Stol #${currentActiveTableId.id}` : `Xona #${currentActiveTableId.id}`;
-
-            let history = JSON.parse(localStorage.getItem('service_history')) || [];
-            history.push({
-                location: locName,
-                waiter: activeWaiter,
-                time: new Date().toLocaleString(),
-                items: itemData.items,
-                guests: itemData.guests,
-                total: totalAmount
-            });
-            localStorage.setItem('service_history', JSON.stringify(history));
-
-            let checkHtml = `<b>Joy:</b> ${locName}<br><b>Ofitsiant:</b> ${activeWaiter}<br><b>Vaqt:</b> ${new Date().toLocaleString()}<br><hr style="border:0; border-top:1px dashed #aaa">`;
-            itemData.items.forEach(i => {
-                checkHtml += `${i.name} x ${i.qty} = ${(i.qty * i.price).toLocaleString()} so'm<br>`;
-            });
-            checkHtml += `<hr style="border:0; border-top:1px dashed #aaa"><b>Jami to'lov: ${totalAmount.toLocaleString()} so'm</b>`;
-            
-            document.getElementById('qr-check-content').innerHTML = checkHtml;
-            document.getElementById('qr-modal').style.display = 'flex';
-            
-            closeModal();
-            renderItems();
-        }
-
-        function closeQrModal() {
-            document.getElementById('qr-modal').style.display = 'none';
-        }
-
-        function openHistory() {
-            let history = JSON.parse(localStorage.getItem('service_history')) || [];
-            let container = document.getElementById('history-list');
-            container.innerHTML = '';
-            if (history.length === 0) {
-                container.innerHTML = '<p>Hozircha tarix bo\'sh.</p>';
+            if(order) {
+                order.isPrinted = true; // Admin panelida to'lov tugmasini chiqaruvchi asosiy belgi
+                localStorage.setItem('waiter_orders', JSON.stringify(waiterOrders));
+                alert("Chek chiqarildi! Admin panelida to'lov oynasi faollashdi.");
             } else {
-                history.slice().reverse().forEach(h => {
-                    let sumText = h.total ? ` | To'lov: <b>${h.total.toLocaleString()} so'm</b>` : '';
-                    container.innerHTML += `
-                        <div style="border-bottom: 1px solid #ccc; padding: 8px 0;">
-                            <strong>${h.location}</strong> | Ofitsiant: ${h.waiter} | Vaqt: ${h.time} | Mehmonlar: ${h.guests} ta${sumText}
-                        </div>
-                    `;
-                });
+                alert("Avval buyurtmani yuboring!");
             }
-            document.getElementById('history-modal').style.display = 'flex';
-        }
-
-        function closeHistory() {
-            document.getElementById('history-modal').style.display = 'none';
         }
     </script>
 </body>

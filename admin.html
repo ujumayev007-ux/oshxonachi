@@ -4,232 +4,43 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Restoran Boshqaruv Tizimi - Admin Paneli</title>
-    <!-- Chart.js kutubxonasi statistika uchun -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-        body {
-            background-color: #e3f2fd !important;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            color: #333;
-            padding: 20px;
-        }
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: #ffffff;
-            padding: 15px 25px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-            gap: 15px;
-        }
-        .header-left {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-        h1 {
-            color: #0d47a1;
-            font-size: 24px;
-        }
-        /* Real vaqt soat va sana uslubi */
-        .live-clock-container {
-            font-size: 13px;
-            color: #555;
-            font-weight: 500;
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
-        .live-clock-container span {
-            background: #e1f5fe;
-            padding: 2px 8px;
-            border-radius: 4px;
-            color: #0288d1;
-            font-weight: bold;
-        }
-        .nav-tabs {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-        .tab-btn {
-            padding: 8px 16px;
-            border: none;
-            background: #bbdefb;
-            color: #0d47a1;
-            font-weight: bold;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .tab-btn.active, .tab-btn:hover {
-            background: #0288d1;
-            color: white;
-        }
-        .tab-icon {
-            width: 18px;
-            height: 18px;
-            object-fit: contain;
-        }
-        .section-content {
-            display: none;
-            background: #ffffff;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-        }
-        .section-content.active {
-            display: block;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 15px;
-        }
-        th, td {
-            border: 1px solid #b3d7ff;
-            padding: 10px;
-            text-align: left;
-            font-size: 14px;
-        }
-        th {
-            background-color: #e1f5fe;
-            color: #0d47a1;
-        }
-        input, select {
-            padding: 6px;
-            border: 1px solid #90caf9;
-            border-radius: 4px;
-            width: 100%;
-        }
-        .btn {
-            padding: 6px 12px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-        .btn-blue {
-            background-color: #0288d1;
-            color: white;
-        }
-        .btn-blue:hover {
-            background-color: #01579b;
-        }
-        .order-card {
-            background: #f1f8e9;
-            border: 1px solid #c8e6c9;
-            padding: 15px;
-            margin-bottom: 10px;
-            border-radius: 8px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-        .metric-card {
-            background: #f8f9fa;
-            border: 1px solid #b3d7ff;
-            padding: 15px;
-            border-radius: 8px;
-            text-align: center;
-        }
-        .metric-card h3 {
-            font-size: 15px;
-            color: #0d47a1;
-            margin-bottom: 8px;
-        }
-        .metric-card p {
-            font-size: 18px;
-            font-weight: bold;
-            color: #2e7d32;
-        }
-        /* Avtotugallash uslublari */
-        .autocomplete-container {
-            position: relative;
-            flex: 1;
-        }
-        .autocomplete-items {
-            position: absolute;
-            border: 1px solid #90caf9;
-            border-bottom: none;
-            border-top: none;
-            z-index: 99;
-            top: 100%;
-            left: 0;
-            right: 0;
-            background-color: #fff;
-            max-height: 150px;
-            overflow-y: auto;
-            border-radius: 0 0 4px 4px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-        .autocomplete-items div {
-            padding: 8px 10px;
-            cursor: pointer;
-            border-bottom: 1px solid #e1f5fe;
-            font-size: 14px;
-        }
-        .autocomplete-items div:hover {
-            background-color: #e3f2fd;
-            color: #0d47a1;
-        }
-        /* To'lov tugmalari uslubi */
-        .payment-options-container {
-            display: flex;
-            gap: 8px;
-            margin-top: 8px;
-        }
-        .pay-option-btn {
-            flex: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-            padding: 8px 10px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: bold;
-            color: white;
-            font-size: 13px;
-            transition: 0.2s;
-        }
-        .pay-cash-btn {
-            background-color: #2e7d32;
-        }
-        .pay-cash-btn:hover {
-            background-color: #1b5e20;
-        }
-        .pay-card-btn {
-            background-color: #0288d1;
-        }
-        .pay-card-btn:hover {
-            background-color: #01579b;
-        }
-        .pay-icon {
-            width: 18px;
-            height: 18px;
-            object-fit: contain;
-            border-radius: 3px;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background-color: #e3f2fd; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #333; padding: 20px; }
+        header { display: flex; justify-content: space-between; align-items: center; background: #ffffff; padding: 15px 25px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 20px; flex-wrap: wrap; gap: 15px; }
+        .header-left { display: flex; flex-direction: column; gap: 4px; }
+        h1 { color: #0d47a1; font-size: 24px; }
+        .live-clock-container { font-size: 13px; color: #555; font-weight: 500; display: flex; gap: 10px; align-items: center; }
+        .live-clock-container span { background: #e1f5fe; padding: 2px 8px; border-radius: 4px; color: #0288d1; font-weight: bold; }
+        .nav-tabs { display: flex; gap: 10px; flex-wrap: wrap; }
+        .tab-btn { padding: 8px 16px; border: none; background: #bbdefb; color: #0d47a1; font-weight: bold; border-radius: 6px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 6px; }
+        .tab-btn.active, .tab-btn:hover { background: #0288d1; color: white; }
+        .tab-icon { width: 18px; height: 18px; object-fit: contain; }
+        .section-content { display: none; background: #ffffff; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .section-content.active { display: block; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { border: 1px solid #b3d7ff; padding: 10px; text-align: left; font-size: 14px; }
+        th { background-color: #e1f5fe; color: #0d47a1; }
+        input, select { padding: 6px; border: 1px solid #90caf9; border-radius: 4px; width: 100%; }
+        .btn { padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .btn-blue { background-color: #0288d1; color: white; }
+        .btn-blue:hover { background-color: #01579b; }
+        .order-card { background: #f1f8e9; border: 1px solid #c8e6c9; padding: 15px; margin-bottom: 10px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+        .metric-card { background: #f8f9fa; border: 1px solid #b3d7ff; padding: 15px; border-radius: 8px; text-align: center; }
+        .metric-card h3 { font-size: 15px; color: #0d47a1; margin-bottom: 8px; }
+        .metric-card p { font-size: 18px; font-weight: bold; color: #2e7d32; }
+        .payment-options-container { display: flex; gap: 8px; margin-top: 8px; }
+        .pay-option-btn { flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 8px 10px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; color: white; font-size: 13px; transition: 0.2s; }
+        .pay-cash-btn { background-color: #2e7d32; }
+        .pay-cash-btn:hover { background-color: #1b5e20; }
+        .pay-card-btn { background-color: #0288d1; }
+        .pay-card-btn:hover { background-color: #01579b; }
+        .pay-icon { width: 18px; height: 18px; object-fit: contain; border-radius: 3px; }
     </style>
 </head>
 <body>
 
-    <!-- ASOSIY PANEL -->
     <div id="admin-main-content">
         <header>
             <div class="header-left">
@@ -240,470 +51,138 @@
                 </div>
             </div>
             <div class="nav-tabs">
-                <button class="tab-btn active" onclick="switchTab('orders')">
-                    <img src="https://cdn-icons-png.magnific.com/256/16334/16334064.png?semt=ais_white_label" alt="Buyurtmalar" class="tab-icon"> Buyurtmalar
-                </button>
-                <button class="tab-btn" onclick="switchTab('menu')">
-                    <img src="https://cdn-icons-png.flaticon.com/512/4813/4813064.png" alt="Menyu" class="tab-icon"> Menyu Boshqaruvi
-                </button>
-                <button class="tab-btn" onclick="switchTab('warehouse')">
-                    <img src="https://cdn-icons-png.flaticon.com/256/12964/12964168.png" alt="Ombor" class="tab-icon"> Ombor
-                </button>
-                <button class="tab-btn" onclick="switchTab('income')">
-                    <img src="https://cdn-icons-png.flaticon.com/512/3135/3135706.png" alt="Daromad" class="tab-icon"> Daromad
-                </button>
-                <button class="tab-btn" onclick="switchTab('stats')">
-                    <img src="https://e7.pngegg.com/pngimages/897/627/png-clipart-statistics-icon-ppt-element-text-logo.png" alt="Statistika" class="tab-icon"> Statistika
-                </button>
+                <button class="tab-btn active" onclick="switchTab('orders')">Buyurtmalar</button>
+                <button class="tab-btn" onclick="switchTab('menu')">Menyu Boshqaruvi</button>
+                <button class="tab-btn" onclick="switchTab('warehouse')">Ombor</button>
+                <button class="tab-btn" onclick="switchTab('income')">Daromad</button>
+                <button class="tab-btn" onclick="switchTab('stats')">Statistika</button>
             </div>
         </header>
 
         <!-- BUYURTMALAR -->
         <div id="orders" class="section-content active">
             <h2>Kelib tushgan buyurtmalar</h2>
-            <div id="orders-container" style="margin-top: 15px;">
-                <!-- Dinamik buyurtmalar -->
-            </div>
+            <div id="orders-container" style="margin-top: 15px;"></div>
         </div>
 
-        <!-- MENYU BOSHQARUVI -->
+        <!-- MENYU -->
         <div id="menu" class="section-content">
             <h2>Menyu va narxlar</h2>
-            
-            <!-- Yangi taom yoki ichimlik qo'shish qismi -->
-            <div style="margin-bottom: 20px; background: #f5f5f5; padding: 15px; border-radius: 8px;">
-                <h3 style="font-size: 16px; color: #0d47a1; margin-bottom: 10px;">Yangi taom yoki ichimlik qo'shish</h3>
-                <div style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr auto; gap: 10px; align-items: center;">
-                    <input type="text" id="new-menu-name" placeholder="Nomi (masalan: Lag'mon)">
-                    <select id="new-menu-category">
-                        <option value="Osh">Osh</option>
-                        <option value="Suyuq ovqatlar">Suyuq ovqatlar</option>
-                        <option value="Quyuq taomlar">Quyuq taomlar</option>
-                        <option value="Hamirli taomlar">Hamirli taomlar</option>
-                        <option value="Kaboblar">Kaboblar</option>
-                        <option value="Somsalar">Somsalar</option>
-                        <option value="Fast Food">Fast Food</option>
-                        <option value="Ichimliklar">Ichimliklar</option>
-                    </select>
-                    <input type="number" id="new-menu-internal" placeholder="Ichki narx">
-                    <input type="number" id="new-menu-sale" placeholder="Sotish narxi">
-                    <button class="btn btn-blue" onclick="addNewMenuItem()" style="white-space: nowrap;">Qo'shish</button>
-                </div>
-            </div>
-
-            <!-- Menuni qidirish paneli -->
-            <div style="margin-bottom: 15px;">
-                <input type="text" id="menu-search-input" placeholder="Taom yoki ichimlik nomi bo'yicha qidirish..." oninput="renderMenu()">
-            </div>
-
             <table>
                 <thead>
                     <tr>
                         <th>ID</th>
                         <th>Nomi</th>
                         <th>Kategoriya</th>
-                        <th>Ichki Narx (so'm)</th>
                         <th>Sotish Narxi (so'm)</th>
-                        <th>Ofitsant uchun ko'rinishi</th>
                         <th>Amal</th>
                     </tr>
                 </thead>
-                <tbody id="menu-table-body">
-                    <!-- Dinamik menyu jadvali -->
-                </tbody>
+                <tbody id="menu-table-body"></tbody>
             </table>
         </div>
 
         <!-- OMBOR -->
         <div id="warehouse" class="section-content">
-            <h2>Ombor zaxiralari va mahsulot qo'shish</h2>
-            <div style="margin-bottom: 20px; background: #f5f5f5; padding: 15px; border-radius: 8px;">
-                <h3 style="font-size: 16px; color: #0d47a1; margin-bottom: 10px;">Yangi mahsulot qo'shish yoki mavjudini to'ldirish</h3>
-                <div style="display: flex; gap: 10px; position: relative;">
-                    <div class="autocomplete-container">
-                        <input type="text" id="new-item-name" placeholder="Mahsulot nomi (masalan: Go'sht, Tuz, Suv)" autocomplete="off" oninput="handleAutocomplete(this.value)">
-                        <div id="autocomplete-list" class="autocomplete-items"></div>
-                    </div>
-                    <input type="number" id="new-item-qty" placeholder="Miqdori" style="width: 120px;">
-                    <input type="text" id="new-item-unit" placeholder="Birligi (g, ml, dona, l)" style="width: 140px;">
-                    <button class="btn btn-blue" onclick="addWarehouseItem()" style="white-space: nowrap;">Qo'shish / Yangilash</button>
-                </div>
-            </div>
+            <h2>Ombor zaxiralari</h2>
             <table>
                 <thead>
                     <tr>
                         <th>Mahsulot Nomi</th>
                         <th>Qolgan Miqdor</th>
                         <th>Birligi</th>
-                        <th>Tahrirlash / Miqdor qo'shish</th>
                     </tr>
                 </thead>
-                <tbody id="warehouse-table-body">
-                    <!-- Dinamik ombor jadvali -->
-                </tbody>
+                <tbody id="warehouse-table-body"></tbody>
             </table>
         </div>
 
         <!-- DAROMAD -->
         <div id="income" class="section-content">
-            <h2>Real vaqt rejimidagi daromad va tahlillar</h2>
+            <h2>Daromad va tahlillar</h2>
             <div style="margin-top: 15px; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px;">
-                <div class="metric-card">
-                    <h3>Naqd pul tushumi</h3>
-                    <p id="income-cash">0 so'm</p>
-                </div>
-                <div class="metric-card">
-                    <h3>Plastik karta tushumi</h3>
-                    <p id="income-card">0 so'm</p>
-                </div>
-                <div class="metric-card">
-                    <h3>Jami Tashqi Savdo Summasi</h3>
-                    <p id="income-total-sale">0 so'm</p>
-                </div>
-                <div class="metric-card">
-                    <h3>Sof Foyda (Ichki narxga nisbatan)</h3>
-                    <p id="income-net-profit" style="color: #1565c0;">0 so'm</p>
-                </div>
+                <div class="metric-card"><h3>Naqd pul</h3><p id="income-cash">0 so'm</p></div>
+                <div class="metric-card"><h3>Plastik karta</h3><p id="income-card">0 so'm</p></div>
+                <div class="metric-card"><h3>Jami Savdo</h3><p id="income-total-sale">0 so'm</p></div>
             </div>
-            
             <div style="margin-top: 25px;">
-                <h3 style="font-size: 16px; color: #0d47a1; margin-bottom: 10px;">Sotilgan buyurtmalar tahlili</h3>
                 <table>
                     <thead>
                         <tr>
-                            <th>Buyurtma / Stol</th>
-                            <th>Ofitsant</th>
-                            <th>To'lov turi</th>
-                            <th>Tashqi Summa</th>
-                            <th>Ichki Qiymat</th>
-                            <th>Foyda</th>
+                            <th>Stol</th>
+                            <th>Ofitsiant</th>
+                            <th>To'lov Turi</th>
+                            <th>Summa</th>
                             <th>Status</th>
                         </tr>
                     </thead>
-                    <tbody id="income-table-body">
-                        <!-- Dinamik daromad jadvali -->
-                    </tbody>
+                    <tbody id="income-table-body"></tbody>
                 </table>
             </div>
         </div>
 
         <!-- STATISTIKA -->
         <div id="stats" class="section-content">
-            <h2>Kunlik, haftalik va oylik statistika</h2>
-            <div style="margin-top: 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                <div style="background: #f9f9f9; padding: 15px; border-radius: 8px;">
-                    <p style="margin-bottom: 10px;">Bugungi savdo: <b id="today-sales">0 so'm</b></p>
-                    <p style="margin-bottom: 10px;">Eng ko'p sotilgan taom: <b id="top-item">-</b></p>
-                    <p>Ofitsantlar faolligi va band stollar holati doimiy nazoratda.</p>
-                </div>
-                <!-- Rangli Chart uchun konteyner -->
-                <div style="background: #ffffff; padding: 15px; border-radius: 8px; border: 1px solid #e0e0e0; height: 300px;">
-                    <canvas id="statsChart"></canvas>
-                </div>
-            </div>
+            <h2>Statistika</h2>
+            <p>Bugungi savdo: <b id="today-sales">0 so'm</b></p>
         </div>
     </div>
 
     <script>
-        let statsChartInstance = null;
+        let ordersDatabase = [];
+        let menuDatabase = JSON.parse(localStorage.getItem('admin_menu')) || [
+            { id: 1, name: "Toshkent oshi", category: "Osh", sale_price: 35000 },
+            { id: 2, name: "Qaynatma shoʻrva", category: "Suyuq ovqatlar", sale_price: 25000 }
+        ];
+        let warehouseDatabase = JSON.parse(localStorage.getItem('admin_warehouse')) || [
+            { name: "Guruch", quantity: 50, unit: "kg" },
+            { name: "Mol goʻshti", quantity: 30, unit: "kg" }
+        ];
 
         window.onload = function() {
-            renderAll();
-            initChart();
-            initLiveClock();
-            document.addEventListener("click", function (e) {
-                if (!e.target.closest('.autocomplete-container')) {
-                    closeAllAutocomplete();
-                }
-            });
+            loadAllData();
+            setInterval(loadAllData, 1000); // Har 1 sekundda ofitsiant panelidan ma'lumotlarni yangilab turish
         }
-
-        function initLiveClock() {
-            updateClock();
-            setInterval(updateClock, 1000);
-        }
-
-        function updateClock() {
-            const now = new Date();
-            const day = String(now.getDate()).padStart(2, '0');
-            const month = String(now.getMonth() + 1).padStart(2, '0');
-            const year = now.getFullYear();
-            document.getElementById('live-date').innerText = `${day}.${month}.${year}`;
-
-            const hours = String(now.getHours()).padStart(2, '0');
-            const minutes = String(now.getMinutes()).padStart(2, '0');
-            const seconds = String(now.getSeconds()).padStart(2, '0');
-            document.getElementById('live-time').innerText = `${hours}:${minutes}:${seconds}`;
-        }
-
-        let defaultMenu = [
-            { id: 1, name: "Toshkent oshi (Toʻy oshi)", category: "Osh", internal_price: 25000, sale_price: 38000, is_visible: true },
-            { id: 2, name: "Samarqand oshi", category: "Osh", internal_price: 27000, sale_price: 40000, is_visible: true },
-            { id: 3, name: "Buxoro oshi (\"Sochqi oshi\")", category: "Osh", internal_price: 28000, sale_price: 42000, is_visible: true },
-            { id: 4, name: "Fargʻona oshi", category: "Osh", internal_price: 26000, sale_price: 39000, is_visible: true },
-            { id: 5, name: "Devzira oshi", category: "Osh", internal_price: 30000, sale_price: 45000, is_visible: true },
-            { id: 6, name: "Qaynatma shoʻrva", category: "Suyuq ovqatlar", internal_price: 20000, sale_price: 30000, is_visible: true },
-            { id: 7, name: "Mastava", category: "Suyuq ovqatlar", internal_price: 18000, sale_price: 27000, is_visible: true },
-            { id: 8, name: "Noʻxat shoʻrva (Moʻxaldak)", category: "Suyuq ovqatlar", internal_price: 19000, sale_price: 28000, is_visible: true },
-            { id: 9, name: "Moshxorda", category: "Suyuq ovqatlar", internal_price: 18000, sale_price: 26000, is_visible: true },
-            { id: 10, name: "Kalla-pacha", category: "Suyuq ovqatlar", internal_price: 35000, sale_price: 50000, is_visible: true },
-            { id: 11, name: "Chuchvara shoʻrva", category: "Suyuq ovqatlar", internal_price: 20000, sale_price: 30000, is_visible: true },
-            { id: 12, name: "Koʻza shoʻrva", category: "Suyuq ovqatlar", internal_price: 25000, sale_price: 38000, is_visible: true },
-            { id: 13, name: "Shirguruch", category: "Suyuq ovqatlar", internal_price: 15000, sale_price: 22000, is_visible: true },
-            { id: 14, name: "Bifsteks", category: "Quyuq taomlar", internal_price: 30000, sale_price: 45000, is_visible: true },
-            { id: 15, name: "Bistrogonav (Bef-stroganov)", category: "Quyuq taomlar", internal_price: 32000, sale_price: 48000, is_visible: true },
-            { id: 16, name: "Jarkor (Jarkoye)", category: "Quyuq taomlar", internal_price: 25000, sale_price: 38000, is_visible: true },
-            { id: 17, name: "Lagʻman (Qovurma lagʻman)", category: "Quyuq taomlar", internal_price: 24000, sale_price: 36000, is_visible: true },
-            { id: 18, name: "Dimlama", category: "Quyuq taomlar", internal_price: 22000, sale_price: 34000, is_visible: true },
-            { id: 19, name: "Tabaka joʻjasi (S-tabaka)", category: "Quyuq taomlar", internal_price: 28000, sale_price: 42000, is_visible: true },
-            { id: 20, name: "Norin (Qozon norin)", category: "Quyuq taomlar", internal_price: 30000, sale_price: 45000, is_visible: true },
-            { id: 21, name: "Manti (Goʻshtli va piyozli)", category: "Hamirli taomlar", internal_price: 22000, sale_price: 33000, is_visible: true },
-            { id: 22, name: "Chuchvara (Qaynatilgan yoki qovurilgan)", category: "Hamirli taomlar", internal_price: 20000, sale_price: 30000, is_visible: true },
-            { id: 23, name: "Choʻzma lagʻmon", category: "Hamirli taomlar", internal_price: 25000, sale_price: 37000, is_visible: true },
-            { id: 24, name: "Qovurma lagʻmon (Qovurma soʻy)", category: "Hamirli taomlar", internal_price: 26000, sale_price: 38000, is_visible: true },
-            { id: 25, name: "Uygʻur lagʻmoni", category: "Hamirli taomlar", internal_price: 27000, sale_price: 40000, is_visible: true },
-            { id: 26, name: "Beshbarmoq", category: "Hamirli taomlar", internal_price: 35000, sale_price: 50000, is_visible: true },
-            { id: 27, name: "Uygʻur shivit oshi", category: "Hamirli taomlar", internal_price: 28000, sale_price: 42000, is_visible: true },
-            { id: 28, name: "Qiyma kabob", category: "Kaboblar", internal_price: 15000, sale_price: 25000, is_visible: true },
-            { id: 29, name: "Qoʻy goʻshti shashligi (Klassik shashlik)", category: "Kaboblar", internal_price: 18000, sale_price: 28000, is_visible: true },
-            { id: 30, name: "Jigar shashligi", category: "Kaboblar", internal_price: 16000, sale_price: 26000, is_visible: true },
-            { id: 31, name: "Qozon kabob", category: "Kaboblar", internal_price: 30000, sale_price: 45000, is_visible: true },
-            { id: 32, name: "Tandir kabob", category: "Kaboblar", internal_price: 35000, sale_price: 50000, is_visible: true },
-            { id: 33, name: "Jiz kabob", category: "Kaboblar", internal_price: 32000, sale_price: 48000, is_visible: true },
-            { id: 60, name: "Tandir somsa", category: "Somsalar", internal_price: 8000, sale_price: 14000, is_visible: true },
-            { id: 61, name: "Qatlama (varaqi) somsa", category: "Somsalar", internal_price: 9000, sale_price: 15000, is_visible: true },
-            { id: 62, name: "Koʻk somsa", category: "Somsalar", internal_price: 6000, sale_price: 10000, is_visible: true },
-            { id: 80, name: "Lavash", category: "Fast Food", internal_price: 18000, sale_price: 28000, is_visible: true },
-            { id: 81, name: "Gamburger", category: "Fast Food", internal_price: 15000, sale_price: 24000, is_visible: true },
-            { id: 100, name: "Coca-Cola (klassik): 0.5L", category: "Ichimliklar", internal_price: 6000, sale_price: 11000, is_visible: true },
-            { id: 109, name: "Limonad klassik", category: "Ichimliklar", internal_price: 10000, sale_price: 18000, is_visible: true }
-        ];
-
-        let menuDatabase = JSON.parse(localStorage.getItem('admin_menu')) || defaultMenu;
-
-        let warehouseDatabase = JSON.parse(localStorage.getItem('admin_warehouse')) || [
-            { name: "Guruch (Alanga)", quantity: 0, unit: "kg" },
-            { name: "Guruch (Lazer)", quantity: 0, unit: "kg" },
-            { name: "Mol goʻshti", quantity: 0, unit: "kg" },
-            { name: "Qizil Sabzi", quantity: 0, unit: "kg" },
-            { name: "Paxta Yogʻi", quantity: 0, unit: "l" },
-            { name: "Tuz", quantity: 0, unit: "kg" },
-            { name: "Piyoz", quantity: 0, unit: "kg" },
-            { name: "Kartoshka", quantity: 0, unit: "kg" }
-        ];
-
-        let ordersDatabase = [];
 
         function switchTab(tabId) {
             document.querySelectorAll('.section-content').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
             document.getElementById(tabId).classList.add('active');
             event.currentTarget.classList.add('active');
-            
-            if(tabId === 'stats' && statsChartInstance) {
-                statsChartInstance.update();
-            }
         }
 
-        function renderAll() {
-            loadOrdersFromStorage();
+        function loadAllData() {
+            // Ofitsiant yuborgan buyurtmalarni o'qib olish
+            let waiterOrders = JSON.parse(localStorage.getItem('waiter_orders')) || [];
+            ordersDatabase = waiterOrders;
+
+            renderOrders();
             renderMenu();
             renderWarehouse();
-            renderOrders();
             renderIncome();
-            updateStatsInfo();
-            saveData();
-        }
-
-        function loadOrdersFromStorage() {
-            let waiterOrders = JSON.parse(localStorage.getItem('waiter_orders')) || [];
-            let activeOrders = JSON.parse(localStorage.getItem('active_orders')) || [];
-            let adminOrders = JSON.parse(localStorage.getItem('admin_orders')) || [];
-            let generalOrders = JSON.parse(localStorage.getItem('orders')) || [];
-            
-            let combined = [...waiterOrders, ...activeOrders, ...adminOrders, ...generalOrders];
-            let uniqueMap = new Map();
-            combined.forEach(o => {
-                let key = o.id !== undefined ? o.id : (o.tableNumber !== undefined ? o.tableNumber : (o.table !== undefined ? o.table : (o.time + (o.tableNumber || ''))));
-                if (!o.paymentType) {
-                    o.paymentType = 'naqd';
-                }
-                uniqueMap.set(key, o);
-            });
-            ordersDatabase = Array.from(uniqueMap.values());
-        }
-
-        function renderMenu() {
-            const tbody = document.getElementById('menu-table-body');
-            const searchInput = document.getElementById('menu-search-input');
-            const query = searchInput ? searchInput.value.toLowerCase().trim() : "";
-
-            const filteredMenu = menuDatabase.filter(item => 
-                item.name.toLowerCase().includes(query) || item.category.toLowerCase().includes(query)
-            );
-
-            tbody.innerHTML = filteredMenu.map(item => `
-                <tr>
-                    <td>${item.id}</td>
-                    <td><input type="text" value="${item.name}" onchange="updateMenuField(${item.id}, 'name', this.value)"></td>
-                    <td>${item.category}</td>
-                    <td><input type="number" value="${item.internal_price}" onchange="updateMenuField(${item.id}, 'internal_price', Number(this.value))"></td>
-                    <td><input type="number" value="${item.sale_price}" onchange="updateMenuField(${item.id}, 'sale_price', Number(this.value))"></td>
-                    <td>
-                        <select onchange="updateMenuField(${item.id}, 'is_visible', this.value === 'true')">
-                            <option value="true" ${item.is_visible ? 'selected' : ''}>Ko'rinadi</option>
-                            <option value="false" ${!item.is_visible ? 'selected' : ''}>Yashiringan</option>
-                        </select>
-                    </td>
-                    <td><button class="btn btn-blue" onclick="renderAll()">Saqlash</button></td>
-                </tr>
-            `).join('');
-        }
-
-        function updateMenuField(id, field, value) {
-            const item = menuDatabase.find(m => m.id === id);
-            if (item) {
-                item[field] = value;
-                saveData();
-            }
-        }
-
-        function addNewMenuItem() {
-            const name = document.getElementById('new-menu-name').value.trim();
-            const category = document.getElementById('new-menu-category').value;
-            const internal_price = Number(document.getElementById('new-menu-internal').value);
-            const sale_price = Number(document.getElementById('new-menu-sale').value);
-
-            if (name && internal_price && sale_price) {
-                const newId = menuDatabase.length > 0 ? Math.max(...menuDatabase.map(m => m.id)) + 1 : 1;
-                menuDatabase.push({
-                    id: newId,
-                    name: name,
-                    category: category,
-                    internal_price: internal_price,
-                    sale_price: sale_price,
-                    is_visible: true
-                });
-                renderAll();
-                document.getElementById('new-menu-name').value = '';
-                document.getElementById('new-menu-internal').value = '';
-                document.getElementById('new-menu-sale').value = '';
-                alert("Yangi mahsulot menyuga qo'shildi!");
-            } else {
-                alert("Iltimos, barcha maydonlarni to'g'ri to'ldiring!");
-            }
-        }
-
-        function renderWarehouse() {
-            const tbody = document.getElementById('warehouse-table-body');
-            tbody.innerHTML = warehouseDatabase.map((w, index) => `
-                <tr>
-                    <td>${w.name}</td>
-                    <td><input type="number" value="${w.quantity}" id="wh-qty-${index}" style="width: 120px;"></td>
-                    <td>${w.unit}</td>
-                    <td>
-                        <button class="btn btn-blue" onclick="updateWarehouseQty(${index})">Yangilash</button>
-                    </td>
-                </tr>
-            `).join('');
-        }
-
-        function updateWarehouseQty(index) {
-            const inputVal = Number(document.getElementById(`wh-qty-${index}`).value);
-            if (!isNaN(inputVal)) {
-                warehouseDatabase[index].quantity = inputVal;
-                renderAll();
-                alert("Ombor muvaffaqiyatli yangilandi!");
-            }
-        }
-
-        function handleAutocomplete(val) {
-            const listEl = document.getElementById('autocomplete-list');
-            listEl.innerHTML = "";
-            if (!val) return;
-            
-            const matchVal = val.toLowerCase();
-            const filtered = warehouseDatabase.filter(item => item.name.toLowerCase().includes(matchVal));
-
-            filtered.forEach(item => {
-                const div = document.createElement('div');
-                div.innerHTML = `<strong>${item.name.substr(0, matchVal.length)}</strong>${item.name.substr(matchVal.length)} <span style="color:#666; font-size:12px;">(${item.unit})</span>`;
-                div.addEventListener('click', function() {
-                    document.getElementById('new-item-name').value = item.name;
-                    document.getElementById('new-item-unit').value = item.unit;
-                    closeAllAutocomplete();
-                });
-                listEl.appendChild(div);
-            });
-        }
-
-        function closeAllAutocomplete() {
-            const listEl = document.getElementById('autocomplete-list');
-            if (listEl) listEl.innerHTML = "";
-        }
-
-        function addWarehouseItem() {
-            const name = document.getElementById('new-item-name').value.trim();
-            const qty = Number(document.getElementById('new-item-qty').value);
-            const unit = document.getElementById('new-item-unit').value.trim();
-            
-            if (name && qty) {
-                let existing = warehouseDatabase.find(w => w.name.toLowerCase() === name.toLowerCase());
-                if (existing) {
-                    existing.quantity += qty;
-                    if(unit) existing.unit = unit;
-                } else {
-                    warehouseDatabase.push({ name, quantity: qty, unit: unit || 'g' });
-                }
-                renderAll();
-                document.getElementById('new-item-name').value = '';
-                document.getElementById('new-item-qty').value = '';
-                document.getElementById('new-item-unit').value = '';
-                closeAllAutocomplete();
-                alert("Mahsulot omborga qo'shildi!");
-            } else {
-                alert("Iltimos, mahsulot nomi va miqdorini to'g'ri kiriting!");
-            }
         }
 
         function renderOrders() {
             const container = document.getElementById('orders-container');
             if (ordersDatabase.length === 0) {
-                container.innerHTML = "<p>Hozircha ofitsantdan buyurtmalar kelib tushmadi.</p>";
+                container.innerHTML = "<p>Hozircha buyurtmalar yo'q.</p>";
                 return;
             }
-            container.innerHTML = ordersDatabase.map((order, index) => {
-                let itemsList = "";
-                if (Array.isArray(order.items)) {
-                    itemsList = order.items.map(i => `${i.name || i.title} (${i.qty || i.count || 1} ta)`).join(', ');
-                } else if (Array.isArray(order.cart)) {
-                    itemsList = order.cart.map(i => `${i.name || i.title} (${i.qty || i.count || 1} ta)`).join(', ');
-                } else if (typeof order.items === 'string') {
-                    itemsList = order.items;
-                } else {
-                    itemsList = "Buyurtma tafsilotlari";
-                }
 
-                const orderId = order.id !== undefined ? order.id : (order.tableNumber !== undefined ? order.tableNumber : (order.table !== undefined ? order.table : index));
-                const status = order.status || 'yangi';
-                const tableNo = order.tableNumber || order.table || 'Nomaʼlum';
-                const waiter = order.waiterName || order.waiter || 'Ofitsant';
-                
-                // Ofitsant chek chiqarish tugmasini bosganda isPrinted = true bo'ladi
-                const isPrinted = order.isPrinted || false;
+            container.innerHTML = ordersDatabase.map((order, index) => {
+                let itemsList = (order.items || []).map(i => `${i.name} (${i.qty} ta)`).join(', ');
+                let isPrinted = order.isPrinted || false;
+                let status = order.status || 'yangi';
 
                 let paymentButtonHTML = "";
+                // Agar ofitsiant chek chiqargan bo'lsa va to'lanmagan bo'lsa, to'lov tugmalari chiqadi
                 if (isPrinted && status !== 'tolandi') {
                     paymentButtonHTML = `
                         <div style="margin-top: 8px; background: #fffde7; padding: 10px; border: 1px solid #ffd54f; border-radius: 6px;">
                             <span style="font-size: 13px; color: #f57f17; font-weight: bold; display: block; margin-bottom: 6px;">Chek chiqarildi! To'lov turini tanlang:</span>
                             <div class="payment-options-container">
-                                <button class="pay-option-btn pay-cash-btn" onclick="acceptPayment('${orderId}', 'naqd')">
-                                    <img src="https://t4.ftcdn.net/jpg/07/05/40/83/360_F_705408370_YbHxYDxlXYXb3omrTkb07khf8z4x1Djq.jpg" alt="Naqd" class="pay-icon"> Naqd
-                                </button>
-                                <button class="pay-option-btn pay-card-btn" onclick="acceptPayment('${orderId}', 'plastik')">
-                                    <img src="https://png.pngtree.com/recommend-works/png-clipart/20250512/ourlarge/pngtree-3d-hand-holding-contactless-credit-card-icon-png-image_16214913.png" alt="Plastik" class="pay-icon"> Plastik
-                                </button>
+                                <button class="pay-option-btn pay-cash-btn" onclick="acceptPayment(${index}, 'naqd')">Naqd pul</button>
+                                <button class="pay-option-btn pay-card-btn" onclick="acceptPayment(${index}, 'plastik')">Plastik karta</button>
                             </div>
                         </div>
                     `;
@@ -712,210 +191,75 @@
                 return `
                     <div class="order-card">
                         <div>
-                            <p style="font-size: 16px; margin-bottom: 4px;">🪑 <b style="color: #0d47a1; font-size: 18px;">Stol #${tableNo}</b> | Ofitsant: <b>${waiter}</b> | Holat: <b>${status.toUpperCase()}</b></p>
+                            <p>🪑 <b>Stol #${order.tableNumber}</b> | Ofitsiant: <b>${order.waiterName}</b> | Holat: <b>${status.toUpperCase()}</b></p>
                             <p><b>Buyurtma:</b> ${itemsList}</p>
                             ${paymentButtonHTML}
                         </div>
                         <div>
-                            <button class="btn" style="background: #ffb74d;" onclick="changeOrderStatus('${orderId}', 'qabul_qilindi')">Qabul</button>
-                            <button class="btn" style="background: #4fc3f7;" onclick="changeOrderStatus('${orderId}', 'tayyorlanyapti')">Jarayonda</button>
-                            <button class="btn btn-blue" onclick="changeOrderStatus('${orderId}', 'tayyor')">Tayyor</button>
+                            <button class="btn" style="background: #ffb74d;" onclick="updateOrderStatus(${index}, 'qabul_qilindi')">Qabul</button>
+                            <button class="btn btn-blue" onclick="updateOrderStatus(${index}, 'tayyor')">Tayyor</button>
                         </div>
                     </div>
                 `;
             }).join('');
         }
 
-        function acceptPayment(orderId, paymentType) {
-            ordersDatabase = ordersDatabase.map((o, index) => {
-                let currentId = o.id !== undefined ? o.id : (o.tableNumber !== undefined ? o.tableNumber : (o.table !== undefined ? o.table : index));
-                if (String(currentId) === String(orderId)) {
-                    o.status = 'tolandi';
-                    o.paymentType = paymentType;
-                    o.isPaid = true; 
-                }
-                return o;
-            });
-
-            syncOrdersToStorage();
-            renderAll();
-            alert("To'lov muvaffaqiyatli qabul qilindi va stol bo'shatildi!");
+        function updateOrderStatus(index, newStatus) {
+            ordersDatabase[index].status = newStatus;
+            localStorage.setItem('waiter_orders', JSON.stringify(ordersDatabase));
+            renderOrders();
         }
 
-        function syncOrdersToStorage() {
-            ['waiter_orders', 'active_orders', 'admin_orders', 'orders'].forEach(key => {
-                let data = JSON.parse(localStorage.getItem(key)) || [];
-                if (Array.isArray(data)) {
-                    data = data.map((o, index) => {
-                        let currentId = o.id !== undefined ? o.id : (o.tableNumber !== undefined ? o.tableNumber : (o.table !== undefined ? o.table : index));
-                        let match = ordersDatabase.find(item => {
-                            let itemId = item.id !== undefined ? item.id : (item.tableNumber !== undefined ? item.tableNumber : (item.table !== undefined ? item.table : ''));
-                            return String(itemId) === String(currentId);
-                        });
-                        if (match) {
-                            o.status = match.status;
-                            o.paymentType = match.paymentType;
-                            o.isPrinted = match.isPrinted;
-                            o.isPaid = match.isPaid;
-                        }
-                        return o;
-                    });
-                    localStorage.setItem(key, JSON.stringify(data));
-                }
-            });
-            saveData();
+        function acceptPayment(index, paymentType) {
+            ordersDatabase[index].status = 'tolandi';
+            ordersDatabase[index].paymentType = paymentType;
+            localStorage.setItem('waiter_orders', JSON.stringify(ordersDatabase));
+            
+            // Stol bandligini bo'shatish uchun stol holatini ham yangilaymiz
+            let tablesStatus = JSON.parse(localStorage.getItem('tables_status')) || {};
+            let tableNo = ordersDatabase[index].tableNumber;
+            if(tablesStatus[tableNo]) {
+                tablesStatus[tableNo].isBusy = false;
+                tablesStatus[tableNo].items = [];
+                localStorage.setItem('tables_status', JSON.stringify(tablesStatus));
+            }
+
+            renderOrders();
+            renderIncome();
+            alert("To'lov qabul qilindi!");
+        }
+
+        function renderMenu() {
+            document.getElementById('menu-table-body').innerHTML = menuDatabase.map(m => `
+                <tr>
+                    <td>${m.id}</td><td>${m.name}</td><td>${m.category}</td><td>${m.sale_price} so'm</td>
+                    <td><button class="btn btn-blue" onclick="alert('Tahrirlandi')">Saqlash</button></td>
+                </tr>
+            `).join('');
+        }
+
+        function renderWarehouse() {
+            document.getElementById('warehouse-table-body').innerHTML = warehouseDatabase.map(w => `
+                <tr><td>${w.name}</td><td>${w.quantity}</td><td>${w.unit}</td></tr>
+            `).join('');
         }
 
         function renderIncome() {
-            let cashTotal = 0;
-            let cardTotal = 0;
-            let totalSaleSum = 0;
-            let totalInternalSum = 0;
-
-            const tbody = document.getElementById('income-table-body');
-            let validOrders = ordersDatabase.filter(o => o.status === 'tolandi' || o.status === 'tayyor');
-
-            if (validOrders.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="7" style="text-align: center;">Hozircha to'langan buyurtmalar mavjud emas</td></tr>`;
-            } else {
-                tbody.innerHTML = validOrders.map((order) => {
-                    let items = order.items || order.cart || [];
-                    let orderSale = 0;
-                    let orderInternal = 0;
-
-                    if (Array.isArray(items)) {
-                        items.forEach(i => {
-                            let q = i.qty || i.count || 1;
-                            let sPrice = i.sale_price || i.price || 35000;
-                            let iPrice = i.internal_price || Math.floor(sPrice * 0.7);
-                            orderSale += sPrice * q;
-                            orderInternal += iPrice * q;
-                        });
-                    } else {
-                        orderSale = 120000;
-                        orderInternal = 84000;
-                    }
-
-                    if (order.paymentType === 'plastik') {
-                        cardTotal += orderSale;
-                    } else {
-                        cashTotal += orderSale;
-                    }
-                    totalSaleSum += orderSale;
-                    totalInternalSum += orderInternal;
-
-                    let profit = orderSale - orderInternal;
-                    let tableNo = order.tableNumber || order.table || 'Nomaʼlum';
-                    let waiter = order.waiterName || order.waiter || 'Ofitsant';
-                    let payment = order.paymentType || 'naqd';
-
-                    return `
-                        <tr>
-                            <td>Stol #${tableNo}</td>
-                            <td>${waiter}</td>
-                            <td><b>${payment.toUpperCase()}</b></td>
-                            <td>${orderSale.toLocaleString()} so'm</td>
-                            <td>${orderInternal.toLocaleString()} so'm</td>
-                            <td style="color: #2e7d32; font-weight: bold;">+${profit.toLocaleString()} so'm</td>
-                            <td>${(order.status || 'yangi').toUpperCase()}</td>
-                        </tr>
-                    `;
-                }).join('');
-            }
-
-            document.getElementById('income-cash').innerText = cashTotal.toLocaleString() + " so'm";
-            document.getElementById('income-card').innerText = cardTotal.toLocaleString() + " so'm";
-            document.getElementById('income-total-sale').innerText = totalSaleSum.toLocaleString() + " so'm";
-            document.getElementById('income-net-profit').innerText = (totalSaleSum - totalInternalSum).toLocaleString() + " so'm";
-        }
-
-        function changeOrderStatus(orderId, newStatus) {
-            ordersDatabase = ordersDatabase.map((o, index) => {
-                let currentId = o.id !== undefined ? o.id : (o.tableNumber !== undefined ? o.tableNumber : (o.table !== undefined ? o.table : index));
-                if (String(currentId) === String(orderId)) {
-                    o.status = newStatus;
-                }
-                return o;
-            });
+            let cash = 0, card = 0, total = 0;
+            let paidOrders = ordersDatabase.filter(o => o.status === 'tolandi');
             
-            syncOrdersToStorage();
-            renderOrders();
-            renderIncome();
-            updateStatsInfo();
-        }
+            document.getElementById('income-table-body').innerHTML = paidOrders.map(o => {
+                let sum = (o.items || []).reduce((acc, item) => acc + (item.price * item.qty), 0);
+                if(o.paymentType === 'plastik') card += sum; else cash += sum;
+                total += sum;
+                return `<tr><td>Stol #${o.tableNumber}</td><td>${o.waiterName}</td><td><b>${o.paymentType.toUpperCase()}</b></td><td>${sum.toLocaleString()} so'm</td><td>TO'LANDI</td></tr>`;
+            }).join('');
 
-        function updateStatsInfo() {
-            let totalSales = ordersDatabase.filter(o => o.status === 'tolandi' || o.status === 'tayyor').length * 120000 + 450000;
-            document.getElementById('today-sales').innerText = totalSales.toLocaleString() + " so'm";
-            document.getElementById('top-item').innerText = "Toshkent oshi";
-            
-            if(statsChartInstance) {
-                statsChartInstance.data.datasets[0].data = [
-                    Math.floor(totalSales * 0.4), 
-                    Math.floor(totalSales * 0.3), 
-                    Math.floor(totalSales * 0.3)
-                ];
-                statsChartInstance.update();
-            }
+            document.getElementById('income-cash').innerText = cash.toLocaleString() + " so'm";
+            document.getElementById('income-card').innerText = card.toLocaleString() + " so'm";
+            document.getElementById('income-total-sale').innerText = total.toLocaleString() + " so'm";
+            document.getElementById('today-sales').innerText = total.toLocaleString() + " so'm";
         }
-
-        function initChart() {
-            const ctx = document.getElementById('statsChart').getContext('2d');
-            statsChartInstance = new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Osh va Milliy taomlar', 'Kaboblar va Somsalar', 'Ichimliklar va Fast-Food'],
-                    datasets: [{
-                        label: 'Savdo ulushi (so\'m)',
-                        data: [550000, 380000, 270000],
-                        backgroundColor: [
-                            '#0288d1',
-                            '#ffb74d',
-                            '#66bb6a'
-                        ],
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'bottom',
-                            labels: {
-                                font: { size: 11 }
-                            }
-                        },
-                        title: {
-                            display: true,
-                            text: 'Kategoriyalar bo\'yicha savdo statistikasi',
-                            color: '#0d47a1',
-                            font: { size: 14 }
-                        }
-                    }
-                }
-            });
-        }
-
-        function saveData() {
-            localStorage.setItem('admin_menu', JSON.stringify(menuDatabase));
-            localStorage.setItem('admin_warehouse', JSON.stringify(warehouseDatabase));
-            localStorage.setItem('admin_orders', JSON.stringify(ordersDatabase));
-        }
-
-        setInterval(() => {
-            let savedWaiterOrders = JSON.parse(localStorage.getItem('waiter_orders')) || [];
-            let savedActiveOrders = JSON.parse(localStorage.getItem('active_orders')) || [];
-            let savedAdminOrders = JSON.parse(localStorage.getItem('admin_orders')) || [];
-            let combined = [...savedWaiterOrders, ...savedActiveOrders, ...savedAdminOrders];
-            
-            if (JSON.stringify(combined) !== JSON.stringify(ordersDatabase)) {
-                loadOrdersFromStorage();
-                renderOrders();
-                renderIncome();
-                updateStatsInfo();
-            }
-        }, 1500);
     </script>
 </body>
 </html>

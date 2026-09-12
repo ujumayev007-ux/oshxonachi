@@ -3,10 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <title>Ofitsant Paneli — Oshxonachi</title>
-    <link rel="stylesheet" href="css/style.css">
     <style>
         body {
-            background-color: #e3f2fd; /* Och ko'k rang */
+            background-color: #e3f2fd;
             font-family: Arial, sans-serif;
             margin: 0;
             padding: 0;
@@ -25,7 +24,6 @@
             max-width: 1200px;
             margin: auto;
         }
-        /* Login ekrani */
         #login-screen {
             display: flex;
             justify-content: center;
@@ -46,6 +44,7 @@
             margin: 10px 0;
             border: 1px solid #ccc;
             border-radius: 5px;
+            box-sizing: border-box;
         }
         .login-box button {
             background: #1976d2;
@@ -57,7 +56,6 @@
             cursor: pointer;
             font-weight: bold;
         }
-        /* Stollar grid */
         #tables-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -77,13 +75,12 @@
             border-color: #ff9800;
             background: #fff3e0;
         }
-        .table-card img {
-            width: 60px;
-            height: 60px;
+        .table-card img.table-icon {
+            width: 50px;
+            height: 50px;
             object-fit: contain;
-            margin-bottom: 10px;
+            margin-bottom: 5px;
         }
-        /* Stol boshqaruv oynasi (Modal) */
         #modal-overlay {
             display: none;
             position: fixed;
@@ -94,11 +91,34 @@
         }
         .modal-content {
             background: white;
-            padding: 20px;
+            padding: 25px;
             border-radius: 10px;
             width: 800px;
             max-height: 90vh;
             overflow-y: auto;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        .category-tabs {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding: 5px 0 10px 0;
+            margin-bottom: 15px;
+            white-space: nowrap;
+        }
+        .tab-btn {
+            padding: 6px 14px;
+            border: none;
+            border-radius: 15px;
+            background: #e0e0e0;
+            color: #333;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: bold;
+        }
+        .tab-btn.active {
+            background: #1976d2;
+            color: white;
         }
         .menu-item-row {
             display: flex;
@@ -108,11 +128,12 @@
             border-bottom: 1px solid #eee;
             padding-bottom: 8px;
         }
-        .menu-item-row img {
-            width: 50px;
-            height: 50px;
-            border-radius: 5px;
+        .menu-item-img {
+            width: 45px;
+            height: 45px;
             object-fit: cover;
+            border-radius: 6px;
+            border: 1px solid #ddd;
         }
         .btn-blue {
             background: #0288d1;
@@ -130,21 +151,30 @@
             border-radius: 5px;
             cursor: pointer;
         }
+        .qty-btn {
+            background: #e3f2fd;
+            border: 1px solid #90caf9;
+            padding: 4px 10px;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 4px;
+        }
     </style>
 </head>
 <body>
 
-    <!-- 1. Autentifikatsiya Ekrani -->
+    <!-- 1. Kirish Ekrani -->
     <div id="login-screen">
         <div class="login-box">
             <h3>Ofitsant Kirishi</h3>
             <input type="text" id="login-user" placeholder="Login (masalan: ofitsant1)">
             <input type="password" id="login-pass" placeholder="Parol">
             <button onclick="loginWaiter()">Kirish</button>
+            <p style="font-size: 12px; color: #666; margin-top: 15px;">Parollar: ofitsant1-4 uchun 1111-4444</p>
         </div>
     </div>
 
-    <!-- Asosiy Panel (Dastlab yashiringan) -->
+    <!-- Asosiy Panel -->
     <div id="main-panel" style="display: none;">
         <header>
             <h2>Ofitsant Boshqaruv Paneli (12 ta Stol)</h2>
@@ -164,22 +194,39 @@
     <!-- Stol Buyurtma va Boshqaruv Modali -->
     <div id="modal-overlay">
         <div class="modal-content">
-            <h2 id="modal-title">Stol Boshqaruvi</h2>
-            <div>
-                <label>Mijozlar soni: </label>
-                <input type="number" id="modal-guests" value="1" min="1" style="width: 60px; padding: 5px;">
+            <h2 id="modal-title" style="margin-top:0;">Stol Boshqaruvi</h2>
+            
+            <!-- Mijozlar sonini boshqarish (+ / -) -->
+            <div style="background: #f5f5f5; padding: 10px 15px; border-radius: 8px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px;">
+                <span style="font-weight: bold;">👥 Mijozlar (odam) soni:</span>
+                <div>
+                    <button class="qty-btn" onclick="changeGuests(-1)">-</button>
+                    <span id="modal-guests-val" style="margin: 0 15px; font-size: 18px; font-weight: bold;">1</span>
+                    <button class="qty-btn" onclick="changeGuests(1)">+</button>
+                </div>
             </div>
-            <hr>
-            <h3>Menyu (Tanlash va miqdorini o'zgartirish)</h3>
-            <div id="menu-selection-list" style="max-height: 300px; overflow-y: auto;">
-                <!-- Dinamik menyu elementlari rasmlari bilan -->
+
+            <!-- Kategoriyalar filtri -->
+            <div class="category-tabs">
+                <button class="tab-btn active" onclick="filterModalMenu('all', event)">Barchasi</button>
+                <button class="tab-btn" onclick="filterModalMenu('osh', event)">Oshlar</button>
+                <button class="tab-btn" onclick="filterModalMenu('supli', event)">Sho'rvalar</button>
+                <button class="tab-btn" onclick="filterModalMenu('asosiy', event)">Asosiy</button>
+                <button class="tab-btn" onclick="filterModalMenu('hamirli', event)">Hamirli</button>
+                <button class="tab-btn" onclick="filterModalMenu('kabob', event)">Kaboblar</button>
+                <button class="tab-btn" onclick="filterModalMenu('somsa', event)">Somsalar</button>
+                <button class="tab-btn" onclick="filterModalMenu('fastfood', event)">Fast-food</button>
             </div>
-            <hr>
-            <h3>Tanlangan Buyurtmalar</h3>
-            <div id="current-order-summary"></div>
-            <div style="margin-top: 15px; display: flex; justify-content: space-between;">
-                <button onclick="sendOrderToAdmin()" class="btn-green">Adminiga Yuborish / Qo'shish</button>
-                <button onclick="printCheck()" class="btn-blue" style="background: #7b1fa2;">Chek Chop Etish (QR bilan)</button>
+
+            <h3 style="margin-bottom: 8px;">Menyu (Taomlar va Ichimliklar)</h3>
+            <div id="menu-selection-list" style="max-height: 220px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; border-radius: 8px;"></div>
+            
+            <h3 style="margin: 15px 0 8px 0;">Tanlangan Buyurtmalar</h3>
+            <div id="current-order-summary" style="background: #fafafa; padding: 10px; border-radius: 8px; border: 1px solid #eee;"></div>
+            
+            <div style="margin-top: 20px; display: flex; justify-content: space-between; gap: 10px;">
+                <button onclick="sendOrderToAdmin()" class="btn-green" style="flex: 1;">Adminiga Yuborish / Yangilash</button>
+                <button onclick="printCheck()" class="btn-blue" style="background: #7b1fa2; flex: 1;">Chek Chop Etish (QR)</button>
                 <button onclick="closeModal()" style="background: #757575; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer;">Yopish</button>
             </div>
         </div>
@@ -196,7 +243,6 @@
     </div>
 
     <script>
-        // 4 ta ofitsant bazasi
         const waitersDB = [
             { login: "ofitsant1", pass: "1111", name: "Anvar" },
             { login: "ofitsant2", pass: "2222", name: "Jasur" },
@@ -204,10 +250,30 @@
             { login: "ofitsant4", pass: "4444", name: "Bobur" }
         ];
 
+        // To'liq menyu ro'yxati (kategoriyalari bilan)
+        const fullMenu = [
+            { id: 1, category: "osh", name: "Buxoro oshi", price: 35000, img: "https://images.unsplash.com/photo-1633964913295-ceb43826e7c9?w=100" },
+            { id: 2, category: "osh", name: "To'y oshi", price: 40000, img: "https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=100" },
+            { id: 3, category: "supli", name: "Mastava", price: 22000, img: "https://images.unsplash.com/photo-1547592166-23ac45744acd?w=100" },
+            { id: 4, category: "supli", name: "Moshkhurda", price: 20000, img: "https://images.unsplash.com/photo-1547592180-85f173990554?w=100" },
+            { id: 5, category: "asosiy", name: "Jiz", price: 45000, img: "https://images.unsplash.com/photo-1544025162-d76694265947?w=100" },
+            { id: 6, category: "asosiy", name: "Qozon kabob", price: 42000, img: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=100" },
+            { id: 7, category: "hamirli", name: "Norin", price: 30000, img: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=100" },
+            { id: 8, category: "hamirli", name: "Manti (3 dona)", price: 25000, img: "https://images.unsplash.com/photo-1496116218417-1a781b1c416c?w=100" },
+            { id: 9, category: "kabob", name: "Qiyma kabob", price: 15000, img: "https://images.unsplash.com/photo-1529193591184-b1d58069ecdd?w=100" },
+            { id: 10, category: "kabob", name: "Jigar kabob", price: 18000, img: "https://images.unsplash.com/photo-1603048588665-791ca8aea617?w=100" },
+            { id: 11, category: "somsa", name: "Tandir somsa", price: 12000, img: "https://images.unsplash.com/photo-1626777552726-4a6b54c97e46?w=100" },
+            { id: 12, category: "somsa", name: "Varka somsa", price: 10000, img: "https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=100" },
+            { id: 13, category: "fastfood", name: "Klab-sendvich", price: 28000, img: "https://images.unsplash.com/photo-1528735602780-2552fd46c7af?w=100" },
+            { id: 14, category: "fastfood", name: "Burger", price: 30000, img: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=100" },
+            { id: 15, category: "drink", name: "Suv 0.5L", price: 4000, img: "https://images.unsplash.com/photo-1548839140-29a749e1cf4d?w=100" },
+            { id: 16, category: "drink", name: "Coca-Cola 1L", price: 12000, img: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=100" }
+        ];
+
         let currentActiveTable = null;
         let activeWaiter = localStorage.getItem('active_waiter') || null;
+        let currentCategoryFilter = 'all';
 
-        // Sahifa yuklanganda holatni tiklash (F5 dan keyin yo'qolmasligi uchun)
         window.onload = function() {
             if (activeWaiter) {
                 document.getElementById('login-screen').style.display = 'none';
@@ -240,7 +306,6 @@
             document.getElementById('main-panel').style.display = 'none';
         }
 
-        // 12 ta stolni chizish (Stol rasmi bilan)
         function renderTables() {
             const grid = document.getElementById('tables-grid');
             grid.innerHTML = '';
@@ -249,21 +314,26 @@
                 
                 grid.innerHTML += `
                     <div class="table-card ${tableData.busy ? 'busy' : ''}" onclick="openTable(${i})">
-                        <img src="img/table_icon.png" alt="Stol">
+                        <img src="https://cdn-icons-png.flaticon.com/512/869/869636.png" class="table-icon" alt="Stol">
                         <h4 style="margin:5px 0;">Stol #${i}</h4>
-                        <p style="font-size: 13px; margin: 0;">${tableData.busy ? `Band (${tableData.guests} kishi)` : 'Bo\'sh'}</p>
+                        <p style="font-size: 13px; margin: 0; font-weight: bold;">${tableData.busy ? `🔴 Band (${tableData.guests} kishi)` : '🟢 Bo\'sh'}</p>
                     </div>
                 `;
             }
         }
 
-        // Stolni ochish va boshqarish
         function openTable(tableNum) {
             currentActiveTable = tableNum;
             document.getElementById('modal-title').innerText = `Stol #${tableNum} Boshqaruvi`;
             let tableData = JSON.parse(localStorage.getItem(`table_${tableNum}_data`)) || { busy: false, guests: 1, items: [] };
             
-            document.getElementById('modal-guests').value = tableData.guests || 1;
+            document.getElementById('modal-guests-val').innerText = tableData.guests || 1;
+            currentCategoryFilter = 'all';
+            
+            // Aktiv tabni to'g'rilash
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelector('.tab-btn').classList.add('active');
+
             renderMenuSelection(tableData.items);
             document.getElementById('modal-overlay').style.display = 'flex';
         }
@@ -272,35 +342,49 @@
             document.getElementById('modal-overlay').style.display = 'none';
         }
 
-        // Menyu va rasmlarni chiqarish (Plus / Minus)
-        function renderMenuSelection(selectedItems) {
-            // Namunaviy menyu elementlari (Admin panelidan yoki configdan kelishi mumkin)
-            let menu = [
-                { id: 1, name: "Buxoro oshi", price: 35000, img: "img/osh.jpg" },
-                { id: 2, name: "Tandir somsa", price: 12000, img: "img/somsa.jpg" },
-                { id: 3, name: "Norin", price: 30000, img: "img/norin.jpg" },
-                { id: 4, name: "Salat (Vitamin)", price: 10000, img: "img/salat.jpg" },
-                { id: 5, name: "Suv 0.5L", price: 4000, img: "img/suv.jpg" }
-            ];
+        function changeGuests(delta) {
+            let valSpan = document.getElementById('modal-guests-val');
+            let currentGuests = parseInt(valSpan.innerText) + delta;
+            if (currentGuests < 1) currentGuests = 1;
+            valSpan.innerText = currentGuests;
 
+            let tableData = JSON.parse(localStorage.getItem(`table_${currentActiveTable}_data`)) || { busy: false, guests: 1, items: [] };
+            tableData.guests = currentGuests;
+            localStorage.setItem(`table_${currentActiveTable}_data`, JSON.stringify(tableData));
+        }
+
+        function filterModalMenu(category, event) {
+            currentCategoryFilter = category;
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+
+            let tableData = JSON.parse(localStorage.getItem(`table_${currentActiveTable}_data`)) || { items: [] };
+            renderMenuSelection(tableData.items);
+        }
+
+        function renderMenuSelection(selectedItems) {
             let container = document.getElementById('menu-selection-list');
             container.innerHTML = '';
 
-            menu.forEach(dish => {
+            let filteredMenu = currentCategoryFilter === 'all' 
+                ? fullMenu 
+                : fullMenu.filter(item => item.category === currentCategoryFilter);
+
+            filteredMenu.forEach(dish => {
                 let existing = selectedItems.find(i => i.id === dish.id);
                 let qty = existing ? existing.qty : 0;
 
                 container.innerHTML += `
                     <div class="menu-item-row">
-                        <img src="${dish.img}" alt="${dish.name}" onerror="this.src='img/placeholder.txt'">
-                        <div style="flex-grow: 1; margin-left: 15px;">
+                        <img src="${dish.img}" class="menu-item-img" alt="${dish.name}">
+                        <div style="flex-grow: 1; margin-left: 12px;">
                             <strong>${dish.name}</strong><br>
-                            <span style="color: #666;">${dish.price} so'm</span>
+                            <span style="color: #666; font-size: 13px;">${dish.price.toLocaleString()} so'm</span>
                         </div>
                         <div>
-                            <button onclick="changeQty(${dish.id}, -1)" style="padding: 5px 10px;">-</button>
+                            <button class="qty-btn" onclick="changeQty(${dish.id}, -1)">-</button>
                             <span id="qty_${dish.id}" style="margin: 0 10px; font-weight: bold;">${qty}</span>
-                            <button onclick="changeQty(${dish.id}, 1)" style="padding: 5px 10px;">+</button>
+                            <button class="qty-btn" onclick="changeQty(${dish.id}, 1)">+</button>
                         </div>
                     </div>
                 `;
@@ -308,9 +392,8 @@
             updateOrderSummaryUI(selectedItems);
         }
 
-        // Mahsulot miqdorini o'zgartirish
         window.changeQty = function(dishId, delta) {
-            let tableData = JSON.parse(localStorage.getItem(`table_${currentActiveTable}_data`)) || { busy: false, guests: 1, items: [] };
+            let tableData = JSON.parse(localStorage.getItem(`table_${currentActiveTable}_data`)) || { busy: false, guests: parseInt(document.getElementById('modal-guests-val').innerText), items: [] };
             let existing = tableData.items.find(i => i.id === dishId);
 
             if (existing) {
@@ -319,10 +402,10 @@
                     tableData.items = tableData.items.filter(i => i.id !== dishId);
                 }
             } else if (delta > 0) {
-                // Menyudan mahsulotni topib qo'shamiz
-                let menuMap = { 1: "Buxoro oshi", 2: "Tandir somsa", 3: "Norin", 4: "Salat (Vitamin)", 5: "Suv 0.5L" };
-                let priceMap = { 1: 35000, 2: 12000, 3: 30000, 4: 10000, 5: 4000 };
-                tableData.items.push({ id: dishId, name: menuMap[dishId], price: priceMap[dishId], qty: 1 });
+                let dish = fullMenu.find(d => d.id === dishId);
+                if (dish) {
+                    tableData.items.push({ id: dish.id, name: dish.name, price: dish.price, qty: 1 });
+                }
             }
 
             localStorage.setItem(`table_${currentActiveTable}_data`, JSON.stringify(tableData));
@@ -332,23 +415,28 @@
         function updateOrderSummaryUI(items) {
             let summaryContainer = document.getElementById('current-order-summary');
             if (items.length === 0) {
-                summaryContainer.innerHTML = '<p style="color: #775; font-style: italic;">Hozircha buyurtma bo\'sh</p>';
+                summaryContainer.innerHTML = '<p style="color: #777; font-style: italic; margin: 0; font-size: 13px;">Hozircha buyurtma bo\'sh</p>';
                 return;
             }
-            let html = '<ul style="padding-left: 20px; margin: 5px 0;">';
+            let html = '<ul style="padding-left: 20px; margin: 0 0 8px 0; font-size: 14px;">';
             let total = 0;
             items.forEach(i => {
-                html += `<li>${i.name} - ${i.qty} ta x ${i.price} so'm = ${i.qty * i.price} so'm</li>`;
+                html += `<li>${i.name} - ${i.qty} ta x ${i.price.toLocaleString()} so'm = <b>${(i.qty * i.price).toLocaleString()} so'm</b></li>`;
                 total += i.qty * i.price;
             });
-            html += `</ul><strong>Umumiy summa: ${total} so'm</strong>`;
+            html += `</ul><div style="text-align: right; font-size: 15px;">Umumiy summa: <b>${total.toLocaleString()} so'm</b></div>`;
             summaryContainer.innerHTML = html;
         }
 
-        // Admin paneliga yuborish va qo'shimcha buyurtma qo'shish
         function sendOrderToAdmin() {
-            let guests = document.getElementById('modal-guests').value;
+            let guests = parseInt(document.getElementById('modal-guests-val').innerText);
             let tableData = JSON.parse(localStorage.getItem(`table_${currentActiveTable}_data`)) || { items: [] };
+            
+            if(tableData.items.length === 0) {
+                alert("Iltimos, avval buyurtmaga taom qo'shing!");
+                return;
+            }
+
             tableData.busy = true;
             tableData.guests = guests;
             tableData.waiter = activeWaiter;
@@ -356,17 +444,15 @@
 
             localStorage.setItem(`table_${currentActiveTable}_data`, JSON.stringify(tableData));
 
-            // Admin paneliga umumiy buyurtmalar ro'yxatiga yuboramiz
             let allOrders = JSON.parse(localStorage.getItem('admin_orders')) || [];
             allOrders.push({ table: currentActiveTable, ...tableData, time: new Date().toLocaleTimeString() });
             localStorage.setItem('admin_orders', JSON.stringify(allOrders));
 
-            alert("Buyurtma Admin paneliga muvaffaqiyatli yuborildi!");
+            alert("Buyurtma Admin paneliga yuborildi!");
             closeModal();
             renderTables();
         }
 
-        // Chek chop etish va tarixlarga saqlash
         function printCheck() {
             let tableData = JSON.parse(localStorage.getItem(`table_${currentActiveTable}_data`));
             if (!tableData || tableData.items.length === 0) {
@@ -374,7 +460,6 @@
                 return;
             }
             
-            // Tarixga yozish
             let history = JSON.parse(localStorage.getItem('service_history')) || [];
             history.push({
                 table: currentActiveTable,
@@ -385,9 +470,8 @@
             });
             localStorage.setItem('service_history', JSON.stringify(history));
 
-            alert(`Stol #${currentActiveTable} uchun Chek inkassa apparatiga yuborildi va QR-kod bilan chop etildi!`);
+            alert(`Stol #${currentActiveTable} uchun QR-kodli chek chop etildi va inkassa apparatiga yuborildi!`);
             
-            // Stolni tozalash va yakunlash
             localStorage.removeItem(`table_${currentActiveTable}_data`);
             closeModal();
             renderTables();

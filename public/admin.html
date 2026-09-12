@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Paneli</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #eef2f3; }
+        .container { max-width: 800px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .order-row { background: #fff; border: 1px solid #ccc; padding: 15px; margin-bottom: 10px; border-radius: 5px; display: flex; justify-content: space-between; align-items: center; }
+        .actions button { padding: 8px 12px; margin-left: 5px; cursor: pointer; border: none; border-radius: 4px; color: white; }
+        .btn-qabul { background: #ffc107; color: black; }
+        .btn-jarayon { background: #17a2b8; }
+        .btn-tayyor { background: #28a745; }
+        .status-badge { font-weight: bold; padding: 4px 8px; border-radius: 4px; background: #eee; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Admin Paneli - Buyurtmalarni boshqarish</h2>
+        <div id="adminOrdersList"></div>
+    </div>
+
+    <!-- Socket.io kutubxonasi -->
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+        const adminOrdersList = document.getElementById('adminOrdersList');
+
+        socket.on('init_orders', renderAdminOrders);
+        socket.on('update_orders', renderAdminOrders);
+
+        function renderAdminOrders(orders) {
+            adminOrdersList.innerHTML = '';
+            if (orders.length === 0) {
+                adminOrdersList.innerHTML = '<p>Yangi buyurtmalar mavjud emas.</p>';
+                return;
+            }
+
+            orders.forEach(order => {
+                const div = document.createElement('div');
+                div.className = 'order-row';
+                div.innerHTML = `
+                    <div>
+                        <strong>Stol: ${order.table}</strong><br>
+                        <span>Taomlar: ${order.items}</span><br>
+                        <small>Vaqti: ${order.createdAt}</small><br>
+                        Holati: <span class="status-badge">${order.status}</span>
+                    </div>
+                    <div class="actions">
+                        <button class="btn-qabul" onclick="changeStatus(${order.id}, 'Qabul qilindi')">Qabul</button>
+                        <button class="btn-jarayon" onclick="changeStatus(${order.id}, 'Jarayonda')">Jarayonda</button>
+                        <button class="btn-tayyor" onclick="changeStatus(${order.id}, 'Tayyor')">Tayyor</button>
+                    </div>
+                `;
+                adminOrdersList.appendChild(div);
+            });
+        }
+
+        // Holatni o'zgartirish funksiyasi
+        function changeStatus(orderId, status) {
+            socket.emit('change_status', { orderId, status });
+        }
+    </script>
+</body>
+</html>

@@ -3,279 +3,339 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Paneli</title>
+    <title>Restoran Boshqaruv Tizimi - Admin & Superadmin Paneli</title>
     <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
         body {
-            background-color: #e3f2fd !important; /* Och ko'k fon / Light blue */
+            background-color: #e3f2fd !important;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             color: #333;
-            margin: 0;
             padding: 20px;
+        }
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #ffffff;
+            padding: 15px 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
         }
         h1 {
             color: #0d47a1;
+            font-size: 24px;
+        }
+        .nav-tabs {
+            display: flex;
+            gap: 10px;
+        }
+        .tab-btn {
+            padding: 8px 16px;
+            border: none;
+            background: #bbdefb;
+            color: #0d47a1;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .tab-btn.active, .tab-btn:hover {
+            background: #0288d1;
+            color: white;
+        }
+        .section-content {
+            display: none;
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        .section-content.active {
+            display: block;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        th, td {
+            border: 1px solid #b3d7ff;
+            padding: 10px;
+            text-align: left;
+            font-size: 14px;
+        }
+        th {
+            background-color: #e1f5fe;
+            color: #0d47a1;
+        }
+        input, select {
+            padding: 6px;
+            border: 1px solid #90caf9;
+            border-radius: 4px;
+            width: 100%;
+        }
+        .btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .btn-blue {
+            background-color: #0288d1;
+            color: white;
+        }
+        .btn-blue:hover {
+            background-color: #01579b;
         }
         .order-card {
-            background: #ffffff;
-            border: 1px solid #b3d7ff;
+            background: #f1f8e9;
+            border: 1px solid #c8e6c9;
             padding: 15px;
             margin-bottom: 10px;
             border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
-        button {
-            padding: 6px 12px;
-            margin-right: 5px;
-            border: 1px solid #b3d7ff;
-            border-radius: 4px;
-            background-color: #fff;
-            cursor: pointer;
-        }
-        button:hover {
-            background-color: #f0f4f8;
+        .ai-box {
+            background: #e1f5fe;
+            border: 1px solid #b3e5fc;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
         }
     </style>
 </head>
 <body>
 
-    <h1>Admin Paneli - Boshqaruv</h1>
-    <div id="admin-orders"></div>
+    <header>
+        <h1>Restoran Admin / Superadmin Paneli</h1>
+        <div class="nav-tabs">
+            <button class="tab-btn active" onclick="switchTab('orders')">Buyurtmalar</button>
+            <button class="tab-btn" onclick="switchTab('menu')">Menyu Boshqaruvi</button>
+            <button class="tab-btn" onclick="switchTab('warehouse')">Ombor</button>
+            <button class="tab-btn" onclick="switchTab('stats')">Statistika</button>
+            <button class="tab-btn" onclick="switchTab('ai')" style="background-color: #0288d1; color: white;">Gemini AI (Superadmin)</button>
+        </div>
+    </header>
+
+    <!-- BUYURTMALAR -->
+    <div id="orders" class="section-content active">
+        <h2>Kelib tushgan buyurtmalar</h2>
+        <div id="orders-container" style="margin-top: 15px;">
+            <!-- Dinamik buyurtmalar -->
+        </div>
+    </div>
+
+    <!-- MENYU BOSHQARUVI -->
+    <div id="menu" class="section-content">
+        <h2>Menyu va narxlar</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nomi</th>
+                    <th>Kategoriya</th>
+                    <th>Ichki Narx (so'm)</th>
+                    <th>Sotish Narxi (so'm)</th>
+                    <th>Ofitsant uchun ko'rinishi</th>
+                    <th>Amal</th>
+                </tr>
+            </thead>
+            <tbody id="menu-table-body">
+                <!-- Dinamik menyu jadvali -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- OMBOR -->
+    <div id="warehouse" class="section-content">
+        <h2>Ombor zaxiralari</h2>
+        <div style="margin-bottom: 15px; display: flex; gap: 10px;">
+            <input type="text" id="new-item-name" placeholder="Mahsulot nomi (masalan: Go'sht, Tuz)">
+            <input type="number" id="new-item-qty" placeholder="Miqdori">
+            <input type="text" id="new-item-unit" placeholder="Birligi (g, ml, dona)">
+            <button class="btn btn-blue" onclick="addWarehouseItem()">Qo'shish</button>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Mahsulot Nomi</th>
+                    <th>Qolgan Miqdor</th>
+                    <th>Birligi</th>
+                </tr>
+            </thead>
+            <tbody id="warehouse-table-body">
+                <!-- Dinamik ombor jadvali -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- STATISTIKA -->
+    <div id="stats" class="section-content">
+        <h2>Kunlik, haftalik va oylik statistika</h2>
+        <p style="margin-top: 10px;">Bugungi savdo: <b id="today-sales">0 so'm</b></p>
+        <p>Eng ko'p sotilgan taom: <b id="top-item">-</b></p>
+        <p>Ofitsantlar faolligi va band stollar holati nazorati doimiy ravishda yangilanib boradi.</p>
+    </div>
+
+    <!-- SUPERADMIN AI -->
+    <div id="ai" class="section-content">
+        <h2>Superadmin uchun Gemini AI Yordamchisi</h2>
+        <div class="ai-box">
+            <p><b>Gemini AI:</b> Salom! Restoraningizdagi ombor qoldiqlari, moliyaviy tahlil yoki taomlar retsepti bo'yicha qanday yordam bera olaman?</p>
+            <div style="margin-top: 10px; display: flex; gap: 10px;">
+                <input type="text" id="ai-input" placeholder="Savol bering...">
+                <button class="btn btn-blue" onclick="askAI()">Yuborish</button>
+            </div>
+            <p id="ai-response" style="margin-top: 10px; font-style: italic; color: #01579b;"></p>
+        </div>
+    </div>
 
     <script>
-        // Barcha menyu ma'lumotlar bazasi
-        const menuDatabase = [
-          {
-            id: 1,
-            name: "Toshkent oshi (To'y oshi)",
-            category: "Osh",
-            internal_price: 25000,
-            sale_price: 38000,
-            is_visible: true,
-            recipe: [
-              { ingredient: "Guruh (Devzira/Lazer)", amount: 250, unit: "g" },
-              { ingredient: "Go'sht (Mol)", amount: 150, unit: "g" },
-              { ingredient: "Sabzi", amount: 200, unit: "g" },
-              { ingredient: "Yog' (Paxta/Zirir)", amount: 50, unit: "ml" },
-              { ingredient: "Tuz", amount: 5, unit: "g" }
-            ]
-          },
-          {
-            id: 2,
-            name: "Samarqand oshi",
-            category: "Osh",
-            internal_price: 27000,
-            sale_price: 40000,
-            is_visible: true,
-            recipe: [
-              { ingredient: "Guruh", amount: 250, unit: "g" },
-              { ingredient: "Go'sht (Mol)", amount: 160, unit: "g" },
-              { ingredient: "Sabzi", amount: 180, unit: "g" },
-              { ingredient: "Nuxat", amount: 30, unit: "g" },
-              { ingredient: "Yog'", amount: 60, unit: "ml" },
-              { ingredient: "Tuz", amount: 5, unit: "g" }
-            ]
-          },
-          {
-            id: 3,
-            name: "Buxoro oshi (\"Sochqi oshi\")",
-            category: "Osh",
-            internal_price: 28000,
-            sale_price: 42000,
-            is_visible: true,
-            recipe: [
-              { ingredient: "Guruh", amount: 250, unit: "g" },
-              { ingredient: "Go'sht (Mol)", amount: 170, unit: "g" },
-              { ingredient: "Sabzi", amount: 190, unit: "g" },
-              { ingredient: "Yog'", amount: 70, unit: "ml" },
-              { ingredient: "Tuz", amount: 5, unit: "g" }
-            ]
-          },
-          {
-            id: 4,
-            name: "Farg'ona oshi",
-            category: "Osh",
-            internal_price: 24000,
-            sale_price: 36000,
-            is_visible: true,
-            recipe: [
-              { ingredient: "Guruh", amount: 250, unit: "g" },
-              { ingredient: "Go'sht (Mol)", amount: 140, unit: "g" },
-              { ingredient: "Sabzi", amount: 200, unit: "g" },
-              { ingredient: "Yog'", amount: 50, unit: "ml" },
-              { ingredient: "Tuz", amount: 5, unit: "g" }
-            ]
-          },
-          {
-            id: 5,
-            name: "Devzira oshi",
-            category: "Osh",
-            internal_price: 32000,
-            sale_price: 48000,
-            is_visible: true,
-            recipe: [
-              { ingredient: "Guruh (Devzira)", amount: 260, unit: "g" },
-              { ingredient: "Go'sht (Qo'y)", amount: 180, unit: "g" },
-              { ingredient: "Sabzi", amount: 200, unit: "g" },
-              { ingredient: "Dumba", amount: 40, unit: "g" },
-              { ingredient: "Yog'", amount: 50, unit: "ml" },
-              { ingredient: "Tuz", amount: 5, unit: "g" }
-            ]
-          },
-          {
-            id: 6,
-            name: "Qaynatma sho'rva",
-            category: "Suyuq ovqatlar",
-            internal_price: 20000,
-            sale_price: 30000,
-            is_visible: true,
-            recipe: [
-              { ingredient: "Go'sht (Suyakli mol)", amount: 250, unit: "g" },
-              { ingredient: "Kartoshka", amount: 150, unit: "g" },
-              { ingredient: "Sabzi", amount: 120, unit: "g" },
-              { ingredient: "Piyoz", amount: 30, unit: "g" },
-              { ingredient: "Tuz", amount: 6, unit: "g" }
-            ]
-          },
-          {
-            id: 7,
-            name: "Mastava",
-            category: "Suyuq ovqatlar",
-            internal_price: 16000,
-            sale_price: 25000,
-            is_visible: true,
-            recipe: [
-              { ingredient: "Guruh", amount: 60, unit: "g" },
-              { ingredient: "Kartoshka", amount: 80, unit: "g" },
-              { ingredient: "Pomidor/pasta", amount: 40, unit: "g" },
-              { ingredient: "Yog'", amount: 30, unit: "ml" },
-              { ingredient: "Tuz", amount: 5, unit: "g" }
-            ]
-          },
-          {
-            id: 8,
-            name: "No'xat sho'rva (Mo'xaldak)",
-            category: "Suyuq ovqatlar",
-            internal_price: 18000,
-            sale_price: 28000,
-            is_visible: true,
-            recipe: [
-              { ingredient: "Go'sht (Qo'y)", amount: 200, unit: "g" },
-              { ingredient: "Nuxat", amount: 100, unit: "g" },
-              { ingredient: "Piyoz", amount: 40, unit: "g" },
-              { ingredient: "Tuz", amount: 5, unit: "g" }
-            ]
-          },
-          {
-            id: 9,
-            name: "Moshxorda",
-            category: "Suyuq ovqatlar",
-            internal_price: 17000,
-            sale_price: 26000,
-            is_visible: true,
-            recipe: [
-              { ingredient: "Mosh", amount: 80, unit: "g" },
-              { ingredient: "Guruh", amount: 40, unit: "g" },
-              { ingredient: "Go'sht (Mol)", amount: 100, unit: "g" },
-              { ingredient: "Piyoz", amount: 30, unit: "g" },
-              { ingredient: "Yog'", amount: 30, unit: "ml" },
-              { ingredient: "Tuz", amount: 5, unit: "g" }
-            ]
-          },
-          {
-            id: 10,
-            name: "Kalla-pacha",
-            category: "Suyuq ovqatlar",
-            internal_price: 30000,
-            sale_price: 45000,
-            is_visible: true,
-            recipe: [
-              { ingredient: "Kalla-pacha go'shti", amount: 350, unit: "g" },
-              { ingredient: "Sarimsoq", amount: 10, unit: "g" },
-              { ingredient: "Tuz", amount: 6, unit: "g" }
-            ]
-          },
-          {
-            id: 11,
-            name: "Chuchvara",
-            category: "Suyuq ovqatlar",
-            internal_price: 18000,
-            sale_price: 24000,
-            is_visible: true,
-            recipe: [
-              { ingredient: "Un", amount: 150, unit: "g" },
-              { ingredient: "Go'sht (Mol)", amount: 100, unit: "g" },
-              { ingredient: "Piyoz", amount: 40, unit: "g" },
-              { ingredient: "Yog'", amount: 25, unit: "ml" },
-              { ingredient: "Tuz", amount: 5, unit: "g" }
-            ]
-          }
+        // LocalStorage dan ma'lumotlarni olish yoki boshlang'ich qiymat yuklash
+        let menuDatabase = JSON.parse(localStorage.getItem('admin_menu')) || [
+            { id: 1, name: "Toshkent oshi", category: "Osh", internal_price: 25000, sale_price: 38000, is_visible: true },
+            { id: 2, name: "Samarqand oshi", category: "Osh", internal_price: 27000, sale_price: 40000, is_visible: true },
+            { id: 3, name: "Qaynatma sho'rva", category: "Suyuq ovqatlar", internal_price: 20000, sale_price: 30000, is_visible: true }
         ];
 
-        // Admin panelining asosiy holati va boshqaruvi[cite: 1]
-        class AdminPanel {[cite: 1]
-          constructor() {[cite: 1]
-            this.menu = menuDatabase;[cite: 1]
-            this.initListeners();[cite: 1]
-          }[cite: 1]
+        let warehouseDatabase = JSON.parse(localStorage.getItem('admin_warehouse')) || [
+            { name: "G'uruch", quantity: 50000, unit: "g" },
+            { name: "Go'sht (Mol)", quantity: 30000, unit: "g" },
+            { name: "Sabzi", quantity: 40000, unit: "g" },
+            { name: "Yog'", quantity: 15000, unit: "ml" },
+            { name: "Tuz", quantity: 5000, unit: "g" }
+        ];
 
-          updateMenuItem(id, newFields) {[cite: 1]
-            const item = this.menu.find(m => m.id === id);[cite: 1]
-            if (item) {[cite: 1]
-              if (newFields.name !== undefined) item.name = newFields.name;[cite: 1]
-              if (newFields.internal_price !== undefined) item.internal_price = newFields.internal_price;[cite: 1]
-              if (newFields.sale_price !== undefined) item.sale_price = newFields.sale_price;[cite: 1]
-              if (newFields.is_visible !== undefined) item.is_visible = newFields.is_visible;[cite: 1]
-              console.log(`Mahsulot yangilandi: ${item.name}`);[cite: 1]
-            }[cite: 1]
-          }[cite: 1]
+        let ordersDatabase = JSON.parse(localStorage.getItem('admin_orders')) || [
+            { id: 101, tableNumber: 5, waiterName: "Anvar", status: "tayyorlanyapti", items: "Toshkent oshi (2 ta)" }
+        ];
 
-          toggleVisibility(id) {[cite: 1]
-            const item = this.menu.find(m => m.id === id);[cite: 1]
-            if (item) {[cite: 1]
-              item.is_visible = !item.is_visible;[cite: 1]
-              console.log(`${item.name} ofitsant uchun holati: ${item.is_visible ? 'Ko\'rinmoqda' : 'Yashiringan'}`);[cite: 1]
-            }[cite: 1]
-          }[cite: 1]
+        function switchTab(tabId) {
+            document.querySelectorAll('.section-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            event.target.classList.add('active');
+        }
 
-          updateWarehouseStock(warehouseList, incomingItemName, incomingQty) {[cite: 1]
-            let existingItem = warehouseList.find(w => w.name.toLowerCase() === incomingItemName.toLowerCase());[cite: 1]
-            if (existingItem) {[cite: 1]
-              existingItem.quantity += incomingQty;[cite: 1]
-            } else {[cite: 1]
-              warehouseList.push({ name: incomingItemName, quantity: incomingQty });[cite: 1]
-            }[cite: 1]
-            return warehouseList;[cite: 1]
-          }[cite: 1]
+        function renderAll() {
+            renderMenu();
+            renderWarehouse();
+            renderOrders();
+            saveData();
+        }
 
-          renderAdminOrders(orders) {[cite: 1]
-            const container = document.getElementById('admin-orders');[cite: 1]
-            if (!container) return;[cite: 1]
+        function renderMenu() {
+            const tbody = document.getElementById('menu-table-body');
+            tbody.innerHTML = menuDatabase.map(item => `
+                <tr>
+                    <td>${item.id}</td>
+                    <td><input type="text" value="${item.name}" onchange="updateMenuField(${item.id}, 'name', this.value)"></td>
+                    <td>${item.category}</td>
+                    <td><input type="number" value="${item.internal_price}" onchange="updateMenuField(${item.id}, 'internal_price', Number(this.value))"></td>
+                    <td><input type="number" value="${item.sale_price}" onchange="updateMenuField(${item.id}, 'sale_price', Number(this.value))"></td>
+                    <td>
+                        <select onchange="updateMenuField(${item.id}, 'is_visible', this.value === 'true')">
+                            <option value="true" ${item.is_visible ? 'selected' : ''}>Ko'rinadi</option>
+                            <option value="false" ${!item.is_visible ? 'selected' : ''}>Yashiringan</option>
+                        </select>
+                    </td>
+                    <td><button class="btn btn-blue" onclick="renderAll()">Saqlash</button></td>
+                </tr>
+            `).join('');
+        }
 
-            container.innerHTML = orders.map(order => `[cite: 1]
-              <div class="order-card">[cite: 1]
-                <p><b>Stol #${order.tableNumber}</b> | Ofitsant: ${order.waiterName}</p>[cite: 1]
-                <p>Status: <span style="font-weight: bold; color: ${order.status === 'tayyor' ? '#0288d1' : '#333'}">${order.status.toUpperCase()}</span></p>[cite: 1]
-                <div style="margin-top: 10px;">[cite: 1]
-                  <button onclick="admin.changeOrderStatus(${order.id}, 'qabul_qilindi')">Qabul qildim</button>[cite: 1]
-                  <button onclick="admin.changeOrderStatus(${order.id}, 'tayyorlanyapti')">Tayyorlanyapti</button>[cite: 1]
-                  <button onclick="admin.changeOrderStatus(${order.id}, 'tayyor')" style="background-color: #0288d1; color: white;">Tayyor</button>[cite: 1]
-                </div>[cite: 1]
-              </div>[cite: 1]
-            `).join('');[cite: 1]
-          }[cite: 1]
+        function updateMenuField(id, field, value) {
+            const item = menuDatabase.find(m => m.id === id);
+            if (item) {
+                item[field] = value;
+                saveData();
+            }
+        }
 
-          changeOrderStatus(orderId, newStatus) {[cite: 1]
-            console.log(`Buyurtma #${orderId} statusi o'zgardi: ${newStatus}`);[cite: 1]
-          }[cite: 1]
+        function renderWarehouse() {
+            const tbody = document.getElementById('warehouse-table-body');
+            tbody.innerHTML = warehouseDatabase.map(w => `
+                <tr>
+                    <td>${w.name}</td>
+                    <td>${w.quantity}</td>
+                    <td>${w.unit}</td>
+                </tr>
+            `).join('');
+        }
 
-          initListeners() {[cite: 1]
-            window.addEventListener('beforeunload', () => {[cite: 1]
-              localStorage.setItem('admin_menu_state', JSON.stringify(this.menu));[cite: 1]
-            });[cite: 1]
-          }[cite: 1]
-        }[cite: 1]
+        function addWarehouseItem() {
+            const name = document.getElementById('new-item-name').value.trim();
+            const qty = Number(document.getElementById('new-item-qty').value);
+            const unit = document.getElementById('new-item-unit').value.trim();
+            if(name && qty) {
+                let existing = warehouseDatabase.find(w => w.name.toLowerCase() === name.toLowerCase());
+                if(existing) {
+                    existing.quantity += qty;
+                } else {
+                    warehouseDatabase.push({ name, quantity: qty, unit: unit || 'g' });
+                }
+                renderAll();
+                document.getElementById('new-item-name').value = '';
+                document.getElementById('new-item-qty').value = '';
+                document.getElementById('new-item-unit').value = '';
+            }
+        }
 
-        const admin = new AdminPanel();[cite: 1]
+        function renderOrders() {
+            const container = document.getElementById('orders-container');
+            if(ordersDatabase.length === 0) {
+                container.innerHTML = "<p>Hozircha buyurtmalar yo'q.</p>";
+                return;
+            }
+            container.innerHTML = ordersDatabase.map(order => `
+                <div class="order-card">
+                    <div>
+                        <p><b>Stol #${order.tableNumber}</b> | Ofitsant: ${order.waiterName}</p>
+                        <p>Buyurtma: ${order.items}</p>
+                        <p>Status: <span style="font-weight: bold; color: #0288d1;">${order.status.toUpperCase()}</span></p>
+                    </div>
+                    <div>
+                        <button class="btn" style="background: #ffb74d;" onclick="changeOrderStatus(${order.id}, 'qabul_qilindi')">Qabul qildim</button>
+                        <button class="btn" style="background: #4fc3f7;" onclick="changeOrderStatus(${order.id}, 'tayyorlanyapti')">Tayyorlanyapti</button>
+                        <button class="btn btn-blue" onclick="changeOrderStatus(${order.id}, 'tayyor')">Tayyor</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function changeOrderStatus(orderId, newStatus) {
+            const order = ordersDatabase.find(o => o.id === orderId);
+            if(order) {
+                order.status = newStatus;
+                renderAll();
+            }
+        }
+
+        function saveData() {
+            localStorage.setItem('admin_menu', JSON.stringify(menuDatabase));
+            localStorage.setItem('admin_warehouse', JSON.stringify(warehouseDatabase));
+            localStorage.setItem('admin_orders', JSON.stringify(ordersDatabase));
+        }
+
+        function askAI() {
+            const query = document.getElementById('ai-input').value.trim();
+            const resp = document.getElementById('ai-response');
+            if(!query) return;
+            resp.textContent = "Gemini AI o'ylamoqda...";
+            setTimeout(() => {
+                resp.textContent = `Gemini AI javobi: "${query} bo'yicha omborda mahsulotlar yetarli, bugungi savdo dinamikasi barqaror davom etmoqda."`;
+            }, 600);
+        }
+
+        window.onload = renderAll;
     </script>
 </body>
 </html>

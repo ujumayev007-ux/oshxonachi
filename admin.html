@@ -232,7 +232,6 @@
     </div>
 
     <script>
-        // Avtorizatsiyani tekshiruvchi funksiya
         function checkLogin() {
             const user = document.getElementById('login-user').value.trim();
             const pass = document.getElementById('login-pass').value.trim();
@@ -256,7 +255,6 @@
             document.getElementById('login-pass').value = '';
         }
 
-        // Sahifaga kirganda avvalgi login holatini tekshirish
         window.onload = function() {
             if (localStorage.getItem('admin_logged_in') === 'true') {
                 document.getElementById('login-overlay').style.display = 'none';
@@ -265,7 +263,6 @@
             }
         }
 
-        // To'liq menyu ro'yxati
         let defaultMenu = [
             { id: 1, name: "Toshkent oshi (Toʻy oshi)", category: "Osh", internal_price: 25000, sale_price: 38000, is_visible: true },
             { id: 2, name: "Samarqand oshi", category: "Osh", internal_price: 27000, sale_price: 40000, is_visible: true },
@@ -455,7 +452,7 @@
             
             let uniqueMap = new Map();
             combined.forEach(o => {
-                let key = o.id || o.tableNumber || o.table || (o.time + (o.tableNumber || ''));
+                let key = o.id !== undefined ? o.id : (o.tableNumber !== undefined ? o.tableNumber : (o.table !== undefined ? o.table : (o.time + (o.tableNumber || ''))));
                 uniqueMap.set(key, o);
             });
             
@@ -542,7 +539,7 @@
                 container.innerHTML = "<p>Hozircha ofitsantdan buyurtmalar kelib tushmadi.</p>";
                 return;
             }
-            container.innerHTML = ordersDatabase.map(order => {
+            container.innerHTML = ordersDatabase.map((order, index) => {
                 let itemsList = "";
                 if (Array.isArray(order.items)) {
                     itemsList = order.items.map(i => `${i.name || i.title} (${i.qty || i.count || 1} ta)`).join(', ');
@@ -554,7 +551,7 @@
                     itemsList = "Buyurtma tafsilotlari";
                 }
 
-                const orderId = order.id || order.tableNumber || order.table;
+                const orderId = order.id !== undefined ? order.id : (order.tableNumber !== undefined ? order.tableNumber : (order.table !== undefined ? order.table : index));
                 const status = order.status || 'yangi';
                 const tableNo = order.tableNumber || order.table || 'Nomaʼlum';
                 const waiter = order.waiterName || order.waiter || 'Ofitsant';
@@ -577,37 +574,38 @@
         }
 
         function changeOrderStatus(orderId, newStatus) {
-            const order = ordersDatabase.find(o => (o.id == orderId || o.tableNumber == orderId || o.table == orderId));
-            if (order) {
-                order.status = newStatus;
-                
-                // Barcha tegishli saqlash kalitlarida statusni yangilash (ofitsant paneli bilan sinxronizatsiya uchun)
-                ['waiter_orders', 'active_orders', 'admin_orders', 'orders'].forEach(key => {
-                    let data = JSON.parse(localStorage.getItem(key)) || [];
-                    if (Array.isArray(data)) {
-                        data = data.map(o => {
-                            if (o.id == orderId || o.tableNumber == orderId || o.table == orderId) {
-                                o.status = newStatus;
-                            }
-                            return o;
-                        });
-                        localStorage.setItem(key, JSON.stringify(data));
-                    }
-                });
+            ordersDatabase = ordersDatabase.map((o, index) => {
+                let currentId = o.id !== undefined ? o.id : (o.tableNumber !== undefined ? o.tableNumber : (o.table !== undefined ? o.table : index));
+                if (String(currentId) === String(orderId)) {
+                    o.status = newStatus;
+                }
+                return o;
+            });
+            
+            ['waiter_orders', 'active_orders', 'admin_orders', 'orders'].forEach(key => {
+                let data = JSON.parse(localStorage.getItem(key)) || [];
+                if (Array.isArray(data)) {
+                    data = data.map((o, index) => {
+                        let currentId = o.id !== undefined ? o.id : (o.tableNumber !== undefined ? o.tableNumber : (o.table !== undefined ? o.table : index));
+                        if (String(currentId) === String(orderId)) {
+                            o.status = newStatus;
+                        }
+                        return o;
+                    });
+                    localStorage.setItem(key, JSON.stringify(data));
+                }
+            });
 
-                saveData();
-                renderOrders();
-            }
+            saveData();
+            renderOrders();
         }
 
         function saveData() {
             localStorage.setItem('admin_menu', JSON.stringify(menuDatabase));
             localStorage.setItem('admin_warehouse', JSON.stringify(warehouseDatabase));
             localStorage.setItem('admin_orders', JSON.stringify(ordersDatabase));
-            // Diqqat: waiter_orders ni to'g'ridan-to'g'ri bo'sh massiv bilan yopib qo'ymaslik uchun faqat admin_orders saqlanadi
         }
 
-        // Real vaqt rejimida ofitsant panelidan kelayotgan buyurtmalarni o'qish uchun har 1.5 sekundda yangilash
         setInterval(() => {
             if (localStorage.getItem('admin_logged_in') === 'true') {
                 let savedWaiterOrders = JSON.parse(localStorage.getItem('waiter_orders')) || [];

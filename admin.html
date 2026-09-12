@@ -523,8 +523,11 @@
             
             let combined = [...waiterOrders, ...activeOrders, ...adminOrders, ...generalOrders];
             let uniqueMap = new Map();
-            combined.forEach(o => {
-                let key = o.id !== undefined ? o.id : (o.tableNumber !== undefined ? o.tableNumber : (o.table !== undefined ? o.table : (o.time + (o.tableNumber || ''))));
+            combined.forEach((o, index) => {
+        let tNum = o.tableNumber || o.table || o.tableNo || o.id || (index + 1);
+        o.tableNumber = tNum; 
+        
+        let key = `${tNum}_${o.time || index}`; (o.table !== undefined ? o.table : (o.time + (o.tableNumber || ''))));
                 if (!o.paymentType) {
                     o.paymentType = 'naqd';
                 }

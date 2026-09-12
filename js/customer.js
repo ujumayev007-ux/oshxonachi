@@ -1,4 +1,4 @@
-// Kengaytirilgan menyu ma'lumotlari (kategoriyalarga bo'lingan holda)
+// Kengaytirilgan menyu ma'lumotlari (kategoriyalarga bo'lingan)
 const menuItems = [
     // -osh
     { id: 1, name: "Toshkent oshi (To'y oshi)", price: 35000, category: "osh", image: "https://images.unsplash.com/photo-1633964913295-ceb43826e7c9?w=300" },
@@ -113,6 +113,9 @@ const menuItems = [
     { id: 98, name: "Pishloqli tayoqchalar (Cheese-sticks)", price: 20000, category: "fastfood", image: "https://images.unsplash.com/photo-1548340795-5d512a4d3396?w=300" }
 ];
 
+// Joriy tanlangan kategoriya
+let currentCategory = 'all';
+
 // Savatcha va holatni saqlash (F5 qilinganda o'chib ketmaydi)
 let cart = JSON.parse(localStorage.getItem('customer_cart')) || {};
 
@@ -123,12 +126,36 @@ window.onload = function() {
     renderTables();
 };
 
+// Kategoriyalar bo'yicha filter qilish funksiyasi
+function filterMenu(category, event) {
+    currentCategory = category;
+    
+    // Aktiv tugma uslubini o'zgartirish (agar HTMLda tugmalarga .tab-btn klassi berilgan bo'lsa)
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    if (event && event.target) {
+        event.target.classList.add('active');
+    }
+    
+    renderMenu();
+}
+
 function renderMenu() {
     const container = document.getElementById('menu-container');
     if (!container) return;
     
     container.innerHTML = '';
-    menuItems.forEach(item => {
+    
+    // Tanlangan kategoriyaga qarab saralash
+    const filteredItems = currentCategory === 'all' 
+        ? menuItems 
+        : menuItems.filter(item => item.category === currentCategory);
+    
+    if (filteredItems.length === 0) {
+        container.innerHTML = '<p style="grid-column: 1 / -1; text-align: center; color: #777;">Bu bo\'limda hozircha ovqatlar yo\'q</p>';
+        return;
+    }
+
+    filteredItems.forEach(item => {
         let count = cart[item.id] ? cart[item.id].qty : 0;
         container.innerHTML += `
             <div class="card" style="display: flex; flex-direction: column; justify-content: space-between; background: #fff; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
@@ -172,8 +199,11 @@ function updateCartUI() {
         totalPrice += cart[id].qty * cart[id].price;
     }
     
-    document.getElementById('cart-count').innerText = totalCount;
-    document.getElementById('cart-total').innerText = totalPrice;
+    let cartCountEl = document.getElementById('cart-count');
+    let cartTotalEl = document.getElementById('cart-total');
+    if (cartCountEl) cartCountEl.innerText = totalCount;
+    if (cartTotalEl) cartTotalEl.innerText = totalPrice;
+    
     let modalTotal = document.getElementById('modal-cart-total');
     if (modalTotal) modalTotal.innerText = totalPrice;
 }

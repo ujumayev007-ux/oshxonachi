@@ -420,22 +420,21 @@
 
         function initLiveClock() {
             updateClock();
-            // Eski setInterval o'rniga faqat kerakliligicha tekshirish
-let lastDataStr = "";
+            setInterval(updateClock, 1000);
+        }
 
-setInterval(() => {
-    let rawWaiter = localStorage.getItem('waiter_orders') || "";
-    let rawActive = localStorage.getItem('active_orders') || "";
-    let combinedStr = rawWaiter + "_" + rawActive;
+        function updateClock() {
+            const now = new Date();
+            const day = String(now.getDate()).padStart(2, '0');
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const year = now.getFullYear();
+            document.getElementById('live-date').innerText = `${day}.${month}.${year}`;
 
-    // Faqat ofitsiant tomondan yangi buyurtma qo'shilsagina qayta chizish
-    if (combinedStr !== lastDataStr) {
-        lastDataStr = combinedStr;
-        loadOrdersFromStorage();
-        renderOrders();
-        renderIncome();
-    }
-}, 2000);
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            document.getElementById('live-time').innerText = `${hours}:${minutes}:${seconds}`;
+        }
 
         let defaultMenu = [
             { id: 1, name: "Toshkent oshi (Toʻy oshi)", category: "Osh", internal_price: 25000, sale_price: 38000, is_visible: true },
@@ -524,11 +523,8 @@ setInterval(() => {
             
             let combined = [...waiterOrders, ...activeOrders, ...adminOrders, ...generalOrders];
             let uniqueMap = new Map();
-            combined.forEach((o, index) => {
-        let tNum = o.tableNumber || o.table || o.tableNo || o.id || (index + 1);
-        o.tableNumber = tNum; 
-        
-        let key = `${tNum}_${o.time || index}`; (o.table !== undefined ? o.table : (o.time + (o.tableNumber || ''))));
+            combined.forEach(o => {
+                let key = o.id !== undefined ? o.id : (o.tableNumber !== undefined ? o.tableNumber : (o.table !== undefined ? o.table : (o.time + (o.tableNumber || ''))));
                 if (!o.paymentType) {
                     o.paymentType = 'naqd';
                 }

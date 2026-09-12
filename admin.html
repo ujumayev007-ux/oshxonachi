@@ -916,6 +916,21 @@
                 updateStatsInfo();
             }
         }, 1500);
-    </script>
+    </script><!-- Socket.io kutubxonasi (agar oldindan qo'shilmagan bo'lsa) -->
+<script src="/socket.io/socket.io.js"></script>
+
+<script>
+  const socket = io();
+
+  document.querySelectorAll('.status-btn').forEach(button => {
+      button.addEventListener('click', (e) => {
+          const orderId = e.target.getAttribute('data-order-id');
+          const newStatus = e.target.getAttribute('data-status'); 
+          const waiterId = e.target.getAttribute('data-waiter-id'); 
+
+          socket.emit('admin_update_status', { orderId, newStatus, waiterId });
+      });
+  });
+</script>
 </body>
 </html>

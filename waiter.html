@@ -757,36 +757,33 @@
         }
 
         function sendOrderToAdmin() {
-            let guests = parseInt(document.getElementById('modal-guests-val').innerText);
-            let key = `${currentActiveTableId.section}_item_${currentActiveTableId.id}`;
-            let itemData = JSON.parse(localStorage.getItem(key)) || { items: [] };
-            
-            if(itemData.items.length === 0) {
-                alert("Iltimos, avval buyurtmaga taom qo'shing!");
-                return;
-            }
+    let cart = tableCarts[currentTableId] || [];
+    if (cart.length === 0) {
+        alert("Stolga buyurtma qo'shilmagan!");
+        return;
+    }
 
-            itemData.busy = true;
-            itemData.guests = guests;
-            itemData.waiter = activeWaiter;
-            itemData.status = 'Tayyorlanyapti';
+    let tableNumClean = currentTableId.split('_')[1];
 
-            localStorage.setItem(key, JSON.stringify(itemData));
+    let newOrder = {
+        id: 'ord_' + Date.now(),
+        tableNumber: tableNumClean, // Admin aynan shu nomni qidiradi
+        waiterName: currentWaiter,
+        items: cart,
+        guests: tableGuests[currentTableId],
+        status: 'yangi',
+        paymentType: 'naqd',
+        time: new Date().toLocaleTimeString()
+    };
 
-            let allOrders = JSON.parse(localStorage.getItem('admin_orders')) || [];
-            allOrders.push({ 
-                type: currentActiveTableId.section, 
-                number: currentActiveTableId.id, 
-                ...itemData, 
-                time: new Date().toLocaleTimeString() 
-            });
-            localStorage.setItem('admin_orders', JSON.stringify(allOrders));
+    ordersData.push(newOrder);
+    // Ikkala kalitga ham yozib qo'yilgani ma'qul:
+    localStorage.setItem('waiter_orders', JSON.stringify(ordersData));
+    localStorage.setItem('active_orders', JSON.stringify(ordersData));
 
-            alert(`Buyurtma Admin paneliga yuborildi! (Ofitsiant: ${activeWaiter})`);
-            closeModal();
-            renderItems();
-        }
-
+    alert("Buyurtma admin panelga yuborildi!");
+    closeModal();
+}
         function printCheck() {
             let key = `${currentActiveTableId.section}_item_${currentActiveTableId.id}`;
             let itemData = JSON.parse(localStorage.getItem(key));

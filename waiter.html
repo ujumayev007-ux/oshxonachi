@@ -2,40 +2,31 @@
 <html lang="uz">
 <head>
     <meta charset="UTF-8">
-    <title>Ofitsant Paneli — Oshxonachi</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ofitsiant Panel - Restoran</title>
     <style>
+        * {
+            box-sizing: border-box;
+        }
         body {
-            background-color: #e3f2fd;
             font-family: Arial, sans-serif;
             margin: 0;
-            padding: 0;
-            color: #333;
+            background-color: #f4f6f9;
         }
-        header {
-            background: #1976d2;
-            color: white;
-            padding: 15px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .container {
-            padding: 20px;
-            max-width: 1200px;
-            margin: auto;
-        }
+        /* Login ekrani */
         #login-screen {
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 80vh;
+            height: 100vh;
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
         }
         .login-box {
             background: white;
             padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-            width: 300px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            width: 320px;
             text-align: center;
         }
         .login-box input {
@@ -43,103 +34,124 @@
             padding: 10px;
             margin: 10px 0;
             border: 1px solid #ccc;
-            border-radius: 5px;
-            box-sizing: border-box;
+            border-radius: 6px;
         }
         .login-box button {
-            background: #1976d2;
+            width: 100%;
+            padding: 10px;
+            background: #2a5298;
             color: white;
             border: none;
-            padding: 10px;
-            width: 100%;
-            border-radius: 5px;
+            border-radius: 6px;
             cursor: pointer;
             font-weight: bold;
         }
-        /* Papkalar / Bo'limlar uslubi */
-        .sections-nav {
+        .login-box button:hover {
+            background: #1e3c72;
+        }
+
+        /* Asosiy panel */
+        #main-panel {
+            display: none;
+            padding: 20px;
+        }
+        .header {
             display: flex;
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-        .section-folder {
+            justify-content: space-between;
+            align-items: center;
             background: white;
-            padding: 15px 25px;
+            padding: 15px 20px;
             border-radius: 10px;
-            cursor: pointer;
-            font-weight: bold;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            border: 2px solid #bbdefb;
-            transition: 0.3s;
+            position: relative;
         }
-        .section-folder.active {
-            background: #1976d2;
+        
+        /* Soat va sana chap yuqori burchakda */
+        .top-left-clock {
+            position: absolute;
+            top: 15px;
+            left: 20px;
+            font-size: 13px;
+            font-weight: bold;
+            color: #333;
+            line-height: 1.2;
+        }
+
+        .header-center {
+            margin-left: 140px; /* Soat uchun joy tashlab turish */
+            display: flex;
+            gap: 10px;
+        }
+        .folder-btn {
+            padding: 8px 16px;
+            border: none;
+            background: #e0e0e0;
+            cursor: pointer;
+            border-radius: 6px;
+            font-weight: bold;
+            transition: 0.2s;
+        }
+        .folder-btn.active {
+            background: #2a5298;
             color: white;
-            border-color: #0d47a1;
         }
-        #tables-grid {
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        /* Grid va Kartochkalar dizayni */
+        .grid-container {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 20px;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
         }
         .table-card {
             background: white;
+            border: 2px solid #ddd;
             border-radius: 10px;
             padding: 15px;
             text-align: center;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
             cursor: pointer;
-            border: 2px solid #bbdefb;
-            transition: 0.3s;
+            transition: 0.2s;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .table-card:hover {
+            transform: translateY(-3px);
+            border-color: #2a5298;
         }
         .table-card.busy {
-            border-color: #ff9800;
-            background: #fff3e0;
+            background-color: #ffe6e6;
+            border-color: #ff4d4d;
         }
-        .table-card img.table-icon {
-            width: 55px;
-            height: 55px;
+        .table-icon {
+            width: 40px;
+            height: 40px;
             object-fit: contain;
             margin-bottom: 5px;
         }
-        #modal-overlay {
+
+        /* Modal oyna */
+        .modal-overlay {
             display: none;
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.5);
             justify-content: center;
             align-items: center;
+            z-index: 1000;
         }
         .modal-content {
             background: white;
-            padding: 25px;
+            padding: 20px;
             border-radius: 10px;
-            width: 900px;
+            width: 600px;
+            max-width: 90%;
             max-height: 90vh;
             overflow-y: auto;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-        }
-        .category-tabs {
-            display: flex;
-            gap: 8px;
-            overflow-x: auto;
-            padding: 5px 0 10px 0;
-            margin-bottom: 15px;
-            white-space: nowrap;
-        }
-        .tab-btn {
-            padding: 6px 14px;
-            border: none;
-            border-radius: 15px;
-            background: #e0e0e0;
-            color: #333;
-            cursor: pointer;
-            font-size: 13px;
-            font-weight: bold;
-        }
-        .tab-btn.active {
-            background: #1976d2;
-            color: white;
         }
         .menu-item-row {
             display: flex;
@@ -150,254 +162,141 @@
             padding-bottom: 8px;
         }
         .menu-item-img {
-            width: 45px;
-            height: 45px;
+            width: 40px;
+            height: 40px;
             object-fit: cover;
             border-radius: 6px;
-            border: 1px solid #ddd;
-        }
-        .btn-blue {
-            background: #0288d1;
-            color: white;
-            border: none;
-            padding: 8px 15px;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        .btn-green {
-            background: #2e7d32;
-            color: white;
-            border: none;
-            padding: 8px 15px;
-            border-radius: 5px;
-            cursor: pointer;
         }
         .qty-btn {
-            background: #e3f2fd;
-            border: 1px solid #90caf9;
-            padding: 4px 10px;
-            font-weight: bold;
+            padding: 2px 8px;
+            background: #ddd;
+            border: none;
             cursor: pointer;
+            font-weight: bold;
             border-radius: 4px;
         }
-        /* Real vaqt dizayni chap pastki burchak uchun */
-        #realtime-clock {
-            position: fixed;
-            bottom: 15px;
-            left: 15px;
-            background: rgba(25, 118, 210, 0.9);
-            color: white;
-            padding: 10px 15px;
-            border-radius: 8px;
+        .qty-btn:hover {
+            background: #ccc;
+        }
+        .tab-btn {
+            padding: 6px 12px;
+            border: none;
+            background: #eee;
+            cursor: pointer;
+            border-radius: 4px;
+            margin-right: 5px;
+            margin-bottom: 5px;
             font-size: 13px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-            z-index: 1000;
-            font-weight: bold;
+        }
+        .tab-btn.active {
+            background: #2a5298;
+            color: white;
         }
     </style>
 </head>
 <body>
 
-    <!-- Kirish Ekrani -->
+    <!-- Login Ekrani -->
     <div id="login-screen">
         <div class="login-box">
-            <h3>Ofitsant Kirishi</h3>
-            <input type="text" id="login-user" placeholder="Login (masalan: ofitsant1)">
+            <h2>Ofitsiant Tizimi</h2>
+            <input type="text" id="login-user" placeholder="Login">
             <input type="password" id="login-pass" placeholder="Parol">
             <button onclick="loginWaiter()">Kirish</button>
-            <p style="font-size: 12px; color: #666; margin-top: 15px;">Parollar: ofitsant1-4 uchun 1111-4444</p>
         </div>
     </div>
 
     <!-- Asosiy Panel -->
-    <div id="main-panel" style="display: none;">
-        <header>
-            <h2>Ofitsant Boshqaruv Paneli</h2>
-            <div>
-                <span id="logged-waiter-name" style="margin-right: 15px; font-weight: bold;"></span>
-                <button onclick="openHistory()" class="btn-blue" style="background:#00acc1;">Tarix</button>
-                <button onclick="logoutWaiter()" style="background: #d32f2f; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer;">Chiqish</button>
-            </div>
-        </header>
+    <div id="main-panel">
+        <div class="header">
+            <!-- Chap yuqori burchakdagi real vaqt soati -->
+            <div id="realtime-clock" class="top-left-clock"></div>
 
-        <div class="container">
-            <!-- Bo'limlar (Xonalar va Zal papkalari) -->
-            <div class="sections-nav">
-                <div id="folder-zal" class="section-folder active" onclick="switchSection('zal')">🏛 Zal (16 ta stol)</div>
-                <div id="folder-xonalar" class="section-folder" onclick="switchSection('xonalar')">🚪 Xonalar (12 ta xona)</div>
+            <div class="header-center">
+                <button id="folder-zal" class="folder-btn active" onclick="switchSection('zal')">Zal</button>
+                <button id="folder-xonalar" class="folder-btn" onclick="switchSection('xonalar')">Xonalar</button>
             </div>
 
-            <h3 id="section-heading-title">Zal Stollari</h3>
-            <div id="tables-grid"></div>
+            <div class="header-right">
+                <span id="logged-waiter-name" style="font-weight: bold;"></span>
+                <button onclick="openHistory()" style="padding: 6px 12px; background: #ff9800; color: white; border: none; border-radius: 5px; cursor: pointer;">Tarix</button>
+                <button onclick="logoutWaiter()" style="padding: 6px 12px; background: #e74c3c; color: white; border: none; border-radius: 5px; cursor: pointer;">Chiqish</button>
+            </div>
         </div>
+
+        <h2 id="section-heading-title" style="margin-top: 25px;">Zal Stollari (16 ta)</h2>
+        <div id="tables-grid" class="grid-container"></div>
     </div>
 
-    <!-- Real vaqt chap pastki burchakda -->
-    <div id="realtime-clock">Yuklanmoqda...</div>
-
-    <!-- Stol Buyurtma va Boshqaruv Modali -->
-    <div id="modal-overlay">
+    <!-- Stol / Xona Boshqaruv Modali -->
+    <div id="modal-overlay" class="modal-overlay">
         <div class="modal-content">
-            <h2 id="modal-title" style="margin-top:0;">Stol Boshqaruvi</h2>
-            
-            <div style="background: #f5f5f5; padding: 10px 15px; border-radius: 8px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px;">
-                <span style="font-weight: bold;">👥 Mehmonlar (odam) soni:</span>
-                <div>
-                    <button class="qty-btn" onclick="changeGuests(-1)">-</button>
-                    <span id="modal-guests-val" style="margin: 0 15px; font-size: 18px; font-weight: bold;">1</span>
-                    <button class="qty-btn" onclick="changeGuests(1)">+</button>
-                </div>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3 id="modal-title" style="margin: 0;">Boshqaruv</h3>
+                <button onclick="closeModal()" style="border: none; background: none; font-size: 20px; cursor: pointer;">&times;</button>
             </div>
 
-            <div class="category-tabs">
+            <div style="margin: 15px 0; display: flex; align-items: center; gap: 10px;">
+                <span>Mehmonlar soni:</span>
+                <button class="qty-btn" onclick="changeGuests(-1)">-</button>
+                <span id="modal-guests-val" style="font-weight: bold; font-size: 16px;">1</span>
+                <button class="qty-btn" onclick="changeGuests(1)">+</button>
+            </div>
+
+            <div style="margin-bottom: 10px;">
                 <button class="tab-btn active" onclick="filterModalMenu('all', event)">Barchasi</button>
-                <button class="tab-btn" onclick="filterModalMenu('osh', event)">Osh</button>
-                <button class="tab-btn" onclick="filterModalMenu('suyuq', event)">Suyuq ovqatlar</button>
-                <button class="tab-btn" onclick="filterModalMenu('quyuq', event)">Quyuq taomlar</button>
-                <button class="tab-btn" onclick="filterModalMenu('hamirli', event)">Hamirli taomlar</button>
-                <button class="tab-btn" onclick="filterModalMenu('kabob', event)">Kaboblar</button>
-                <button class="tab-btn" onclick="filterModalMenu('somsa', event)">Somsalar</button>
+                <button class="tab-btn" onclick="filterModalMenu('milliy', event)">Milliy taomlar</button>
                 <button class="tab-btn" onclick="filterModalMenu('fastfood', event)">Fast Food</button>
+                <button class="tab-btn" onclick="filterModalMenu('ichimliklar', event)">Ichimliklar</button>
             </div>
 
-            <h3 style="margin-bottom: 8px;">Menyu</h3>
-            <div id="menu-selection-list" style="max-height: 250px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; border-radius: 8px;"></div>
-            
-            <h3 style="margin: 15px 0 8px 0;">Tanlangan Buyurtmalar</h3>
-            <div id="current-order-summary" style="background: #fafafa; padding: 10px; border-radius: 8px; border: 1px solid #eee;"></div>
-            
-            <div style="margin-top: 20px; display: flex; justify-content: space-between; gap: 10px;">
-                <button onclick="sendOrderToAdmin()" class="btn-green" style="flex: 1;">Adminiga Yuborish / Yangilash</button>
-                <button onclick="printCheck()" class="btn-blue" style="background: #7b1fa2; flex: 1;">Chek Chop Etish (QR)</button>
-                <button onclick="closeModal()" style="background: #757575; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer;">Yopish</button>
+            <div id="menu-selection-list" style="max-height: 250px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; border-radius: 6px;">
+                <!-- Menyu ro'yxati dinamik chiqadi -->
+            </div>
+
+            <div style="margin-top: 15px; background: #f9f9f9; padding: 10px; border-radius: 6px;" id="current-order-summary">
+                <!-- Buyurtmalar yig'indisi -->
+            </div>
+
+            <div style="margin-top: 20px; display: flex; justify-content: flex-end; gap: 10px;">
+                <button onclick="printCheck()" style="padding: 8px 15px; background: #ff9800; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">Chek chiqarish</button>
+                <button onclick="sendOrderToAdmin()" style="padding: 8px 15px; background: #27ae60; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">Buyurtmani yuborish</button>
             </div>
         </div>
     </div>
 
-    <!-- QR Chek Ko'rsatish Modali -->
-    <div id="qr-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center;">
-        <div class="modal-content" style="width: 400px; text-align: center;">
-            <h3>Restoran Cheki & QR-kod</h3>
-            <div id="qr-check-content" style="text-align: left; margin: 15px 0; background: #fff; padding: 10px; border: 1px dashed #ccc; font-size: 13px;"></div>
-            <div style="margin: 15px 0;">
-                <!-- Namuna QR-kod rasmi -->
-                <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=OshxonaCheckPaymentQR" alt="QR Kod" style="width: 130px; height: 130px;">
-            </div>
-            <button onclick="closeQrModal()" class="btn-blue">Yopish</button>
+    <!-- QR / Check Modali -->
+    <div id="qr-modal" class="modal-overlay">
+        <div class="modal-content" style="width: 350px; text-align: center;">
+            <h3>Chek</h3>
+            <div id="qr-check-content" style="text-align: left; margin: 15px 0; font-size: 14px;"></div>
+            <button onclick="closeQrModal()" style="padding: 8px 20px; background: #2a5298; color: white; border: none; border-radius: 5px; cursor: pointer;">Yopish</button>
         </div>
     </div>
 
     <!-- Tarix Modali -->
-    <div id="history-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center;">
+    <div id="history-modal" class="modal-overlay">
         <div class="modal-content">
-            <h2>Xizmat Ko'rsatish Tarixi</h2>
-            <div id="history-list" style="max-height: 400px; overflow-y: auto; margin-top: 15px;"></div>
-            <br>
-            <button onclick="closeHistory()" class="btn-blue">Yopish</button>
+            <h3>Xizmat tarixi</h3>
+            <div id="history-list" style="max-height: 300px; overflow-y: auto; margin: 15px 0;"></div>
+            <button onclick="closeHistory()" style="padding: 8px 15px; background: #2a5298; color: white; border: none; border-radius: 5px; cursor: pointer;">Yopish</button>
         </div>
     </div>
 
     <script>
         const waitersDB = [
-            { login: "ofitsant1", pass: "1111", name: "Anvar" },
-            { login: "ofitsant2", pass: "2222", name: "Jasur" },
-            { login: "ofitsant3", pass: "3333", name: "Sardor" },
-            { login: "ofitsant4", pass: "4444", name: "Bobur" }
+            { login: "valijon", pass: "1234", name: "Valijon" },
+            { login: "sherzod", pass: "1234", name: "Sherzod" }
         ];
 
         const fullMenu = [
-            // Osh
-            { id: 1, category: "osh", name: "Toshkent oshi (Toʻy oshi)", price: 40000, img: "https://images.unsplash.com/photo-1633964913295-ceb43826e7c9?w=100" },
-            { id: 2, category: "osh", name: "Samarqand oshi", price: 42000, img: "https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=100" },
-            { id: 3, category: "osh", name: "Buxoro oshi (\"Sochqi oshi\")", price: 38000, img: "https://images.unsplash.com/photo-1633964913295-ceb43826e7c9?w=100" },
-            { id: 4, category: "osh", name: "Fargʻona oshi", price: 39000, img: "https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=100" },
-            { id: 5, category: "osh", name: "Devzira oshi", price: 45000, img: "https://images.unsplash.com/photo-1633964913295-ceb43826e7c9?w=100" },
-
-            // Suyuq ovqatlar
-            { id: 6, category: "suyuq", name: "Qaynatma shoʻrva", price: 25000, img: "https://images.unsplash.com/photo-1547592166-23ac45744acd?w=100" },
-            { id: 7, category: "suyuq", name: "Mastava", price: 22000, img: "https://images.unsplash.com/photo-1547592180-85f173990554?w=100" },
-            { id: 8, category: "suyuq", name: "Noʻxat shoʻrva (Moʻxaldak)", price: 23000, img: "https://images.unsplash.com/photo-1547592166-23ac45744acd?w=100" },
-            { id: 9, category: "suyuq", name: "Moshxorda", price: 20000, img: "https://images.unsplash.com/photo-1547592180-85f173990554?w=100" },
-            { id: 10, category: "suyuq", name: "Kalla-pacha", price: 35000, img: "https://images.unsplash.com/photo-1547592166-23ac45744acd?w=100" },
-            { id: 11, category: "suyuq", name: "Chuchvara shoʻrva", price: 24000, img: "https://images.unsplash.com/photo-1547592180-85f173990554?w=100" },
-            { id: 12, category: "suyuq", name: "Koʻza shoʻrva", price: 28000, img: "https://images.unsplash.com/photo-1547592166-23ac45744acd?w=100" },
-            { id: 13, category: "suyuq", name: "Shirguruch", price: 18000, img: "https://images.unsplash.com/photo-1547592180-85f173990554?w=100" },
-
-            // Quyuq taomlar
-            { id: 14, category: "quyuq", name: "Bifsteks", price: 45000, img: "https://images.unsplash.com/photo-1544025162-d76694265947?w=100" },
-            { id: 15, category: "quyuq", name: "Bistrogonav (Bef-stroganov)", price: 42000, img: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=100" },
-            { id: 16, category: "quyuq", name: "Jarkor (Jarkoye)", price: 38000, img: "https://images.unsplash.com/photo-1544025162-d76694265947?w=100" },
-            { id: 17, category: "quyuq", name: "Lagʻman (Qovurma lagʻman)", price: 30000, img: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=100" },
-            { id: 18, category: "quyuq", name: "Dimlama", price: 32000, img: "https://images.unsplash.com/photo-1544025162-d76694265947?w=100" },
-            { id: 19, category: "quyuq", name: "Tabaka joʻjasi (S-tabaka)", price: 40000, img: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=100" },
-            { id: 20, category: "quyuq", name: "Norin (Qozon norin)", price: 35000, img: "https://images.unsplash.com/photo-1544025162-d76694265947?w=100" },
-
-            // Hamirli taomlar
-            { id: 21, category: "hamirli", name: "Manti (Goʻshtli va piyozli)", price: 28000, img: "https://images.unsplash.com/photo-1496116218417-1a781b1c416c?w=100" },
-            { id: 22, category: "hamirli", name: "Chuchvara (Qaynatilgan yoki qovurilgan)", price: 25000, img: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=100" },
-            { id: 23, category: "hamirli", name: "Choʻzma lagʻmon", price: 29000, img: "https://images.unsplash.com/photo-1496116218417-1a781b1c416c?w=100" },
-            { id: 24, category: "hamirli", name: "Qovurma lagʻmon (Qovurma soʻy)", price: 30000, img: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=100" },
-            { id: 25, category: "hamirli", name: "Uygʻur lagʻmoni", price: 32000, img: "https://images.unsplash.com/photo-1496116218417-1a781b1c416c?w=100" },
-            { id: 26, category: "hamirli", name: "Norin", price: 30000, img: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=100" },
-            { id: 27, category: "hamirli", name: "Beshbarmoq", price: 45000, img: "https://images.unsplash.com/photo-1496116218417-1a781b1c416c?w=100" },
-            { id: 28, category: "hamirli", name: "Uygʻur shivit oshi", price: 33000, img: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=100" },
-
-            // Kaboblar
-            { id: 29, category: "kabob", name: "Qiyma kabob", price: 15000, img: "https://images.unsplash.com/photo-1529193591184-b1d58069ecdd?w=100" },
-            { id: 30, category: "kabob", name: "Qoʻy goʻshti shashligi (Klassik shashlik)", price: 20000, img: "https://images.unsplash.com/photo-1603048588665-791ca8aea617?w=100" },
-            { id: 31, category: "kabob", name: "Jigar shashligi", price: 18000, img: "https://images.unsplash.com/photo-1529193591184-b1d58069ecdd?w=100" },
-            { id: 32, category: "kabob", name: "Qozon kabob", price: 42000, img: "https://images.unsplash.com/photo-1603048588665-791ca8aea617?w=100" },
-            { id: 33, category: "kabob", name: "Tandir kabob", price: 48000, img: "https://images.unsplash.com/photo-1529193591184-b1d58069ecdd?w=100" },
-            { id: 34, category: "kabob", name: "Jiz kabob", price: 45000, img: "https://images.unsplash.com/photo-1603048588665-791ca8aea617?w=100" },
-            { id: 35, category: "kabob", name: "Norin kabob", price: 35000, img: "https://images.unsplash.com/photo-1529193591184-b1d58069ecdd?w=100" },
-            { id: 36, category: "kabob", name: "Toyloq (Uygʻurcha) kabob", price: 22000, img: "https://images.unsplash.com/photo-1603048588665-791ca8aea617?w=100" },
-            { id: 37, category: "kabob", name: "Bedana kabob", price: 30000, img: "https://images.unsplash.com/photo-1529193591184-b1d58069ecdd?w=100" },
-            { id: 38, category: "kabob", name: "Tovuq shashligi (File kabob)", price: 17000, img: "https://images.unsplash.com/photo-1603048588665-791ca8aea617?w=100" },
-            { id: 39, category: "kabob", name: "Lula-kabob", price: 19000, img: "https://images.unsplash.com/photo-1529193591184-b1d58069ecdd?w=100" },
-            { id: 40, category: "kabob", name: "Karsak kabob", price: 21000, img: "https://images.unsplash.com/photo-1603048588665-791ca8aea617?w=100" },
-            { id: 41, category: "kabob", name: "Qovurma shashlik", price: 20000, img: "https://images.unsplash.com/photo-1529193591184-b1d58069ecdd?w=100" },
-            { id: 42, category: "kabob", name: "Quyruq kabob (Dumba kabob)", price: 23000, img: "https://images.unsplash.com/photo-1603048588665-791ca8aea617?w=100" },
-            { id: 43, category: "kabob", name: "Bifshteks kabob", price: 25000, img: "https://images.unsplash.com/photo-1529193591184-b1d58069ecdd?w=100" },
-            { id: 44, category: "kabob", name: "Tabaka kabob", price: 38000, img: "https://images.unsplash.com/photo-1603048588665-791ca8aea617?w=100" },
-            { id: 45, category: "kabob", name: "Ovoza kabob", price: 22000, img: "https://images.unsplash.com/photo-1529193591184-b1d58069ecdd?w=100" },
-            { id: 46, category: "kabob", name: "Sabzavotli kabob", price: 12000, img: "https://images.unsplash.com/photo-1603048588665-791ca8aea617?w=100" },
-            { id: 47, category: "kabob", name: "Qanotcha shashligi (Tovuq qanoti)", price: 18000, img: "https://images.unsplash.com/photo-1529193591184-b1d58069ecdd?w=100" },
-            { id: 48, category: "kabob", name: "Piyozli kabob", price: 14000, img: "https://images.unsplash.com/photo-1603048588665-791ca8aea617?w=100" },
-            { id: 49, category: "kabob", name: "Qovurgʻa kabob (Ribs)", price: 32000, img: "https://images.unsplash.com/photo-1529193591184-b1d58069ecdd?w=100" },
-            { id: 50, category: "kabob", name: "Kavkazcha shashlik (Kars)", price: 26000, img: "https://images.unsplash.com/photo-1603048588665-791ca8aea617?w=100" },
-            { id: 51, category: "kabob", name: "Baliq kabob", price: 35000, img: "https://images.unsplash.com/photo-1529193591184-b1d58069ecdd?w=100" },
-            { id: 52, category: "kabob", name: "Mushroom (Qoʻziqorin) kabob", price: 15000, img: "https://images.unsplash.com/photo-1603048588665-791ca8aea617?w=100" },
-            { id: 53, category: "kabob", name: "Gilos kabob (Mevali kabob)", price: 24000, img: "https://images.unsplash.com/photo-1529193591184-b1d58069ecdd?w=100" },
-            { id: 54, category: "kabob", name: "Asalli shashlik", price: 22000, img: "https://images.unsplash.com/photo-1603048588665-791ca8aea617?w=100" },
-            { id: 55, category: "kabob", name: "Achchiq (Laza) shashlik", price: 19000, img: "https://images.unsplash.com/photo-1529193591184-b1d58069ecdd?w=100" },
-            { id: 56, category: "kabob", name: "Minora kabob", price: 28000, img: "https://images.unsplash.com/photo-1603048588665-791ca8aea617?w=100" },
-            { id: 57, category: "kabob", name: "Kletchatka kabob", price: 16000, img: "https://images.unsplash.com/photo-1529193591184-b1d58069ecdd?w=100" },
-            { id: 58, category: "kabob", name: "Jigar-dumba kabob", price: 20000, img: "https://images.unsplash.com/photo-1603048588665-791ca8aea617?w=100" },
-            { id: 581, category: "kabob", name: "O'rama kabob", price: 27000, img: "https://images.unsplash.com/photo-1529193591184-b1d58069ecdd?w=100" },
-            { id: 582, category: "kabob", name: "Napoleon kabob", price: 30000, img: "https://images.unsplash.com/photo-1603048588665-791ca8aea617?w=100" },
-
-            // Somsalar
-            { id: 59, category: "somsa", name: "Tandir somsa", price: 12000, img: "https://images.unsplash.com/photo-1626777552726-4a6b54c97e46?w=100" },
-            { id: 60, category: "somsa", name: "Qatlama (varaqi) somsa", price: 10000, img: "https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=100" },
-            { id: 61, category: "somsa", name: "Koʻk somsa", price: 8000, img: "https://images.unsplash.com/photo-1626777552726-4a6b54c97e46?w=100" },
-            { id: 62, category: "somsa", name: "Qovoqli somsa", price: 8000, img: "https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=100" },
-            { id: 63, category: "somsa", name: "Kartoshkali somsa", price: 8000, img: "https://images.unsplash.com/photo-1626777552726-4a6b54c97e46?w=100" },
-            { id: 64, category: "somsa", name: "G‘umma somsa (Qovurma somsa)", price: 9000, img: "https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=100" },
-            { id: 65, category: "somsa", name: "Go‘shtli-kartoshkali somsa", price: 10000, img: "https://images.unsplash.com/photo-1626777552726-4a6b54c97e46?w=100" },
-            { id: 66, category: "somsa", name: "Pishloqli somsa", price: 11000, img: "https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=100" },
-            { id: 67, category: "somsa", name: "Tovuqli somsa", price: 10000, img: "https://images.unsplash.com/photo-1626777552726-4a6b54c97e46?w=100" },
-            { id: 68, category: "somsa", name: "Qiyma somsa", price: 10000, img: "https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=100" },
-            { id: 69, category: "somsa", name: "Moshli somsa", price: 9000, img: "https://images.unsplash.com/photo-1626777552726-4a6b54c97e46?w=100" },
-            { id: 70, category: "somsa", name: "Zig‘ir somsa", price: 13000, img: "https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=100" },
-            { id: 71, category: "somsa", name: "Asal solingan shirin somsa", price: 9000, img: "https://images.unsplash.com/photo-1626777552726-4a6b54c97e46?w=100" },
-            { id: 72, category: "somsa", name: "Qora zira (yoki kunjutli) somsa", price: 11000, img: "https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=100" },
-            { id: 73, category: "somsa", name: "Katta to‘y somsasi", price: 80000, img: "https://images.unsplash.com/photo-1626777552726-4a6b54c97e46?w=100" },
-            { id: 74, category: "somsa", name: "Piyozli somsa (piyoz-dumba)", price: 9000, img: "https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=100" },
-            { id: 75, category: "somsa", name: "Qo‘ziqorinli somsa", price: 10000, img: "https://images.unsplash.com/photo-1626777552726-4a6b54c97e46?w=100" },
-            { id: 76, category: "somsa", name: "Uyg‘urcha somsa", price: 12000, img: "https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=100" },
-            { id: 77, category: "somsa", name: "Jigar somsasi", price: 11000, img: "https://images.unsplash.com/photo-1626777552726-4a6b54c97e46?w=100" },
-            { id: 78, category: "somsa", name: "Sutli xamirdan tayyorlangan somsa", price: 10000, img: "https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=100" },
-
+            // Milliy taomlar
+            { id: 1, category: "milliy", name: "Osh (Palov)", price: 35000, img: "https://images.unsplash.com/photo-1633964913295-ceb43826e7c9?w=100" },
+            { id: 2, category: "milliy", name: "Manti", price: 6000, img: "https://images.unsplash.com/photo-1541658016709-82535e94bc69?w=100" },
+            { id: 3, category: "milliy", name: "Somsa (Tandir)", price: 8000, img: "https://images.unsplash.com/photo-1601050690597-df0568f70950?w=100" },
+            { id: 4, category: "milliy", name: "Shashlik (Go'sht)", price: 15000, img: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=100" },
+            { id: 5, category: "milliy", name: "Norin", price: 40000, img: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=100" },
+            { id: 6, category: "milliy", name: "Lag'mon", price: 30000, img: "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=100" },
             // Fast Food
             { id: 79, category: "fastfood", name: "Lavash", price: 32000, img: "https://images.unsplash.com/photo-1626777552726-4a6b54c97e46?w=100" },
             { id: 80, category: "fastfood", name: "Gamburger", price: 30000, img: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=100" },
@@ -418,7 +317,13 @@
             { id: 95, category: "fastfood", name: "Panini", price: 26000, img: "https://images.unsplash.com/photo-1528735602780-2552fd46c7af?w=100" },
             { id: 96, category: "fastfood", name: "Wok lapshasi", price: 35000, img: "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=100" },
             { id: 97, category: "fastfood", name: "Korn-dog", price: 16000, img: "https://images.unsplash.com/photo-1619740455993-9e612b1af08a?w=100" },
-            { id: 98, category: "fastfood", name: "Pishloqli tayoqchalar (Cheese-sticks)", price: 20000, img: "https://images.unsplash.com/photo-1548340748-6d2b7d7da28e?w=100" }
+            { id: 98, category: "fastfood", name: "Pishloqli tayoqchalar (Cheese-sticks)", price: 20000, img: "https://images.unsplash.com/photo-1548340748-6d2b7d7da28e?w=100" },
+            // Ichimliklar
+            { id: 101, category: "ichimliklar", name: "Qora choy", price: 3000, img: "https://images.unsplash.com/photo-1576092768241-dec231879fc3?w=100" },
+            { id: 102, category: "ichimliklar", name: "Ko'k choy", price: 3000, img: "https://images.unsplash.com/photo-1576092768241-dec231879fc3?w=100" },
+            { id: 103, category: "ichimliklar", name: "Coca-Cola (1L)", price: 12000, img: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=100" },
+            { id: 104, category: "ichimliklar", name: "Fanta (1L)", price: 12000, img: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=100" },
+            { id: 105, category: "ichimliklar", name: "Limonli choy", price: 5000, img: "https://images.unsplash.com/photo-1576092768241-dec231879fc3?w=100" }
         ];
 
         let currentActiveSection = 'zal'; // 'zal' yoki 'xonalar'
@@ -501,10 +406,14 @@
                 
                 let titlePrefix = (currentActiveSection === 'zal') ? 'Stol #' : 'Xona #';
 
-                // Stol-stul jamlanmasi rasmi ikonka sifatida qo'yildi
+                // Talabga ko'ra: Zal uchun stol-o'rindiq, Xonalar uchun uycha rasmi qo'yildi
+                let iconSrc = (currentActiveSection === 'zal') 
+                    ? 'https://cdn-icons-png.flaticon.com/512/962/962863.png' 
+                    : 'https://cdn-icons-png.flaticon.com/512/619/619153.png';
+
                 grid.innerHTML += `
                     <div class="table-card ${itemData.busy ? 'busy' : ''}" onclick="openItemModal('${currentActiveSection}', ${i})">
-                        <img src="https://cdn-icons-png.flaticon.com/512/962/962863.png" class="table-icon" alt="Stol va O'rindiq">
+                        <img src="${iconSrc}" class="table-icon" alt="Ikonka">
                         <h4 style="margin:5px 0;">${titlePrefix}${i}</h4>
                         <p style="font-size: 13px; margin: 0; font-weight: bold;">${itemData.busy ? `🔴 Band (${itemData.guests} kishi)` : '🟢 Bo\'sh'}</p>
                     </div>
@@ -676,7 +585,6 @@
             });
             localStorage.setItem('service_history', JSON.stringify(history));
 
-            // Ofitsantga chek va QR-kodni ko'rsatish
             let checkHtml = `<b>Joy:</b> ${locName}<br><b>Ofitsant:</b> ${activeWaiter}<br><b>Vaqt:</b> ${new Date().toLocaleString()}<br><hr style="border:0; border-top:1px dashed #aaa">`;
             itemData.items.forEach(i => {
                 checkHtml += `${i.name} x ${i.qty} = ${(i.qty * i.price).toLocaleString()} so'm<br>`;

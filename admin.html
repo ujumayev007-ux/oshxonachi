@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Panel - Restoran</title>
+    <title>Ofitsiant Panel - Restoran</title>
     <style>
         * {
             box-sizing: border-box;
@@ -13,64 +13,182 @@
             margin: 0;
             background-color: #f4f6f9;
         }
+        /* Login ekrani */
+        #login-screen {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+        }
+        .login-box {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            width: 320px;
+            text-align: center;
+        }
+        .login-box input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+        }
+        .login-box button {
+            width: 100%;
+            padding: 10px;
+            background: #2a5298;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .login-box button:hover {
+            background: #1e3c72;
+        }
+
+        /* Asosiy panel */
+        #main-panel {
+            display: none;
+            padding: 20px;
+        }
         .header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             background: white;
             padding: 15px 20px;
+            border-radius: 10px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            position: relative;
         }
-        .container {
-            padding: 20px;
-            max-width: 1200px;
-            margin: 0 auto;
+        
+        /* Soat va sana chap yuqori burchakda */
+        .top-left-clock {
+            position: absolute;
+            top: 15px;
+            left: 20px;
+            font-size: 13px;
+            font-weight: bold;
+            color: #333;
+            line-height: 1.4;
         }
-        .card-grid {
+
+        .header-center {
+            margin-left: 170px; /* Soat uchun kengroq joy tashlandi */
+            display: flex;
+            gap: 10px;
+        }
+        .folder-btn {
+            padding: 8px 16px;
+            border: none;
+            background: #e0e0e0;
+            cursor: pointer;
+            border-radius: 6px;
+            font-weight: bold;
+            transition: 0.2s;
+        }
+        .folder-btn.active {
+            background: #2a5298;
+            color: white;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        /* Grid va Kartochkalar dizayni */
+        .grid-container {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
             gap: 15px;
             margin-top: 20px;
         }
-        .order-card {
+        .table-card {
             background: white;
+            border: 2px solid #ddd;
             border-radius: 10px;
             padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: 0.2s;
             box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-            border-left: 5px solid #2a5298;
         }
-        .order-card.zal {
-            border-left-color: #27ae60;
+        .table-card:hover {
+            transform: translateY(-3px);
+            border-color: #2a5298;
         }
-        .order-card.xonalar {
-            border-left-color: #ff9800;
+        .table-card.busy {
+            background-color: #ffe6e6;
+            border-color: #ff4d4d;
         }
-        .btn {
-            padding: 6px 12px;
+        .table-icon {
+            width: 40px;
+            height: 40px;
+            object-fit: contain;
+            margin-bottom: 5px;
+        }
+
+        /* Modal oyna */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            width: 600px;
+            max-width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .menu-item-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 8px;
+        }
+        .menu-item-img {
+            width: 40px;
+            height: 40px;
+            object-fit: cover;
+            border-radius: 6px;
+        }
+        .qty-btn {
+            padding: 2px 8px;
+            background: #ddd;
             border: none;
-            border-radius: 5px;
             cursor: pointer;
             font-weight: bold;
-            color: white;
+            border-radius: 4px;
         }
-        .btn-danger { background: #e74c3c; }
-        .btn-success { background: #27ae60; }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            background: white;
-            border-radius: 10px;
-            overflow: hidden;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-            margin-top: 20px;
+        .qty-btn:hover {
+            background: #ccc;
         }
-        th, td {
-            padding: 12px 15px;
-            text-align: left;
-            border-bottom: 1px solid #eee;
-            font-size: 14px;
+        .tab-btn {
+            padding: 6px 12px;
+            border: none;
+            background: #eee;
+            cursor: pointer;
+            border-radius: 4px;
+            margin-right: 5px;
+            margin-bottom: 5px;
+            font-size: 13px;
         }
-        th {
+        .tab-btn.active {
             background: #2a5298;
             color: white;
         }
@@ -78,158 +196,383 @@
 </head>
 <body>
 
-    <div class="header">
-        <h2>Restoran Admin Paneli</h2>
-        <div>
-            <button class="btn btn-danger" onclick="clearAllOrders()">Barcha buyurtmalarni tozalash</button>
+    <!-- Login Ekrani -->
+    <div id="login-screen">
+        <div class="login-box">
+            <h2>Ofitsiant Tizimi</h2>
+            <input type="text" id="login-user" placeholder="Login">
+            <input type="password" id="login-pass" placeholder="Parol">
+            <button onclick="loginWaiter()">Kirish</button>
         </div>
     </div>
 
-    <div class="container">
-        <h3>Kelib tushgan faol buyurtmalar</h3>
-        <div id="admin-orders-grid" class="card-grid">
-            <!-- Dinamik chiqadi -->
+    <!-- Asosiy Panel -->
+    <div id="main-panel">
+        <div class="header">
+            <!-- Chap yuqori burchakdagi real vaqt soati va maxsus ikonkalari -->
+            <div id="realtime-clock" class="top-left-clock"></div>
+
+            <div class="header-center">
+                <button id="folder-zal" class="folder-btn active" onclick="switchSection('zal')">Zal</button>
+                <button id="folder-xonalar" class="folder-btn" onclick="switchSection('xonalar')">Xonalar</button>
+            </div>
+
+            <div class="header-right">
+                <span id="logged-waiter-name" style="font-weight: bold;"></span>
+                <button onclick="openHistory()" style="padding: 6px 12px; background: #ff9800; color: white; border: none; border-radius: 5px; cursor: pointer;">Tarix</button>
+                <button onclick="logoutWaiter()" style="padding: 6px 12px; background: #e74c3c; color: white; border: none; border-radius: 5px; cursor: pointer;">Chiqish</button>
+            </div>
         </div>
 
-        <h3 style="margin-top: 40px;">Stollar va Xonalar Holati</h3>
-        <div id="tables-status-container"></div>
+        <h2 id="section-heading-title" style="margin-top: 25px;">Zal Stollari (16 ta)</h2>
+        <div id="tables-grid" class="grid-container"></div>
+    </div>
 
-        <h3 style="margin-top: 40px;">Xizmat tarixi (Cheklar)</h3>
-        <div style="overflow-x: auto;">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Joy</th>
-                        <th>Ofitsiant</th>
-                        <th>Mehmonlar</th>
-                        <th>Vaqt</th>
-                        <th>Umumiy summa</th>
-                    </tr>
-                </thead>
-                <tbody id="admin-history-list">
-                    <!-- Tarix dinamik chiqadi -->
-                </tbody>
-            </table>
+    <!-- Stol / Xona Boshqaruv Modali -->
+    <div id="modal-overlay" class="modal-overlay">
+        <div class="modal-content">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3 id="modal-title" style="margin: 0;">Boshqaruv</h3>
+                <button onclick="closeModal()" style="border: none; background: none; font-size: 20px; cursor: pointer;">&times;</button>
+            </div>
+
+            <div style="margin: 15px 0; display: flex; align-items: center; gap: 10px;">
+                <span>Mehmonlar soni:</span>
+                <button class="qty-btn" onclick="changeGuests(-1)">-</button>
+                <span id="modal-guests-val" style="font-weight: bold; font-size: 16px;">1</span>
+                <button class="qty-btn" onclick="changeGuests(1)">+</button>
+            </div>
+
+            <div style="margin-bottom: 10px;" id="menu-categories-tabs">
+                <button class="tab-btn active" onclick="filterModalMenu('all', event)">Barchasi</button>
+                <button class="tab-btn" onclick="filterModalMenu('Osh', event)">Osh</button>
+                <button class="tab-btn" onclick="filterModalMenu('Suyuq ovqatlar', event)">Suyuq ovqatlar</button>
+                <button class="tab-btn" onclick="filterModalMenu('Quyuq taomlar', event)">Quyuq taomlar</button>
+                <button class="tab-btn" onclick="filterModalMenu('Hamirli taomlar', event)">Hamirli taomlar</button>
+                <button class="tab-btn" onclick="filterModalMenu('Kaboblar', event)">Kaboblar</button>
+                <button class="tab-btn" onclick="filterModalMenu('Somsalar', event)">Somsalar</button>
+                <button class="tab-btn" onclick="filterModalMenu('Fast Food', event)">Fast Food</button>
+                <button class="tab-btn" onclick="filterModalMenu('Ichimliklar', event)">Ichimliklar</button>
+            </div>
+
+            <div id="menu-selection-list" style="max-height: 250px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; border-radius: 6px;">
+                <!-- Menyu ro'yxati dinamik chiqadi -->
+            </div>
+
+            <div style="margin-top: 15px; background: #f9f9f9; padding: 10px; border-radius: 6px;" id="current-order-summary">
+                <!-- Buyurtmalar yig'indisi -->
+            </div>
+
+            <div style="margin-top: 20px; display: flex; justify-content: flex-end; gap: 10px;">
+                <button onclick="printCheck()" style="padding: 8px 15px; background: #ff9800; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">Chek chiqarish</button>
+                <button onclick="sendOrderToAdmin()" style="padding: 8px 15px; background: #27ae60; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">Buyurtmani yuborish</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- QR / Check Modali -->
+    <div id="qr-modal" class="modal-overlay">
+        <div class="modal-content" style="width: 350px; text-align: center;">
+            <h3>Chek</h3>
+            <div id="qr-check-content" style="text-align: left; margin: 15px 0; font-size: 14px;"></div>
+            <button onclick="closeQrModal()" style="padding: 8px 20px; background: #2a5298; color: white; border: none; border-radius: 5px; cursor: pointer;">Yopish</button>
+        </div>
+    </div>
+
+    <!-- Tarix Modali -->
+    <div id="history-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h3>Xizmat tarixi</h3>
+            <div id="history-list" style="max-height: 300px; overflow-y: auto; margin: 15px 0;"></div>
+            <button onclick="closeHistory()" style="padding: 8px 15px; background: #2a5298; color: white; border: none; border-radius: 5px; cursor: pointer;">Yopish</button>
         </div>
     </div>
 
     <script>
+        // Real vaqt rejimidagi soat va sana funksiyasi[cite: 9]
+        function updateRealTimeClock() {
+            const clockElement = document.getElementById('realtime-clock');
+            if (clockElement) {
+                const now = new Date();
+                const hours = String(now.getHours()).padStart(2, '0');
+                const minutes = String(now.getMinutes()).padStart(2, '0');
+                const seconds = String(now.getSeconds()).padStart(2, '0');
+                
+                const year = now.getFullYear();
+                const month = String(now.getMonth() + 1).padStart(2, '0');
+                const day = String(now.getDate()).padStart(2, '0');
+                
+                clockElement.innerHTML = `${hours}:${minutes}:${seconds}<br>${day}.${month}.${year}`;
+            }
+        }
+        setInterval(updateRealTimeClock, 1000);
         window.onload = function() {
-            loadAdminData();
-            setInterval(loadAdminData, 2000); // Har 2 sekundda yangilab turadi
+            updateRealTimeClock();
+            // Agar oldindan kirilgan bo'lsa tiklash
+            let savedWaiter = localStorage.getItem('logged_waiter');
+            if (savedWaiter) {
+                currentWaiter = JSON.parse(savedWaiter);
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('main-panel').style.display = 'block';
+                document.getElementById('logged-waiter-name').innerText = `Ofitsiant: ${currentWaiter.name}`;
+                renderTables();
+            }
         };
 
-        function loadAdminData() {
-            renderActiveOrders();
-            renderTablesStatus();
-            renderHistoryTable();
+        // Ofitsiant bazasi va parollari[cite: 9]
+        const waitersDB = [
+            { login: "Akmal", pass: "112233", name: "Akmal" },
+            { login: "Bek", pass: "223344", name: "Bek" },
+            { login: "Lola", pass: "334455", name: "Lola" },
+            { login: "Guli", pass: "445566", name: "Guli" }
+        ];
+
+        let currentWaiter = null;
+        let currentSection = 'zal';
+        let currentTableId = null;
+        let tablesData = JSON.parse(localStorage.getItem('waiter_tables_state')) || {};
+
+        function loginWaiter() {
+            const user = document.getElementById('login-user').value.trim();
+            const pass = document.getElementById('login-pass').value.trim();
+            const found = waitersDB.find(w => w.login === user && w.pass === pass);
+            if (found) {
+                currentWaiter = found;
+                localStorage.setItem('logged_waiter', JSON.stringify(found));
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('main-panel').style.display = 'block';
+                document.getElementById('logged-waiter-name').innerText = `Ofitsiant: ${found.name}`;
+                renderTables();
+            } else {
+                alert("Login yoki parol xato!");
+            }
         }
 
-        function renderActiveOrders() {
-            let ordersGrid = document.getElementById('admin-orders-grid');
-            let orders = JSON.parse(localStorage.getItem('admin_orders')) || [];
-            
-            ordersGrid.innerHTML = '';
-            if (orders.length === 0) {
-                ordersGrid.innerHTML = '<p style="color: #777; font-style: italic;">Hozircha faol buyurtmalar mavjud emas.</p>';
-                return;
+        function logoutWaiter() {
+            localStorage.removeItem('logged_waiter');
+            currentWaiter = null;
+            document.getElementById('login-screen').style.display = 'flex';
+            document.getElementById('main-panel').style.display = 'none';
+            document.getElementById('login-user').value = '';
+            document.getElementById('login-pass').value = '';
+        }
+
+        function switchSection(section) {
+            currentSection = section;
+            document.getElementById('folder-zal').classList.toggle('active', section === 'zal');
+            document.getElementById('folder-xonalar').classList.toggle('active', section === 'xonalar');
+            document.getElementById('section-heading-title').innerText = section === 'zal' ? "Zal Stollari (16 ta)" : "Xonalar (8 ta)";
+            renderTables();
+        }
+
+        function renderTables() {
+            const grid = document.getElementById('tables-grid');
+            grid.innerHTML = '';
+            const count = currentSection === 'zal' ? 16 : 8;
+            for (let i = 1; i <= count; i++) {
+                const tableKey = `${currentSection}_${i}`;
+                const tData = tablesData[tableKey];
+                const isBusy = tData && tData.status === 'busy';
+                
+                const card = document.createElement('div');
+                card.className = `table-card ${isBusy ? 'busy' : ''}`;
+                card.onclick = () => openTableModal(tableKey, i);
+                
+                card.innerHTML = `
+                    <img src="https://img.icons8.com/color/96/table.png" class="table-icon" alt="table">
+                    <div style="font-weight: bold; margin-top: 5px;">${currentSection === 'zal' ? 'Stol' : 'Xona'} #${i}</div>
+                    <div style="font-size: 12px; color: #666; margin-top: 3px;">${isBusy ? 'Band' : 'Bo\'sh'}</div>
+                `;
+                grid.appendChild(card);
             }
+        }
 
-            orders.forEach((order, index) => {
-                let locationName = order.type === 'zal' ? `Stol #${order.number}` : `Xona #${order.number}`;
-                let itemsHtml = '<ul style="padding-left: 15px; margin: 8px 0; font-size: 13px;">';
-                let total = 0;
+        let activeTableKey = null;
+        let currentGuests = 1;
+        let selectedItems = {};
 
-                order.items.forEach(i => {
-                    itemsHtml += `<li>${i.name} - ${i.qty} ta (${(i.qty * i.price).toLocaleString()} so'm)</li>`;
-                    total += i.qty * i.price;
-                });
-                itemsHtml += '</ul>';
+        function openTableModal(tableKey, number) {
+            activeTableKey = tableKey;
+            currentTableId = number;
+            document.getElementById('modal-title').innerText = `${currentSection === 'zal' ? 'Stol' : 'Xona'} #${number} Boshqaruvi`;
+            
+            if (!tablesData[tableKey]) {
+                tablesData[tableKey] = { guests: 1, items: {}, status: 'free' };
+            }
+            currentGuests = tablesData[tableKey].guests || 1;
+            selectedItems = JSON.parse(JSON.stringify(tablesData[tableKey].items || {}));
+            
+            document.getElementById('modal-guests-val').innerText = currentGuests;
+            document.getElementById('modal-overlay').style.display = 'flex';
+            filterModalMenu('all');
+            renderOrderSummary();
+        }
 
-                ordersGrid.innerHTML += `
-                    <div class="order-card ${order.type}">
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <h4 style="margin: 0; color: #333;">${locationName}</h4>
-                            <span style="font-size: 12px; background: #eee; padding: 2px 6px; border-radius: 4px;">${order.time}</span>
+        function closeModal() {
+            document.getElementById('modal-overlay').style.display = 'none';
+        }
+
+        function changeGuests(val) {
+            currentGuests += val;
+            if (currentGuests < 1) currentGuests = 1;
+            document.getElementById('modal-guests-val').innerText = currentGuests;
+        }
+
+        const fullMenu = [
+            { id: 1, category: "Osh", name: "Toshkent oshi (Toʻy oshi)", price: 35000 },
+            { id: 2, category: "Osh", name: "Samarqand oshi", price: 38000 },
+            { id: 10, category: "Suyuq ovqatlar", name: "Qaynatma shoʻrva", price: 25000 },
+            { id: 11, category: "Suyuq ovqatlar", name: "Mastava", price: 22000 },
+            { id: 20, category: "Quyuq taomlar", name: "Bifsteks", price: 38000 },
+            { id: 21, category: "Quyuq taomlar", name: "Bistrogonav (Bef-stroganov)", price: 40000 },
+            { id: 30, category: "Hamirli taomlar", name: "Manti (Goʻshtli va piyozli)", price: 30000 },
+            { id: 31, category: "Hamirli taomlar", name: "Chuchvara", price: 25000 },
+            { id: 40, category: "Kaboblar", name: "Qiyma kabob", price: 16000 },
+            { id: 41, category: "Kaboblar", name: "Qoʻy goʻshti shashligi", price: 20000 },
+            { id: 80, category: "Somsalar", name: "Tandir somsa", price: 10000 },
+            { id: 81, category: "Somsalar", name: "Qatlama somsa", price: 9000 },
+            { id: 110, category: "Fast Food", name: "Lavash", price: 32000 },
+            { id: 111, category: "Fast Food", name: "Gamburger", price: 30000 },
+            { id: 140, category: "Ichimliklar", name: "Coca-Cola 0.5L", price: 10000 },
+            { id: 141, category: "Ichimliklar", name: "Qora choy", price: 8000 }
+        ];
+
+        function filterModalMenu(cat, event) {
+            if (event) {
+                document.querySelectorAll('#menu-categories-tabs .tab-btn').forEach(b => b.classList.remove('active'));
+                event.target.classList.add('active');
+            }
+            const listContainer = document.getElementById('menu-selection-list');
+            const filtered = cat === 'all' ? fullMenu : fullMenu.filter(m => m.category === cat);
+            
+            listContainer.innerHTML = filtered.map(item => {
+                const qty = selectedItems[item.id] ? selectedItems[item.id].qty : 0;
+                return `
+                    <div class="menu-item-row">
+                        <div>
+                            <div style="font-weight: bold; font-size: 14px;">${item.name}</div>
+                            <div style="font-size: 12px; color: #666;">${item.price} so'm</div>
                         </div>
-                        <p style="margin: 5px 0; font-size: 13px; color: #555;">Ofitsiant: <b>${order.waiter}</b> | Mehmonlar: <b>${order.guests} ta</b></p>
-                        ${itemsHtml}
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
-                            <span style="font-size: 14px; color: #27ae60;">Jami: <b>${total.toLocaleString()} so'm</b></span>
-                            <button class="btn btn-success" onclick="completeOrder(${index}, '${order.type}', ${order.number})">Bajarildi</button>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <button class="qty-btn" onclick="updateItemQty(${item.id}, -1)">-</button>
+                            <span style="font-weight: bold; width: 20px; text-align: center;">${qty}</span>
+                            <button class="qty-btn" onclick="updateItemQty(${item.id}, 1)">+</button>
                         </div>
                     </div>
                 `;
-            });
+            }).join('');
         }
 
-        function completeOrder(index, type, number) {
-            let orders = JSON.parse(localStorage.getItem('admin_orders')) || [];
-            orders.splice(index, 1);
-            localStorage.setItem('admin_orders', JSON.stringify(orders));
-
-            // Stol yoki xonani bo'shatish yoki holatini yangilash
-            let key = `${type}_item_${number}`;
-            let itemData = JSON.parse(localStorage.getItem(key));
-            if (itemData) {
-                itemData.busy = false;
-                itemData.items = [];
-                localStorage.setItem(key, JSON.stringify(itemData));
-            }
-
-            loadAdminData();
-        }
-
-        function clearAllOrders() {
-            if (confirm("Barcha faol buyurtmalarni o'chirmoqchimisiz?")) {
-                localStorage.removeItem('admin_orders');
-                loadAdminData();
-            }
-        }
-
-        function renderTablesStatus() {
-            let container = document.getElementById('tables-status-container');
-            let html = '<div style="display: flex; gap: 20px; flex-wrap: wrap; margin-top: 10px;">';
-            
-            ['zal', 'xonalar'].forEach(sec => {
-                let count = sec === 'zal' ? 16 : 12;
-                let secTitle = sec === 'zal' ? 'Zal Stolari' : 'Xonalar';
-                html += `<div style="background: white; padding: 15px; border-radius: 8px; flex: 1; min-width: 250px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">`;
-                html += `<h4>${secTitle}</h4><div style="display: flex; flex-direction: column; gap: 5px;">`;
-                
-                for (let i = 1; i <= count; i++) {
-                    let key = `${sec}_item_${i}`;
-                    let data = JSON.parse(localStorage.getItem(key)) || { busy: false };
-                    let statusText = data.busy ? `🔴 Band (${data.guests || 1} kishi, Ofitsiant: ${data.waiter || 'Noma\'lum'})` : `🟢 Bo'sh`;
-                    html += `<div style="font-size: 13px; display: flex; justify-content: space-between; border-bottom: 1px solid #f0f0f0; padding: 4px 0;"><span>#${i}</span> <span>${statusText}</span></div>`;
+        function updateItemQty(id, delta) {
+            const item = fullMenu.find(m => m.id === id);
+            if (!item) return;
+            if (!selectedItems[id]) {
+                if (delta > 0) {
+                    selectedItems[id] = { ...item, qty: 1 };
                 }
-                html += `</div></div>`;
+            } else {
+                selectedItems[id].qty += delta;
+                if (selectedItems[id].qty <= 0) {
+                    delete selectedItems[id];
+                }
+            }
+            filterModalMenu(document.querySelector('#menu-categories-tabs .tab-btn.active').innerText);
+            renderOrderSummary();
+        }
+
+        function renderOrderSummary() {
+            const container = document.getElementById('current-order-summary');
+            const itemsArr = Object.values(selectedItems);
+            if (itemsArr.length === 0) {
+                container.innerHTML = "<i>Hozircha buyurtma bo'sh</i>";
+                return;
+            }
+            let total = 0;
+            let html = '<b style="font-size: 13px;">Tanlanganlar:</b><ul style="margin: 5px 0 0 15px; padding: 0; font-size: 13px;">';
+            itemsArr.forEach(i => {
+                let sum = i.price * i.qty;
+                total += sum;
+                html += `<li>${i.name} - ${i.qty} ta (${sum} so'm)</li>`;
             });
-            html += `</div>`;
+            html += `</ul><div style="margin-top: 8px; font-weight: bold; text-align: right;">Jami: ${total} so'm</div>`;
             container.innerHTML = html;
         }
 
-        function renderHistoryTable() {
-            let historyList = document.getElementById('admin-history-list');
-            let history = JSON.parse(localStorage.getItem('service_history')) || [];
-            
-            historyList.innerHTML = '';
-            if (history.length === 0) {
-                historyList.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #777;">Hozircha tarix bo\'sh.</td></tr>';
+        function sendOrderToAdmin() {
+            const itemsArr = Object.values(selectedItems);
+            if (itemsArr.length === 0) {
+                alert("Iltimos, buyurtmaga taom qo'shing!");
                 return;
             }
+            tablesData[activeTableKey] = {
+                guests: currentGuests,
+                items: selectedItems,
+                status: 'busy'
+            };
+            localStorage.setItem('waiter_tables_state', JSON.stringify(tablesData));
 
-            history.slice().reverse().forEach(h => {
-                historyList.innerHTML += `
-                    <tr>
-                        <td>${h.location}</td>
-                        <td>${h.waiter}</td>
-                        <td>${h.guests} ta</td>
-                        <td>${h.time}</td>
-                        <td><b>${h.total ? h.total.toLocaleString() : 0} so'm</b></td>
-                    </tr>
-                `;
+            // Admin uchun buyurtmalar ro'yxatiga yuborish
+            let activeOrders = JSON.parse(localStorage.getItem('active_orders')) || [];
+            let orderObj = {
+                id: activeTableKey + '_' + Date.now(),
+                tableNumber: `${currentSection === 'zal' ? 'Zal' : 'Xona'} #${currentTableId}`,
+                waiterName: currentWaiter.name,
+                guests: currentGuests,
+                items: itemsArr,
+                status: 'yangi',
+                time: new Date().toLocaleTimeString()
+            };
+            activeOrders.push(orderObj);
+            localStorage.setItem('active_orders', JSON.stringify(activeOrders));
+
+            // Tarixga yozish
+            let history = JSON.parse(localStorage.getItem('waiter_history')) || [];
+            history.unshift({
+                text: `${currentWaiter.name} - ${orderObj.tableNumber}ga buyurtma berdi (${new Date().toLocaleTimeString()})`,
+                date: new Date().toLocaleString()
             });
+            localStorage.setItem('waiter_history', JSON.stringify(history));
+
+            alert("Buyurtma adminga yuborildi!");
+            closeModal();
+            renderTables();
+        }
+
+        function printCheck() {
+            const itemsArr = Object.values(selectedItems);
+            if (itemsArr.length === 0) {
+                alert("Chek chiqarish uchun buyurtma mavjud emas!");
+                return;
+            }
+            let total = 0;
+            let content = `<b>Restoran Cheki</b><br>Stol: ${currentSection === 'zal' ? 'Zal' : 'Xona'} #${currentTableId}<br>Ofitsiant: ${currentWaiter.name}<br><hr>`;
+            itemsArr.forEach(i => {
+                let sum = i.price * i.qty;
+                total += sum;
+                content += `${i.name} x ${i.qty} = ${sum} so'm<br>`;
+            });
+            content += `<hr><b>Jami to'lov: ${total} so'm</b>`;
+            document.getElementById('qr-check-content').innerHTML = content;
+            document.getElementById('qr-modal').style.display = 'flex';
+        }
+
+        function closeQrModal() {
+            document.getElementById('qr-modal').style.display = 'none';
+        }
+
+        function openHistory() {
+            let history = JSON.parse(localStorage.getItem('waiter_history')) || [];
+            const list = document.getElementById('history-list');
+            if (history.length === 0) {
+                list.innerHTML = "<p>Tarix bo'sh.</p>";
+            } else {
+                list.innerHTML = history.map(h => `<div style="padding: 5px 0; border-bottom: 1px solid #eee; font-size: 13px;">${h.text}</div>`).join('');
+            }
+            document.getElementById('history-modal').style.display = 'flex';
+        }
+
+        function closeHistory() {
+            document.getElementById('history-modal').style.display = 'none';
         }
     </script>
 </body>

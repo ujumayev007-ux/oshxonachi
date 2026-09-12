@@ -1,43 +1,71 @@
-let ws = new WebSocket(SERVER_URL);
-let globalData = {};
+// Admin panelining asosiy holati va boshqaruvi
+class AdminPanel {
+  constructor() {
+    this.menu = menuDatabase;
+    this.initListeners();
+  }
 
-ws.onmessage = (event) => {
-    const msg = JSON.parse(event.data);
-    if(msg.type === 'INIT_STATE' || msg.type === 'STATE_UPDATED') {
-        globalData = msg.data;
-        renderAdminOrders();
-        renderWarehouse();
+  // 1. Menyu nomini, ichki va sotish narxini, ombor qoldig'ini o'zgartirish
+  updateMenuItem(id, newFields) {
+    const item = this.menu.find(m => m.id === id);
+    if (item) {
+      if (newFields.name !== undefined) item.name = newFields.name;
+      if (newFields.internal_price !== undefined) item.internal_price = newFields.internal_price;
+      if (newFields.sale_price !== undefined) item.sale_price = newFields.sale_price;
+      if (newFields.is_visible !== undefined) item.is_visible = newFields.is_visible;
+      console.log(`Mahsulot yangilandi: ${item.name}`);
     }
-};
+  }
 
-function renderAdminOrders() {
+  // 2. Ofitsant panelida ko'rinish yoki ko'rinmasligini o'zgartirish (active/hidden)
+  toggleVisibility(id) {
+    const item = this.menu.find(m => m.id === id);
+    if (item) {
+      item.is_visible = !item.is_visible;
+      console.log(`${item.name} ofitsant uchun holati: ${item.is_visible ? 'Ko\'rinmoqda' : 'Yashiringan'}`);
+    }
+  }
+
+  // 3. Omborga yangi tovar qo'shish yoki mavjudini qidirib ustiga qo'shish
+  updateWarehouseStock(warehouseList, incomingItemName, incomingQty) {
+    let existingItem = warehouseList.find(w => w.name.toLowerCase() === incomingItemName.toLowerCase());
+    if (existingItem) {
+      existingItem.quantity += incomingQty;
+    } else {
+      warehouseList.push({ name: incomingItemName, quantity: incomingQty });
+    }
+    return warehouseList;
+  }
+
+  // 4. Ofitsant buyurtmasi kelganda statuslar bilan ishlash
+  renderAdminOrders(orders) {
     const container = document.getElementById('admin-orders');
-    if(!container) return;
-    container.innerHTML = '';
-    globalData.orders.forEach(o => {
-        let itemsHtml = o.items.map(i => `<li>${i.name} x ${i.quantity}</li>`).join('');
-        container.innerHTML += `
-            <div class="card">
-                <h4>Stol #${o.tableId}</h4>
-                <ul>${itemsHtml}</ul>
-                <p>Status: <b>${o.status}</b></p>
-                <button onclick="updateStatus(${o.id}, 'Tayyorlanyapti')">Tayyorlanyapti</button>
-                <button class="status-ready" onclick="updateStatus(${o.id}, 'Tayyor')">Tayyor</button>
-            </div>
-        `;
+    if (!container) return;
+
+    container.innerHTML = orders.map(order => `
+      <div class="order-card" style="background: #ffffff; border: 1px solid #b3d7ff; padding: 15px; margin-bottom: 10px; border-radius: 8px;">
+        <p><b>Stol #${order.tableNumber}</b> | Ofitsant: ${order.waiterName}</p>
+        <p>Status: <span style="font-weight: bold; color: ${order.status === 'tayyor' ? '#0288d1' : '#333'}">${order.status.toUpperCase()}</span></p>
+        <div style="margin-top: 10px;">
+          <button onclick="admin.changeOrderStatus(${order.id}, 'qabul_qilindi')">Qabul qildim</button>
+          <button onclick="admin.changeOrderStatus(${order.id}, 'tayyorlanyapti')">Tayyorlanyapti</button>
+          <button onclick="admin.changeOrderStatus(${order.id}, 'tayyor')" style="background-color: #0288d1; color: white;">Tayyor</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  changeOrderStatus(orderId, newStatus) {
+    // Socket.io orqali ofitsant va serverga yuborish logikasi
+    console.log(`Buyurtma #${orderId} statusi o'zgardi: ${newStatus}`);
+  }
+
+  initListeners() {
+    // Sahifa F5 qilinganda yoki yangilanganda holatni saqlab qolish
+    window.addEventListener('beforeunload', () => {
+      localStorage.setItem('admin_menu_state', JSON.stringify(this.menu));
     });
+  }
 }
 
-function updateStatus(orderId, status) {
-    ws.send(JSON.stringify({ type: 'UPDATE_ORDER_STATUS', orderId, status }));
-}
-
-function renderWarehouse() {
-    const wDiv = document.getElementById('warehouse-list');
-    if(!wDiv) return;
-    wDiv.innerHTML = '<ul>';
-    for(let [item, qty] of Object.entries(globalData.warehouse)) {
-        wDiv.innerHTML += `<li>${item}: <b>${qty}</b> g/ml</li>`;
-    }
-    wDiv.innerHTML += '</ul>';
-}
+const admin = new AdminPanel();

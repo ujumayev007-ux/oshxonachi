@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="uz">
 <head>
@@ -139,6 +140,23 @@
             flex-wrap: wrap;
             gap: 10px;
         }
+        .metric-card {
+            background: #f8f9fa;
+            border: 1px solid #b3d7ff;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .metric-card h3 {
+            font-size: 15px;
+            color: #0d47a1;
+            margin-bottom: 8px;
+        }
+        .metric-card p {
+            font-size: 18px;
+            font-weight: bold;
+            color: #2e7d32;
+        }
         /* Avtotugallash uslublari */
         .autocomplete-container {
             position: relative;
@@ -169,6 +187,45 @@
             background-color: #e3f2fd;
             color: #0d47a1;
         }
+        /* To'lov tugmalari uslubi */
+        .payment-options-container {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        .pay-option-btn {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 8px 10px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            color: white;
+            font-size: 13px;
+            transition: 0.2s;
+        }
+        .pay-cash-btn {
+            background-color: #2e7d32;
+        }
+        .pay-cash-btn:hover {
+            background-color: #1b5e20;
+        }
+        .pay-card-btn {
+            background-color: #0288d1;
+        }
+        .pay-card-btn:hover {
+            background-color: #01579b;
+        }
+        .pay-icon {
+            width: 18px;
+            height: 18px;
+            object-fit: contain;
+            border-radius: 3px;
+        }
     </style>
 </head>
 <body>
@@ -184,12 +241,21 @@
                 </div>
             </div>
             <div class="nav-tabs">
-                <button class="tab-btn active" onclick="switchTab('orders')">Buyurtmalar</button>
-                <button class="tab-btn" onclick="switchTab('menu')">Menyu Boshqaruvi</button>
+                <button class="tab-btn active" onclick="switchTab('orders')">
+                    <img src="https://cdn-icons-png.magnific.com/256/16334/16334064.png?semt=ais_white_label" alt="Buyurtmalar" class="tab-icon"> Buyurtmalar
+                </button>
+                <button class="tab-btn" onclick="switchTab('menu')">
+                    <img src="https://cdn-icons-png.flaticon.com/512/4813/4813064.png" alt="Menyu" class="tab-icon"> Menyu Boshqaruvi
+                </button>
                 <button class="tab-btn" onclick="switchTab('warehouse')">
                     <img src="https://cdn-icons-png.flaticon.com/256/12964/12964168.png" alt="Ombor" class="tab-icon"> Ombor
                 </button>
-                <button class="tab-btn" onclick="switchTab('stats')">Statistika</button>
+                <button class="tab-btn" onclick="switchTab('income')">
+                    <img src="https://cdn-icons-png.flaticon.com/512/3135/3135706.png" alt="Daromad" class="tab-icon"> Daromad
+                </button>
+                <button class="tab-btn" onclick="switchTab('stats')">
+                    <img src="https://e7.pngegg.com/pngimages/897/627/png-clipart-statistics-icon-ppt-element-text-logo.png" alt="Statistika" class="tab-icon"> Statistika
+                </button>
             </div>
         </header>
 
@@ -279,6 +345,49 @@
             </table>
         </div>
 
+        <!-- DAROMAD -->
+        <div id="income" class="section-content">
+            <h2>Real vaqt rejimidagi daromad va tahlillar</h2>
+            <div style="margin-top: 15px; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px;">
+                <div class="metric-card">
+                    <h3>Naqd pul tushumi</h3>
+                    <p id="income-cash">0 so'm</p>
+                </div>
+                <div class="metric-card">
+                    <h3>Plastik karta tushumi</h3>
+                    <p id="income-card">0 so'm</p>
+                </div>
+                <div class="metric-card">
+                    <h3>Jami Tashqi Savdo Summasi</h3>
+                    <p id="income-total-sale">0 so'm</p>
+                </div>
+                <div class="metric-card">
+                    <h3>Sof Foyda (Ichki narxga nisbatan)</h3>
+                    <p id="income-net-profit" style="color: #1565c0;">0 so'm</p>
+                </div>
+            </div>
+            
+            <div style="margin-top: 25px;">
+                <h3 style="font-size: 16px; color: #0d47a1; margin-bottom: 10px;">Sotilgan buyurtmalar tahlili</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Buyurtma / Stol</th>
+                            <th>Ofitsant</th>
+                            <th>To'lov turi</th>
+                            <th>Tashqi Summa</th>
+                            <th>Ichki Qiymat</th>
+                            <th>Foyda</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="income-table-body">
+                        <!-- Dinamik daromad jadvali -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
         <!-- STATISTIKA -->
         <div id="stats" class="section-content">
             <h2>Kunlik, haftalik va oylik statistika</h2>
@@ -302,7 +411,7 @@
         window.onload = function() {
             renderAll();
             initChart();
-            initLiveClock(); // Real vaqt soatni ishga tushirish
+            initLiveClock();
             document.addEventListener("click", function (e) {
                 if (!e.target.closest('.autocomplete-container')) {
                     closeAllAutocomplete();
@@ -310,7 +419,6 @@
             });
         }
 
-        // Real vaqt soat va sanani yangilab turish funksiyasi
         function initLiveClock() {
             updateClock();
             setInterval(updateClock, 1000);
@@ -318,14 +426,11 @@
 
         function updateClock() {
             const now = new Date();
-            
-            // Sana formatlash (kun.oy.yil)
             const day = String(now.getDate()).padStart(2, '0');
             const month = String(now.getMonth() + 1).padStart(2, '0');
             const year = now.getFullYear();
             document.getElementById('live-date').innerText = `${day}.${month}.${year}`;
 
-            // Vaqt formatlash (soat:minut:sekund)
             const hours = String(now.getHours()).padStart(2, '0');
             const minutes = String(now.getMinutes()).padStart(2, '0');
             const seconds = String(now.getSeconds()).padStart(2, '0');
@@ -406,6 +511,7 @@
             renderMenu();
             renderWarehouse();
             renderOrders();
+            renderIncome();
             updateStatsInfo();
             saveData();
         }
@@ -420,6 +526,9 @@
             let uniqueMap = new Map();
             combined.forEach(o => {
                 let key = o.id !== undefined ? o.id : (o.tableNumber !== undefined ? o.tableNumber : (o.table !== undefined ? o.table : (o.time + (o.tableNumber || ''))));
+                if (!o.paymentType) {
+                    o.paymentType = 'naqd';
+                }
                 uniqueMap.set(key, o);
             });
             ordersDatabase = Array.from(uniqueMap.values());
@@ -580,22 +689,144 @@
                 const status = order.status || 'yangi';
                 const tableNo = order.tableNumber || order.table || 'Nomaʼlum';
                 const waiter = order.waiterName || order.waiter || 'Ofitsant';
+                const isPrinted = order.isPrinted || false;
+
+                // Agar ofitsant chek chiqargan bo'lsa (isPrinted true), admin uchun "Naqd" va "Plastik" to'lov tugmalari chiqadi
+                let paymentButtonHTML = "";
+                if (isPrinted && status !== 'tolandi') {
+                    paymentButtonHTML = `
+                        <div style="margin-top: 8px; background: #fffde7; padding: 10px; border: 1px solid #ffd54f; border-radius: 6px;">
+                            <span style="font-size: 13px; color: #f57f17; font-weight: bold; display: block; margin-bottom: 6px;">Chek chiqarildi! To'lov turini tanlang:</span>
+                            <div class="payment-options-container">
+                                <button class="pay-option-btn pay-cash-btn" onclick="acceptPayment('${orderId}', 'naqd')">
+                                    <img src="https://t4.ftcdn.net/jpg/07/05/40/83/360_F_705408370_YbHxYDxlXYXb3omrTkb07khf8z4x1Djq.jpg" alt="Naqd" class="pay-icon"> Naqd
+                                </button>
+                                <button class="pay-option-btn pay-card-btn" onclick="acceptPayment('${orderId}', 'plastik')">
+                                    <img src="https://png.pngtree.com/recommend-works/png-clipart/20250512/ourlarge/pngtree-3d-hand-holding-contactless-credit-card-icon-png-image_16214913.png" alt="Plastik" class="pay-icon"> Plastik
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }
 
                 return `
                     <div class="order-card">
                         <div>
-                            <p><b>Stol #${tableNo}</b> | Ofitsant: ${waiter}</p>
+                            <p><b>Stol #${tableNo}</b> | Ofitsant: ${waiter} | Holat: <b>${status.toUpperCase()}</b></p>
                             <p>Buyurtma: ${itemsList}</p>
-                            <p>Status: <span style="font-weight: bold; color: #0288d1;">${status.toUpperCase()}</span></p>
+                            ${paymentButtonHTML}
                         </div>
                         <div>
-                            <button class="btn" style="background: #ffb74d;" onclick="changeOrderStatus('${orderId}', 'qabul_qilindi')">Qabul qildim</button>
-                            <button class="btn" style="background: #4fc3f7;" onclick="changeOrderStatus('${orderId}', 'tayyorlanyapti')">Tayyorlanyapti</button>
+                            <button class="btn" style="background: #ffb74d;" onclick="changeOrderStatus('${orderId}', 'qabul_qilindi')">Qabul</button>
+                            <button class="btn" style="background: #4fc3f7;" onclick="changeOrderStatus('${orderId}', 'tayyorlanyapti')">Jarayonda</button>
                             <button class="btn btn-blue" onclick="changeOrderStatus('${orderId}', 'tayyor')">Tayyor</button>
                         </div>
                     </div>
                 `;
             }).join('');
+        }
+
+        function acceptPayment(orderId, paymentType) {
+            ordersDatabase = ordersDatabase.map((o, index) => {
+                let currentId = o.id !== undefined ? o.id : (o.tableNumber !== undefined ? o.tableNumber : (o.table !== undefined ? o.table : index));
+                if (String(currentId) === String(orderId)) {
+                    o.status = 'tolandi';
+                    o.paymentType = paymentType;
+                    o.isPaid = true; // Stolni bo'shatish uchun qabul qilingan belgi
+                }
+                return o;
+            });
+
+            syncOrdersToStorage();
+            renderAll();
+            alert("To'lov muvaffaqiyatli qabul qilindi va stol bo'shatildi!");
+        }
+
+        function syncOrdersToStorage() {
+            ['waiter_orders', 'active_orders', 'admin_orders', 'orders'].forEach(key => {
+                let data = JSON.parse(localStorage.getItem(key)) || [];
+                if (Array.isArray(data)) {
+                    data = data.map((o, index) => {
+                        let currentId = o.id !== undefined ? o.id : (o.tableNumber !== undefined ? o.tableNumber : (o.table !== undefined ? o.table : index));
+                        let match = ordersDatabase.find(item => {
+                            let itemId = item.id !== undefined ? item.id : (item.tableNumber !== undefined ? item.tableNumber : (item.table !== undefined ? item.table : ''));
+                            return String(itemId) === String(currentId);
+                        });
+                        if (match) {
+                            o.status = match.status;
+                            o.paymentType = match.paymentType;
+                            o.isPrinted = match.isPrinted;
+                            o.isPaid = match.isPaid;
+                        }
+                        return o;
+                    });
+                    localStorage.setItem(key, JSON.stringify(data));
+                }
+            });
+            saveData();
+        }
+
+        function renderIncome() {
+            let cashTotal = 0;
+            let cardTotal = 0;
+            let totalSaleSum = 0;
+            let totalInternalSum = 0;
+
+            const tbody = document.getElementById('income-table-body');
+            let validOrders = ordersDatabase.filter(o => o.status === 'tolandi' || o.status === 'tayyor');
+
+            if (validOrders.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" style="text-align: center;">Hozircha to'langan buyurtmalar mavjud emas</td></tr>`;
+            } else {
+                tbody.innerHTML = validOrders.map((order) => {
+                    let items = order.items || order.cart || [];
+                    let orderSale = 0;
+                    let orderInternal = 0;
+
+                    if (Array.isArray(items)) {
+                        items.forEach(i => {
+                            let q = i.qty || i.count || 1;
+                            let sPrice = i.sale_price || i.price || 35000;
+                            let iPrice = i.internal_price || Math.floor(sPrice * 0.7);
+                            orderSale += sPrice * q;
+                            orderInternal += iPrice * q;
+                        });
+                    } else {
+                        orderSale = 120000;
+                        orderInternal = 84000;
+                    }
+
+                    if (order.paymentType === 'plastik') {
+                        cardTotal += orderSale;
+                    } else {
+                        cashTotal += orderSale;
+                    }
+                    totalSaleSum += orderSale;
+                    totalInternalSum += orderInternal;
+
+                    let profit = orderSale - orderInternal;
+                    let tableNo = order.tableNumber || order.table || 'Nomaʼlum';
+                    let waiter = order.waiterName || order.waiter || 'Ofitsant';
+                    let payment = order.paymentType || 'naqd';
+
+                    return `
+                        <tr>
+                            <td>Stol #${tableNo}</td>
+                            <td>${waiter}</td>
+                            <td><b>${payment.toUpperCase()}</b></td>
+                            <td>${orderSale.toLocaleString()} so'm</td>
+                            <td>${orderInternal.toLocaleString()} so'm</td>
+                            <td style="color: #2e7d32; font-weight: bold;">+${profit.toLocaleString()} so'm</td>
+                            <td>${(order.status || 'yangi').toUpperCase()}</td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+
+            document.getElementById('income-cash').innerText = cashTotal.toLocaleString() + " so'm";
+            document.getElementById('income-card').innerText = cardTotal.toLocaleString() + " so'm";
+            document.getElementById('income-total-sale').innerText = totalSaleSum.toLocaleString() + " so'm";
+            document.getElementById('income-net-profit').innerText = (totalSaleSum - totalInternalSum).toLocaleString() + " so'm";
         }
 
         function changeOrderStatus(orderId, newStatus) {
@@ -607,27 +838,14 @@
                 return o;
             });
             
-            ['waiter_orders', 'active_orders', 'admin_orders', 'orders'].forEach(key => {
-                let data = JSON.parse(localStorage.getItem(key)) || [];
-                if (Array.isArray(data)) {
-                    data = data.map((o, index) => {
-                        let currentId = o.id !== undefined ? o.id : (o.tableNumber !== undefined ? o.tableNumber : (o.table !== undefined ? o.table : index));
-                        if (String(currentId) === String(orderId)) {
-                            o.status = newStatus;
-                        }
-                        return o;
-                    });
-                    localStorage.setItem(key, JSON.stringify(data));
-                }
-            });
-
-            saveData();
+            syncOrdersToStorage();
             renderOrders();
+            renderIncome();
             updateStatsInfo();
         }
 
         function updateStatsInfo() {
-            let totalSales = ordersDatabase.filter(o => o.status === 'tayyor').length * 120000 + 450000;
+            let totalSales = ordersDatabase.filter(o => o.status === 'tolandi' || o.status === 'tayyor').length * 120000 + 450000;
             document.getElementById('today-sales').innerText = totalSales.toLocaleString() + " so'm";
             document.getElementById('top-item').innerText = "Toshkent oshi";
             
@@ -682,7 +900,7 @@
         function saveData() {
             localStorage.setItem('admin_menu', JSON.stringify(menuDatabase));
             localStorage.setItem('admin_warehouse', JSON.stringify(warehouseDatabase));
-            localStorage.setItem('admin_orders', JSON.stringify(admin_orders_fix = ordersDatabase));
+            localStorage.setItem('admin_orders', JSON.stringify(ordersDatabase));
         }
 
         setInterval(() => {
@@ -694,9 +912,12 @@
             if (JSON.stringify(combined) !== JSON.stringify(ordersDatabase)) {
                 loadOrdersFromStorage();
                 renderOrders();
+                renderIncome();
                 updateStatsInfo();
             }
         }, 1500);
     </script>
 </body>
 </html>
+
+```

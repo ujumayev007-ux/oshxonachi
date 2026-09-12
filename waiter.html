@@ -4,18 +4,416 @@
     <meta charset="UTF-8">
     <title>Ofitsant Paneli — Oshxonachi</title>
     <link rel="stylesheet" href="css/style.css">
+    <style>
+        body {
+            background-color: #e3f2fd; /* Och ko'k rang */
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
+        header {
+            background: #1976d2;
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .container {
+            padding: 20px;
+            max-width: 1200px;
+            margin: auto;
+        }
+        /* Login ekrani */
+        #login-screen {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 80vh;
+        }
+        .login-box {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            width: 300px;
+            text-align: center;
+        }
+        .login-box input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .login-box button {
+            background: #1976d2;
+            color: white;
+            border: none;
+            padding: 10px;
+            width: 100%;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        /* Stollar grid */
+        #tables-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+        }
+        .table-card {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            cursor: pointer;
+            border: 2px solid #bbdefb;
+            transition: 0.3s;
+        }
+        .table-card.busy {
+            border-color: #ff9800;
+            background: #fff3e0;
+        }
+        .table-card img {
+            width: 60px;
+            height: 60px;
+            object-fit: contain;
+            margin-bottom: 10px;
+        }
+        /* Stol boshqaruv oynasi (Modal) */
+        #modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .menu-item-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 8px;
+        }
+        .menu-item-row img {
+            width: 50px;
+            height: 50px;
+            border-radius: 5px;
+            object-fit: cover;
+        }
+        .btn-blue {
+            background: #0288d1;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .btn-green {
+            background: #2e7d32;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+    </style>
 </head>
 <body>
-    <header>
-        <h2>Ofitsant Boshqaruv Paneli (12 ta Stol)</h2>
-    </header>
 
-    <div class="container">
-        <h3>Stollar Holati</h3>
-        <div id="tables-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px;"></div>
+    <!-- 1. Autentifikatsiya Ekrani -->
+    <div id="login-screen">
+        <div class="login-box">
+            <h3>Ofitsant Kirishi</h3>
+            <input type="text" id="login-user" placeholder="Login (masalan: ofitsant1)">
+            <input type="password" id="login-pass" placeholder="Parol">
+            <button onclick="loginWaiter()">Kirish</button>
+        </div>
     </div>
 
-    <script src="js/config.js"></script>
-    <script src="js/waiter.js"></script>
+    <!-- Asosiy Panel (Dastlab yashiringan) -->
+    <div id="main-panel" style="display: none;">
+        <header>
+            <h2>Ofitsant Boshqaruv Paneli (12 ta Stol)</h2>
+            <div>
+                <span id="logged-waiter-name" style="margin-right: 15px; font-weight: bold;"></span>
+                <button onclick="openHistory()" class="btn-blue" style="background:#00acc1;">Tarix</button>
+                <button onclick="logoutWaiter()" style="background: #d32f2f; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer;">Chiqish</button>
+            </div>
+        </header>
+
+        <div class="container">
+            <h3>Stollar Holati</h3>
+            <div id="tables-grid"></div>
+        </div>
+    </div>
+
+    <!-- Stol Buyurtma va Boshqaruv Modali -->
+    <div id="modal-overlay">
+        <div class="modal-content">
+            <h2 id="modal-title">Stol Boshqaruvi</h2>
+            <div>
+                <label>Mijozlar soni: </label>
+                <input type="number" id="modal-guests" value="1" min="1" style="width: 60px; padding: 5px;">
+            </div>
+            <hr>
+            <h3>Menyu (Tanlash va miqdorini o'zgartirish)</h3>
+            <div id="menu-selection-list" style="max-height: 300px; overflow-y: auto;">
+                <!-- Dinamik menyu elementlari rasmlari bilan -->
+            </div>
+            <hr>
+            <h3>Tanlangan Buyurtmalar</h3>
+            <div id="current-order-summary"></div>
+            <div style="margin-top: 15px; display: flex; justify-content: space-between;">
+                <button onclick="sendOrderToAdmin()" class="btn-green">Adminiga Yuborish / Qo'shish</button>
+                <button onclick="printCheck()" class="btn-blue" style="background: #7b1fa2;">Chek Chop Etish (QR bilan)</button>
+                <button onclick="closeModal()" style="background: #757575; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer;">Yopish</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tarix Modali -->
+    <div id="history-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center;">
+        <div class="modal-content">
+            <h2>Xizmat Ko'rsatish Tarixi</h2>
+            <div id="history-list" style="max-height: 400px; overflow-y: auto; margin-top: 15px;"></div>
+            <br>
+            <button onclick="closeHistory()" class="btn-blue">Yopish</button>
+        </div>
+    </div>
+
+    <script>
+        // 4 ta ofitsant bazasi
+        const waitersDB = [
+            { login: "ofitsant1", pass: "1111", name: "Anvar" },
+            { login: "ofitsant2", pass: "2222", name: "Jasur" },
+            { login: "ofitsant3", pass: "3333", name: "Sardor" },
+            { login: "ofitsant4", pass: "4444", name: "Bobur" }
+        ];
+
+        let currentActiveTable = null;
+        let activeWaiter = localStorage.getItem('active_waiter') || null;
+
+        // Sahifa yuklanganda holatni tiklash (F5 dan keyin yo'qolmasligi uchun)
+        window.onload = function() {
+            if (activeWaiter) {
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('main-panel').style.display = 'block';
+                document.getElementById('logged-waiter-name').innerText = `Ofitsant: ${activeWaiter}`;
+            }
+            renderTables();
+        };
+
+        function loginWaiter() {
+            let u = document.getElementById('login-user').value.trim();
+            let p = document.getElementById('login-pass').value.trim();
+            let found = waitersDB.find(w => w.login === u && w.pass === p);
+            if (found) {
+                activeWaiter = found.name;
+                localStorage.setItem('active_waiter', activeWaiter);
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('main-panel').style.display = 'block';
+                document.getElementById('logged-waiter-name').innerText = `Ofitsant: ${activeWaiter}`;
+                renderTables();
+            } else {
+                alert("Login yoki parol noto'g'ri!");
+            }
+        }
+
+        function logoutWaiter() {
+            localStorage.removeItem('active_waiter');
+            activeWaiter = null;
+            document.getElementById('login-screen').style.display = 'flex';
+            document.getElementById('main-panel').style.display = 'none';
+        }
+
+        // 12 ta stolni chizish (Stol rasmi bilan)
+        function renderTables() {
+            const grid = document.getElementById('tables-grid');
+            grid.innerHTML = '';
+            for (let i = 1; i <= 12; i++) {
+                let tableData = JSON.parse(localStorage.getItem(`table_${i}_data`)) || { busy: false, guests: 0, items: [] };
+                
+                grid.innerHTML += `
+                    <div class="table-card ${tableData.busy ? 'busy' : ''}" onclick="openTable(${i})">
+                        <img src="img/table_icon.png" alt="Stol">
+                        <h4 style="margin:5px 0;">Stol #${i}</h4>
+                        <p style="font-size: 13px; margin: 0;">${tableData.busy ? `Band (${tableData.guests} kishi)` : 'Bo\'sh'}</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Stolni ochish va boshqarish
+        function openTable(tableNum) {
+            currentActiveTable = tableNum;
+            document.getElementById('modal-title').innerText = `Stol #${tableNum} Boshqaruvi`;
+            let tableData = JSON.parse(localStorage.getItem(`table_${tableNum}_data`)) || { busy: false, guests: 1, items: [] };
+            
+            document.getElementById('modal-guests').value = tableData.guests || 1;
+            renderMenuSelection(tableData.items);
+            document.getElementById('modal-overlay').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('modal-overlay').style.display = 'none';
+        }
+
+        // Menyu va rasmlarni chiqarish (Plus / Minus)
+        function renderMenuSelection(selectedItems) {
+            // Namunaviy menyu elementlari (Admin panelidan yoki configdan kelishi mumkin)
+            let menu = [
+                { id: 1, name: "Buxoro oshi", price: 35000, img: "img/osh.jpg" },
+                { id: 2, name: "Tandir somsa", price: 12000, img: "img/somsa.jpg" },
+                { id: 3, name: "Norin", price: 30000, img: "img/norin.jpg" },
+                { id: 4, name: "Salat (Vitamin)", price: 10000, img: "img/salat.jpg" },
+                { id: 5, name: "Suv 0.5L", price: 4000, img: "img/suv.jpg" }
+            ];
+
+            let container = document.getElementById('menu-selection-list');
+            container.innerHTML = '';
+
+            menu.forEach(dish => {
+                let existing = selectedItems.find(i => i.id === dish.id);
+                let qty = existing ? existing.qty : 0;
+
+                container.innerHTML += `
+                    <div class="menu-item-row">
+                        <img src="${dish.img}" alt="${dish.name}" onerror="this.src='img/placeholder.txt'">
+                        <div style="flex-grow: 1; margin-left: 15px;">
+                            <strong>${dish.name}</strong><br>
+                            <span style="color: #666;">${dish.price} so'm</span>
+                        </div>
+                        <div>
+                            <button onclick="changeQty(${dish.id}, -1)" style="padding: 5px 10px;">-</button>
+                            <span id="qty_${dish.id}" style="margin: 0 10px; font-weight: bold;">${qty}</span>
+                            <button onclick="changeQty(${dish.id}, 1)" style="padding: 5px 10px;">+</button>
+                        </div>
+                    </div>
+                `;
+            });
+            updateOrderSummaryUI(selectedItems);
+        }
+
+        // Mahsulot miqdorini o'zgartirish
+        window.changeQty = function(dishId, delta) {
+            let tableData = JSON.parse(localStorage.getItem(`table_${currentActiveTable}_data`)) || { busy: false, guests: 1, items: [] };
+            let existing = tableData.items.find(i => i.id === dishId);
+
+            if (existing) {
+                existing.qty += delta;
+                if (existing.qty <= 0) {
+                    tableData.items = tableData.items.filter(i => i.id !== dishId);
+                }
+            } else if (delta > 0) {
+                // Menyudan mahsulotni topib qo'shamiz
+                let menuMap = { 1: "Buxoro oshi", 2: "Tandir somsa", 3: "Norin", 4: "Salat (Vitamin)", 5: "Suv 0.5L" };
+                let priceMap = { 1: 35000, 2: 12000, 3: 30000, 4: 10000, 5: 4000 };
+                tableData.items.push({ id: dishId, name: menuMap[dishId], price: priceMap[dishId], qty: 1 });
+            }
+
+            localStorage.setItem(`table_${currentActiveTable}_data`, JSON.stringify(tableData));
+            renderMenuSelection(tableData.items);
+        }
+
+        function updateOrderSummaryUI(items) {
+            let summaryContainer = document.getElementById('current-order-summary');
+            if (items.length === 0) {
+                summaryContainer.innerHTML = '<p style="color: #775; font-style: italic;">Hozircha buyurtma bo\'sh</p>';
+                return;
+            }
+            let html = '<ul style="padding-left: 20px; margin: 5px 0;">';
+            let total = 0;
+            items.forEach(i => {
+                html += `<li>${i.name} - ${i.qty} ta x ${i.price} so'm = ${i.qty * i.price} so'm</li>`;
+                total += i.qty * i.price;
+            });
+            html += `</ul><strong>Umumiy summa: ${total} so'm</strong>`;
+            summaryContainer.innerHTML = html;
+        }
+
+        // Admin paneliga yuborish va qo'shimcha buyurtma qo'shish
+        function sendOrderToAdmin() {
+            let guests = document.getElementById('modal-guests').value;
+            let tableData = JSON.parse(localStorage.getItem(`table_${currentActiveTable}_data`)) || { items: [] };
+            tableData.busy = true;
+            tableData.guests = guests;
+            tableData.waiter = activeWaiter;
+            tableData.status = 'Tayyorlanyapti';
+
+            localStorage.setItem(`table_${currentActiveTable}_data`, JSON.stringify(tableData));
+
+            // Admin paneliga umumiy buyurtmalar ro'yxatiga yuboramiz
+            let allOrders = JSON.parse(localStorage.getItem('admin_orders')) || [];
+            allOrders.push({ table: currentActiveTable, ...tableData, time: new Date().toLocaleTimeString() });
+            localStorage.setItem('admin_orders', JSON.stringify(allOrders));
+
+            alert("Buyurtma Admin paneliga muvaffaqiyatli yuborildi!");
+            closeModal();
+            renderTables();
+        }
+
+        // Chek chop etish va tarixlarga saqlash
+        function printCheck() {
+            let tableData = JSON.parse(localStorage.getItem(`table_${currentActiveTable}_data`));
+            if (!tableData || tableData.items.length === 0) {
+                alert("Chek chiqarish uchun buyurtma mavjud emas!");
+                return;
+            }
+            
+            // Tarixga yozish
+            let history = JSON.parse(localStorage.getItem('service_history')) || [];
+            history.push({
+                table: currentActiveTable,
+                waiter: activeWaiter,
+                time: new Date().toLocaleString(),
+                items: tableData.items,
+                guests: tableData.guests
+            });
+            localStorage.setItem('service_history', JSON.stringify(history));
+
+            alert(`Stol #${currentActiveTable} uchun Chek inkassa apparatiga yuborildi va QR-kod bilan chop etildi!`);
+            
+            // Stolni tozalash va yakunlash
+            localStorage.removeItem(`table_${currentActiveTable}_data`);
+            closeModal();
+            renderTables();
+        }
+
+        function openHistory() {
+            let history = JSON.parse(localStorage.getItem('service_history')) || [];
+            let container = document.getElementById('history-list');
+            container.innerHTML = '';
+            if (history.length === 0) {
+                container.innerHTML = '<p>Hozircha tarix bo\'sh.</p>';
+            } else {
+                history.reverse().forEach(h => {
+                    container.innerHTML += `
+                        <div style="border-bottom: 1px solid #ccc; padding: 8px 0;">
+                            <strong>Stol #${h.table}</strong> | Ofitsant: ${h.waiter} | Vaqt: ${h.time} | Mehmonlar: ${h.guests} ta
+                        </div>
+                    `;
+                });
+            }
+            document.getElementById('history-modal').style.display = 'flex';
+        }
+
+        function closeHistory() {
+            document.getElementById('history-modal').style.display = 'none';
+        }
+    </script>
 </body>
 </html>

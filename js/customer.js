@@ -119,8 +119,17 @@ let currentCategory = 'all';
 // Savatcha va holatni saqlash (F5 qilinganda o'chib ketmaydi)
 let cart = JSON.parse(localStorage.getItem('customer_cart')) || {};
 
-// BroadcastChannel orqali ofitsantlar bilan bog'lanish kanali
-const waiterChannel = new BroadcastChannel('waiter_call_channel');
+// WebSocket orqali ofitsantlar serveriga ulanish (waiter.js bilan moslash uchun)
+const WS_URL = window.WS_URL || 'ws://localhost:8080'; 
+let ws = new WebSocket(WS_URL);
+
+ws.onopen = function() {
+    console.log("Mijoz WebSocket serverga muvaffaqiyatli ulandi");
+};
+
+ws.onerror = function(error) {
+    console.error("WebSocket xatoligi:", error);
+};
 
 // Sahifa yuklanganda menyuni va stollarni chiqarish
 window.onload = function() {
@@ -259,16 +268,21 @@ function renderTables() {
     }
 }
 
-// O'ZGARTILGAN QISM: Ofitsantga real vaqt rejimida ovozli va stoli ko'rinadigan chaqiruv yuborish
+// O'ZGARTILGAN QISM: WebSocket orqali ofitsantga real vaqt rejimida chaqiruv yuborish
 function callWaiter(tableNum) {
-    // Ofitsant paneliga xabar yuborish
-    waiterChannel.postMessage({
+    const callData = {
         type: 'WAITER_CALL',
         table: tableNum,
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    });
+    };
 
-    alert(`Stol #${tableNum} uchun ofitsant chaqirildi! Xabar yuborildi.`);
+    if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify(callData));
+        alert(`Stol #${tableNum} uchun ofitsant chaqirildi! Xabar yuborildi.`);
+    } else {
+        alert("Server bilan aloqa yo'q! WebSocket ulanishini tekshiring.");
+    }
+
     closeWaiterModal();
 }
 

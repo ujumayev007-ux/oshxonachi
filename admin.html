@@ -186,45 +186,6 @@
             background-color: #e3f2fd;
             color: #0d47a1;
         }
-        /* To'lov tugmalari uslubi */
-        .payment-options-container {
-            display: flex;
-            gap: 8px;
-            margin-top: 8px;
-        }
-        .pay-option-btn {
-            flex: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-            padding: 8px 10px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: bold;
-            color: white;
-            font-size: 13px;
-            transition: 0.2s;
-        }
-        .pay-cash-btn {
-            background-color: #2e7d32;
-        }
-        .pay-cash-btn:hover {
-            background-color: #1b5e20;
-        }
-        .pay-card-btn {
-            background-color: #0288d1;
-        }
-        .pay-card-btn:hover {
-            background-color: #01579b;
-        }
-        .pay-icon {
-            width: 18px;
-            height: 18px;
-            object-fit: contain;
-            border-radius: 3px;
-        }
     </style>
 </head>
 <body>
@@ -513,17 +474,17 @@
         }
 
         function loadOrdersFromStorage() {
+            // Ofitsant paneli yuborishi mumkin bo'lgan barcha localStoragekalitlarinitekshiramiz
             let activeOrders = JSON.parse(localStorage.getItem('activeOrders')) || [];
-            let oldActive = JSON.parse(localStorage.getItem('active_orders')) || [];
             let waiterOrders = JSON.parse(localStorage.getItem('waiter_orders')) || [];
             let orders = JSON.parse(localStorage.getItem('orders')) || [];
             let adminOrders = JSON.parse(localStorage.getItem('admin_orders')) || [];
             
-            let combined = [...activeOrders, ...oldActive, ...waiterOrders, ...orders, ...adminOrders];
+            let combined = [...activeOrders, ...waiterOrders, ...orders, ...adminOrders];
             let uniqueMap = new Map();
 
             combined.forEach((o, index) => {
-                let key = o.tableId || o.id || (o.tableNumber !== undefined ? o.tableNumber : (o.table !== undefined ? o.table : index));
+                let key = o.tableId || o.id || o.tableNumber || index;
                 if (uniqueMap.has(key)) {
                     let existing = uniqueMap.get(key);
                     existing.status = o.status === 'tolandi' ? 'tolandi' : (existing.status || o.status);
@@ -532,7 +493,13 @@
                 }
             });
 
-            ordersDatabase = Array.from(uniqueMap.values());
+            // Agar activeOrders bo'sh bo'lib, lekin waiter_orders da ma'lumot bo'lsa, ularni sinxronlaymiz
+            let finalOrders = Array.from(uniqueMap.values());
+            if (activeOrders.length === 0 && waiterOrders.length > 0) {
+                localStorage.setItem('activeOrders', JSON.stringify(waiterOrders));
+            }
+            
+            ordersDatabase = finalOrders;
         }
 
         function renderMenu() {
@@ -672,14 +639,17 @@
             const container = document.getElementById('orders-container');
             if (!container) return;
 
+            // Barcha joydan faol buyurtmalarni o'qib olamiz
             let activeOrders = JSON.parse(localStorage.getItem('activeOrders')) || [];
-            
-            if (activeOrders.length === 0) {
+            let waiterOrders = JSON.parse(localStorage.getItem('waiter_orders')) || [];
+            let allActive = [...activeOrders, ...waiterOrders];
+
+            if (allActive.length === 0) {
                 container.innerHTML = "<p>Hozircha faol buyurtmalar yoki cheklar yo'q.</p>";
                 return;
             }
 
-            container.innerHTML = activeOrders.map((order, index) => {
+            container.innerHTML = allActive.map((order, index) => {
                 let itemsHtml = "";
                 if (Array.isArray(order.items)) {
                     itemsHtml = order.items.map(i => `<li>${i.name} - ${i.quantity} dona x ${i.price} so'm = ${i.quantity * i.price} so'm</li>`).join('');
@@ -688,27 +658,28 @@
                 }
 
                 let timeStr = order.timestamp ? new Date(order.timestamp).toLocaleTimeString() : "--:--";
+                let tableTitle = order.tableName || order.tableNumber || ('Stol #' + (order.tableId || index));
+                let waiterName = order.waiterName || order.waiter || 'Ofitsant';
+                let totalSum = order.totalAmount || 0;
 
                 return `
-                    <div class="order-card" style="background: #f1f8e9; border: 1px solid #c8e6c9; padding: 15px; margin-bottom: 10px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                    <div class="order-card">
                         <div>
-                            <h4 style="color: #0d47a1; font-size: 18px; margin-bottom: 4px;">🪑 ${order.tableName || ('Stol #' + order.tableId)}</h4>
-                            <p><strong>Ofitsant:</strong> ${order.waiterName || 'Ofitsant'}</p>
+                            <h4 style="color: #0d47a1; font-size: 18px; margin-bottom: 4px;">🪑 ${tableTitle}</h4>
+                            <p><strong>Ofitsant:</strong> ${waiterName}</p>
                             <p><strong>Vaqt:</strong> ${timeStr}</p>
                             <ul style="margin-left: 20px; margin-top: 5px; margin-bottom: 5px;">${itemsHtml}</ul>
-                            <p><strong>Jami summa:</strong> <span style="color: green; font-weight: bold;">${order.totalAmount || 0} so'm</span></p>
+                            <p><strong>Jami summa:</strong> <span style="color: green; font-weight: bold;">${totalSum} so'm</span></p>
                         </div>
                         <div>
-                            ${order.status === 'pending_payment' ? `
-                                <div style="display: flex; gap: 8px; align-items: center;">
-                                    <button class="btn" style="background-color: #2e7d32; color: white;" onclick="processPaymentWithMethod('${order.tableId}', ${index}, 'naqd')">
-                                        Naqd To'lov
-                                    </button>
-                                    <button class="btn" style="background-color: #0288d1; color: white;" onclick="processPaymentWithMethod('${order.tableId}', ${index}, 'plastik')">
-                                        Plastik To'lov
-                                    </button>
-                                </div>
-                            ` : '<span style="color: gray;">Toʻlangan</span>'}
+                            <div style="display: flex; gap: 8px; align-items: center;">
+                                <button class="btn" style="background-color: #2e7d32; color: white;" onclick="processPaymentWithMethod('${order.tableId || index}', ${index}, 'naqd')">
+                                    Naqd To'lov
+                                </button>
+                                <button class="btn" style="background-color: #0288d1; color: white;" onclick="processPaymentWithMethod('${order.tableId || index}', ${index}, 'plastik')">
+                                    Plastik To'lov
+                                </button>
+                            </div>
                         </div>
                     </div>
                 `;
@@ -717,19 +688,22 @@
 
         function processPaymentWithMethod(tableId, index, paymentType) {
             let activeOrders = JSON.parse(localStorage.getItem('activeOrders')) || [];
-            let order = activeOrders[index];
+            let waiterOrders = JSON.parse(localStorage.getItem('waiter_orders')) || [];
+            
+            let order = activeOrders[index] || waiterOrders[index];
 
             if (order) {
                 order.status = 'tolandi';
                 order.paymentType = paymentType;
 
-                order.id = order.tableId || index;
-                order.tableNumber = order.tableName;
-                order.waiter = order.waiterName;
                 ordersDatabase.push(order);
 
-                activeOrders.splice(index, 1);
+                // Faol ro'yxatlardan olib tashlaymiz
+                if (activeOrders[index]) activeOrders.splice(index, 1);
+                if (waiterOrders[index]) waiterOrders.splice(index, 1);
+
                 localStorage.setItem('activeOrders', JSON.stringify(activeOrders));
+                localStorage.setItem('waiter_orders', JSON.stringify(waiterOrders));
 
                 let tablesData = JSON.parse(localStorage.getItem('tablesData')) || {};
                 if (tablesData[tableId]) {
@@ -756,7 +730,6 @@
                 tbody.innerHTML = `<tr><td colspan="7" style="text-align: center;">Hozircha to'langan buyurtmalar mavjud emas</td></tr>`;
             } else {
                 tbody.innerHTML = validOrders.map((order) => {
-                    let items = order.items || [];
                     let orderSale = order.totalAmount || 0;
                     let orderInternal = Math.floor(orderSale * 0.7);
 
@@ -851,6 +824,7 @@
             localStorage.setItem('admin_warehouse', JSON.stringify(warehouseDatabase));
         }
 
+        // Har 1 sekundda ma'lumotlarni yangilab turish (ofitsant panelidan yuborilganini darhol ko'rsatish uchun)
         setInterval(() => {
             loadOrdersFromStorage();
             renderOrders();

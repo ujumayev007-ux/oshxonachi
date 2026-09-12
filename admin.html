@@ -1,26 +1,1528 @@
-<!DOCTYPE html>
-<html lang="uz">
-<head>
-    <meta charset="UTF-8">
-    <title>Admin Paneli — Oshxonachi</title>
-    <link rel="stylesheet" href="css/style.css">
-</head>
-<body>
-    <header>
-        <h2>Admin Paneli - Buyurtmalar va Ombor</h2>
-    </header>
+// Barcha menyu va uning ombordagi xomashyo taqsimoti (retsepti)
+const menuDatabase = [
+  // --- Osh ---
+  {
+    id: 1,
+    name: "Toshkent oshi (Toʻy oshi)",
+    category: "Osh",
+    internal_price: 25000,
+    sale_price: 38000,
+    is_visible: true,
+    recipe: [
+      { ingredient: "Guruch (Devzira/Lazer)", amount: 250, unit: "g" },
+      { ingredient: "Go'sht (Mol)", amount: 150, unit: "g" },
+      { ingredient: "Sabzi", amount: 200, unit: "g" },
+      { ingredient: "Yog' (Paxta/Zirir)", amount: 50, unit: "ml" },
+      { ingredient: "Tuz", amount: 5, unit: "g" }
+    ]
+  },
+  {
+    id: 2,
+    name: "Samarqand oshi",
+    category: "Osh",
+    internal_price: 27000,
+    sale_price: 40000,
+    is_visible: true,
+    recipe: [
+      { ingredient: "Guruch", amount: 250, unit: "g" },
+      { ingredient: "Go'sht (Mol)", amount: 160, unit: "g" },
+      { ingredient: "Sabzi", amount: 180, unit: "g" },
+      { ingredient: "Nuxat", amount: 30, unit: "g" },
+      { ingredient: "Yog'", amount: 60, unit: "ml" },
+      { ingredient: "Tuz", amount: 5, unit: "g" }
+    ]
+  },
+  {
+    id: 3,
+    name: "Buxoro oshi (\"Sochqi oshi\")",
+    category: "Osh",
+    internal_price: 28000,
+    sale_price: 42000,
+    is_visible: true,
+    recipe: [
+      { ingredient: "Guruch", amount: 250, unit: "g" },
+      { ingredient: "Go'sht (Mol)", amount: 170, unit: "g" },
+      { ingredient: "Sabzi", amount: 190, unit: "g" },
+      { ingredient: "Yog'", amount: 70, unit: "ml" },
+      { ingredient: "Tuz", amount: 5, unit: "g" }
+    ]
+  },
+  {
+    id: 4,
+    name: "Fargʻona oshi",
+    category: "Osh",
+    internal_price: 24000,
+    sale_price: 36000,
+    is_visible: true,
+    recipe: [
+      { ingredient: "Guruch", amount: 250, unit: "g" },
+      { ingredient: "Go'sht (Mol)", amount: 140, unit: "g" },
+      { ingredient: "Sabzi", amount: 200, unit: "g" },
+      { ingredient: "Yog'", amount: 50, unit: "ml" },
+      { ingredient: "Tuz", amount: 5, unit: "g" }
+    ]
+  },
+  {
+    id: 5,
+    name: "Devzira oshi",
+    category: "Osh",
+    internal_price: 32000,
+    sale_price: 48000,
+    is_visible: true,
+    recipe: [
+      { ingredient: "Guruch (Devzira)", amount: 260, unit: "g" },
+      { ingredient: "Go'sht (Qo'y)", amount: 180, unit: "g" },
+      { ingredient: "Sabzi", amount: 200, unit: "g" },
+      { ingredient: "Dumba", amount: 40, unit: "g" },
+      { ingredient: "Yog'", amount: 50, unit: "ml" },
+      { ingredient: "Tuz", amount: 5, unit: "g" }
+    ]
+  },
 
-    <div class="container">
-        <h3>Kelib tushgan buyurtmalar</h3>
-        <div id="admin-orders"></div>
+  // --- Suyuq ovqatlar ---
+  {
+    id: 6,
+    name: "Qaynatma shoʻrva",
+    category: "Suyuq ovqatlar",
+    internal_price: 20000,
+    sale_price: 30000,
+    is_visible: true,
+    recipe: [
+      { ingredient: "Go'sht (Suyakli mol)", amount: 250, unit: "g" },
+      { ingredient: "Kartoshka", amount: 150, unit: "g" },
+      { ingredient: "Sabzi", amount: 50, unit: "g" },
+      { ingredient: "Piyoz", amount: 30, unit: "g" },
+      { ingredient: "Tuz", amount: 6, unit: "g" }
+    ]
+  },
+  {
+    id: 7,
+    name: "Mastava",
+    category: "Suyuq ovqatlar",
+    internal_price: 16000,
+    sale_price: 25000,
+    is_visible: true,
+    recipe: [
+      { ingredient: "Go'sht (Mol)", amount: 120, unit: "g" },
+      { ingredient: "Guruch", amount: 60, unit: "g" },
+      { ingredient: "Kartoshka", amount: 80, unit: "g" },
+      { ingredient: "Guruch", amount: 50, unit: "g" },
+      { ingredient: "Pomidor/Pasta", amount: 40, unit: "g" },
+      { ingredient: "Yog'", amount: 30, unit: "ml" },
+      { ingredient: "Tuz", amount: 5, unit: "g" }
+    ]
+  },
+  {
+    id: 8,
+    name: "Noʻxat shoʻrva (Moʻxaldak)",
+    category: "Suyuq ovqatlar",
+    internal_price: 18000,
+    sale_price: 28000,
+    is_visible: true,
+    recipe: [
+      { ingredient: "Go'sht (Qo'y)", amount: 200, unit: "g" },
+      { ingredient: "Nuxat", amount: 100, unit: "g" },
+      { ingredient: "Piyoz", amount: 40, unit: "g" },
+      { ingredient: "Tuz", amount: 5, unit: "g" }
+    ]
+  },
+  {
+    id: 9,
+    name: "Moshxorda",
+    category: "Suyuq ovqatlar",
+    internal_price: 17000,
+    sale_price: 26000,
+    is_visible: true,
+    recipe: [
+      { ingredient: "Mosh", amount: 80, unit: "g" },
+      { ingredient: "Guruch", amount: 40, unit: "g" },
+      { ingredient: "Go'sht (Mol)", amount: 100, unit: "g" },
+      { ingredient: "Piyoz", amount: 30, unit: "g" },
+      { ingredient: "Yog'", amount: 30, unit: "ml" },
+      { ingredient: "Tuz", amount: 5, unit: "g" }
+    ]
+  },
+  {
+    id: 10,
+    name: "Kalla-pacha",
+    category: "Suyuq ovqatlar",
+    internal_price: 30000,
+    sale_price: 45000,
+    is_visible: true,
+    recipe: [
+      { ingredient: "Kalla-pacha go'shti", amount: 350, unit: "g" },
+      { ingredient: "Sarimsoq", amount: 10, unit: "g" },
+      { ingredient: "Tuz", amount: 6, unit: "g" }
+    ]
+  },
+  {
+    id: 11,
+    name: "Chuchvara shoʻrva",
+    category: "Suyuq ovqatlar",
+    internal_price: 18000,
+    sale_price: 28000,
+    is_visible: true,
+    recipe: [
+      { ingredient: "Un", amount: 100, unit: "g" },
+      { ingredient: "Go'sht (Qiyma)", amount: 80, unit: "g" },
+      { ingredient: "Piyoz", amount: 30, unit: "g" },
+      { ingredient: "Yog'", amount: 20, unit: "ml" },
+      { ingredient: "Tuz", amount: 5, unit: "g" }
+    ]
+  },
+  {
+    id: 12,
+    name: "Koʻza shoʻrva",
+    category: "Suyuq ovqatlar",
+    internal_price: 25000,
+    sale_price: 38000,
+    is_visible: true,
+    recipe: [
+      { ingredient: "Go'sht (Qo'y)", amount: 220, unit: "g" },
+      { ingredient: "Kartoshka", amount: 100, unit: "g" },
+      { ingredient: "Pomidor", amount: 50, unit: "g" },
+      { ingredient: "Bulg'or qalampiri", amount: 40, unit: "g" },
+      { ingredient: "Tuz", amount: 5, unit: "g" }
+    ]
+  },
+  {
+    id: 13,
+    name: "Shirguruch",
+    category: "Suyuq ovqatlar",
+    internal_price: 12000,
+    sale_price: 20000,
+    is_visible: true,
+    recipe: [
+      { ingredient: "Guruch", amount: 100, unit: "g" },
+      { ingredient: "Sut", amount: 300, unit: "ml" },
+      { ingredient: "Shakar", amount: 20, unit: "g" },
+      { ingredient: "Sariyog'", amount: 20, unit: "g" },
+      { ingredient: "Tuz", amount: 3, unit: "g" }
+    ]
+  },
 
-        <h3 style="margin-top:30px;">Ombor qoldiqlari</h3>
-        <div class="card">
-            <div id="warehouse-list"></div>
-        </div>
-    </div>
+  // --- Quyuq taomlar ---
+  {
+    id: 14,
+    name: "Bifsteks",
+    category: "Quyuq taomlar",
+    internal_price: 35000,
+    sale_price: 55000,
+    is_visible: true,
+    recipe: [
+      { ingredient: "Mol go'shti (qiyma)", amount: 250, unit: "g" },
+      { ingredient: "Tuxum", amount: 1, unit: "dona" },
+      { ingredient: "Yog'", amount: 30, unit: "ml" },
+      { ingredient: "Tuz", amount: 5, unit: "g" }
+    ]
+  },
+  {
+    id: 15,
+    name: "Bistrogonav (Bef-stroganov)",
+    category: "Quyuq taomlar",
+    internal_price: 36000,
+    sale_price: 56000,
+    is_visible: true,
+    recipe: [
+      { ingredient: "Mol go'shti (lavash)", amount: 220, unit: "g" },
+      { ingredient: "Smetana", amount: 60, unit: "g" },
+      { ingredient: "Piyoz", amount: 40, unit: "g" },
+      { ingredient: "Un", amount: 15, unit: "g" },
+      { ingredient: "Yog'", amount: 30, unit: "ml" },
+      { ingredient: "Tuz", amount: 5, unit: "g" }
+    ]
+  },
+  {
+    id: 16,
+    name: "Jarkor (Jarkoye)",
+    category: "Quyuq taomlar",
+    internal_price: 28000,
+    sale_price: 42000,
+    is_visible: true,
+    recipe: [
+      { ingredient: "Go'sht (Mol)", amount: 200, unit: "g" },
+      { ingredient: "Kartoshka", amount: 250, unit: "g" },
+      { ingredient: "Piyoz", amount: 40, unit: "g" },
+      { ingredient: "Yog'", amount: 40, unit: "ml" },
+      { ingredient: "Tuz", amount: 5, unit: "g" }
+    ]
+  },
+  {
+    id: 17,
+    name: "Lagʻman (Qovurma lagʻman)",
+    category: "Quyuq taomlar",
+    internal_price: 24000,
+    sale_price: 38000,
+    is_visible: true,
+    recipe: [
+      { ingredient: "Un", amount: 150, unit: "g" },
+      { ingredient: "Go'sht (Mol)", amount: 130, unit: "g" },
+      { ingredient: "Bulg'or qalampiri", amount: 60, unit: "g" },
+      { ingredient: "Pomidor", amount: 50, unit: "g" },
+      { ingredient: "Piyoz", amount: 40, unit: "g" },
+      { ingredient: "Yog'", amount: 40, unit: "ml" },
+      { ingredient: "Tuz", amount: 5, unit: "g" }
+    ]
+  },
+  {
+    id: 18,
+    name: "Dimlama",
+    category: "Quyuq taomlar",
+    internal_price: 26000,
+    sale_price: 40000,
+    is_visible: true,
+    recipe: [
+      { ingredient: "Go'sht (Qo'y/Mol)", amount: 200, unit: "g" },
+      { ingredient: "Karam", amount: 150, unit: "g" },
+      { ingredient: "Kartoshka", amount: 150, unit: "g" },
+      { ingredient: "Sabzi", amount: 80, unit: "g" },
+      { ingredient: "Piyoz", amount: 60, unit: "g" },
+      { ingredient: "Dumba", amount: 30, unit: "g" },
+      { ingredient: "Tuz", amount: 5, unit: "g" }
+    ]
+  },
+  {
+    id: 19,
+    name: "Tabaka joʻjasi (S-tabaka)",
+    category: "Quyuq taomlar",
+    internal_price: 32000,
+    sale_price: 50000,
+    is_visible: true,
+    recipe: [
+      { ingredient: "Tovuq", amount: 500, unit: "g" },
+      { ingredient: "Sariyog'", amount: 30, unit: "g" },
+      { ingredient: "Sarimsoq", amount: 15, unit: "g" },
+      { ingredient: "Tuz", amount: 6, unit: "g" }
+    ]
+  },
+  {
+    id: 20,
+    name: "Norin (Qozon norin)",
+    category: "Quyuq taomlar",
+    internal_price: 30000,
+    sale_price: 46000,
+    is_visible: true,
+    recipe: [
+      { ingredient: "Ot go'shti / Mol go'shti", amount: 200, unit: "g" },
+      { ingredient: "Un", amount: 150, unit: "g" },
+      { ingredient: "Piyoz", amount: 50, unit: "g" },
+      { ingredient: "Tuz", amount: 5, unit: "g" }
+    ]
+  },
 
-    <script src="js/config.js"></script>
-    <script src="js/admin.js"></script>
-</body>
-</html>
+  // --- Hamirli taomlar ---
+  {
+    id: 21,
+    name: "Manti (Goʻshtli va piyozli)",
+    category: "Hamirli taomlar",
+    internal_price: 22000,
+    sale_price: 35000,
+    is_visible: true,
+    recipe: [
+      { ingredient: "Un", amount: 120, unit: "g" },
+      { ingredient: "Go'sht (Mol)", amount: 130, unit: "g" },
+      { ingredient: "Piyoz", amount: 100, unit: "g" },
+      { ingredient: "Dumba", amount: 30, unit: "g" },
+      { ingredient: "Tuz", amount: 5, unit: "g" }
+    ]
+  },
+  {
+    id: 22,
+    name: "Chuchvara (Qaynatilgan yoki qovurilgan)",
+    category: "Hamirli taomlar",
+    internal_price: 19000,
+    sale_price: 30000,
+    is_visible: true,
+    recipe: [
+      { ingredient: "Un", amount: 120, unit: "g" },
+      { ingredient: "Go'sht (Qiyma)", amount: 100, unit: "g" },
+      { ingredient: "Piyoz", amount: 50, unit: "g" },
+      { ingredient: "Yog'", amount: 30, unit: "ml" },
+      { ingredient: "Tuz", amount: 5, unit: "g" }
+    ]
+  },
+  {
+    id: 23,
+    name: "Choʻzma lagʻmon",
+    category: "Hamirli taomlar",
+    internal_price: 24000,
+    sale_price: 38000,
+    is_visible: true,
+    recipe: [
+      { ingredient: "Un", amount: 160, unit: "g" },
+      { ingredient: "Go'sht", amount: 120, unit: "g" },
+      { ingredient: "Sabzavotlar (aralash)", amount: 100, unit: "g" },
+      { ingredient: "Yog'", amount: 40, unit: "ml" },
+      { ingredient: "Tuz", amount: 5, unit: "g" }
+    ]
+  },
+  {
+    id: 24,
+    name: "Qovurma lagʻmon (Qovurma soʻy)",
+    category: "Hamirli taomlar",
+    internal_price: 25000,
+    sale_price: 39000,
+    is_visible: true,
+    recipe: [
+      { ingredient: "Un", amount: 160, unit: "g" },
+      { ingredient: "Go'sht", amount: 130, unit: "g" },
+      { ingredient: "Sabzavotlar", amount: 120, unit: "g" },
+      { ingredient: "Yog'", amount: 50, unit: "ml" },
+      { ingredient: "Tuz", amount: 5, unit: "g" }
+    ]
+  },
+  {
+    id: 25,
+    name: "Uygʻur lagʻmoni",
+    category: "Hamirli taomlar",
+    internal_price: 26000,
+    sale_price: 40000,
+    is_visible: true,
+    recipe: [
+      { ingredient: "Un", amount: 160, unit: "g" },
+      { ingredient: "Go'sht", amount: 140, unit: "g" },
+      { ingredient: "Aksay sabzavotlari", amount: 130, unit: "g" },
+      { ingredient: "Maxsus ziravorlar", amount: 10, unit: "g" },
+      { ingredient: "Tuz", amount: 5, unit: "g" }
+    ]
+  },
+  {
+    id: 26,
+    name: "Beshbarmoq",
+    category: "Hamirli taomlar",
+    internal_price: 34000,
+    sale_price: 52000,
+    is_visible: true,
+    recipe: [
+      { ingredient: "Ot/Mol go'shti", amount: 250, unit: "g" },
+      { ingredient: "Un (Xamir uchun)", amount: 150, unit: "g" },
+      { ingredient: "Piyoz", amount: 50, unit: "g" },
+      { ingredient: "Tuz", amount: 5, unit: "g" }
+    ]
+  },
+  {
+    id: 27,
+    name: "Uygʻur shivit oshi",
+    category: "Hamirli taomlar",
+    internal_price: 27000,
+    sale_price: 42000,
+    is_visible: true,
+    recipe: [
+      { ingredient: "Un (Shivit suvida)", amount: 160, unit: "g" },
+      { ingredient: "Go'sht", amount: 120, unit: "g" },
+      { ingredient: "Sabzavot va qayla", amount: 100, unit: "g" },
+      { ingredient: "Yog'", amount: 40, unit: "ml" },
+      { ingredient: "Tuz", amount: 5, unit: "g" }
+    ]
+  },
+
+  // --- Kaboblar ---
+  {
+    id: 28,
+    name: "Qiyma kabob",
+    category: "Kaboblar",
+    internal_price: 15000,
+    sale_price: 24000,
+    is_visible: true,
+    recipe: [
+      { ingredient: "Go'sht qiyma (Mol/Qo'y)", amount: 180, unit: "g" },
+      { ingredient: "Dumba", amount: 40, unit: "g" },
+      { ingredient: "Piyoz", amount: 30, unit: "g" },
+      { ingredient: "Tuz", amount: 4, unit: "g" }
+    ]
+  },
+  {
+    id: 29,
+    name: "Qoʻy goʻshti shashligi (Klassik shashlik)",
+    category: "Kaboblar",
+    internal_price: 18000,
+    sale_price: 28000,
+    is_visible: true,
+    recipe: [
+      { ingredient: "Qo'y go'shti", amount: 170, unit: "g" },
+      { ingredient: "Dumba", amount: 50, unit: "g" },
+      { ingredient: "Piyoz", amount: 40, unit: "g" },
+      { ingredient: "Tuz", amount: 4, unit: "g" }
+    ]
+  },
+  {
+    id: 30,
+    name: "Jigar shashligi",
+    category: "Kaboblar",
+    internal_price: 16000,
+    sale_price: 25000,
+    is_visible: true,
+    recipe: [
+      { ingredient: "Jigar", amount: 180, unit: "g" },
+      { ingredient: "Dumba", amount: 40, unit: "g" },
+      { ingredient: "Tuz", amount: 4, unit: "g" }
+    ]
+  },
+  {
+    id: 31,
+    name: "Qozon kabob",
+    category: "Kaboblar",
+    internal_price: 32000,
+    sale_price: 48000,
+    is_visible: true,
+    recipe: [
+      { ingredient: "Qo'y go'shti (suyakli)", amount: 350, unit: "g" },
+      { ingredient: "Kartoshka", amount: 200, unit: "g" },
+      { ingredient: "Yog'", amount: 50, unit: "ml" },
+      { ingredient: "Tuz", amount: 6, unit: "g" }
+    ]
+  },
+  {
+    id: 32,
+    name: "Tandir kabob",
+    category: "Kaboblar",
+    internal_price: 38000,
+    sale_price: 58000,
+    is_visible: true,
+    recipe: [
+      { ingredient: "Qo'y go'shti", amount: 400, unit: "g" },
+      { ingredient: "Ziravorlar", amount: 10, unit: "g" },
+      { ingredient: "Tuz", amount: 6, unit: "g" }
+    ]
+  },
+  {
+    id: 33,
+    name: "Jiz kabob",
+    category: "Kaboblar",
+    internal_price: 35000,
+    sale_price: 52000,
+    is_visible: true,
+    recipe: [
+      { ingredient: "Qo'y go'shti va ichki yog'", amount: 350, unit: "g" },
+      { ingredient: "Piyoz", amount: 50, unit: "g" },
+      { ingredient: "Tuz", amount: 5, unit: "g" }
+    ]
+  },
+  {
+    id: 34,
+    name: "Napalyon",
+    category: "Kaboblar", // yoki shirinliklar, namunada keltirilganidek
+    internal_price: 10000,
+    sale_price: 18000,
+    is_visible: true,
+    recipe: [
+      { ingredient: "Un", amount: 80, unit: "g" },
+      { ingredient: "Sariyog'", amount: 40, unit: "g" },
+      { ingredient: "Sut", amount: 50, unit: "ml" },
+      { ingredient: "Shakar", amount: 30, unit: "g" }
+    ]
+  },
+  {
+    id: 35,
+    name: "O’rama",
+    category: "Kaboblar",
+    internal_price: 14000,
+    sale_price: 22000,
+    is_visible: true,
+    recipe: [
+      { ingredient: "Un", amount: 100, unit: "g" },
+      { ingredient: "Go'sht/Piyoz qiyma", amount: 80, unit: "g" },
+      { ingredient: "Yog'", amount: 30, unit: "ml" },
+      { ingredient: "Tuz", amount: 4, unit: "g" }
+    ]
+  },
+  {
+    id: 36,
+    name: "Norin kabob",
+    category: "Kaboblar",
+    internal_price: 25000,
+    sale_price: 38000,
+    is_visible: true,
+    recipe: [
+      { ingredient: "Go'sht", amount: 200, unit: "g" },
+      { ingredient: "Maxsus xamir", amount: 100, unit: "g" },
+      { ingredient: "Tuz", amount: 4, unit: "g" }
+    ]
+  },
+  {
+    id: 37,
+    name: "Toyloq (Uygʻurcha) kabob",
+    category: "Kaboblar",
+    internal_price: 22000,
+    sale_price: 34000,
+    is_visible: true,
+    recipe: [
+      { ingredient: "Go'sht", amount: 220, unit: "g" },
+      { ingredient: "Maxsus achchiq ziravorlar", amount: 15, unit: "g" },
+      { ingredient: "Tuz", amount: 5, unit: "g" }
+    ]
+  },
+  {
+    id: 38,
+    name: "Bedana kabob",
+    category: "Kaboblar",
+    internal_price: 24000,
+    sale_price: 38000,
+    is_visible: true,
+    recipe: [
+      { ingredient: "Bedana go'shti", amount: 1, unit: "dona" },
+      { ingredient: "Ziravorlar", amount: 10, unit: "g" },
+      { ingredient: "Yog'", amount: 20, unit: "ml" }
+    ]
+  },
+  {
+    id: 39,
+    name: "Tovuq shashligi (File kabob)",
+    category: "Kaboblar",
+    internal_price: 14000,
+    sale_price: 22000,
+    is_visible: true,
+    recipe: [
+      { ingredient: "Tovuq filesi", amount: 180, unit: "g" },
+      { ingredient: "Mayonez/Sous", amount: 30, unit: "g" },
+      { ingredient: "Tuz", amount: 4, unit: "g" }
+    ]
+  },
+  {
+    id: 40,
+    name: "Lula-kabob",
+    category: "Kaboblar",
+    internal_price: 16000,
+    sale_price: 26000,
+    is_visible: true,
+    recipe: [
+      { ingredient: "Mol/Qo'y qiyma", amount: 180, unit: "g" },
+      { ingredient: "Piyoz", amount: 30, unit: "g" },
+      { ingredient: "Ko'kat", amount: 10, unit: "g" },
+      { ingredient: "Tuz", amount: 4, unit: "g" }
+    ]
+  },
+  {
+    id: 41,
+    name: "Karsak kabob",
+    category: "Kaboblar",
+    internal_price: 20000,
+    sale_price: 30000,
+    is_visible: true,
+    recipe: [
+      { ingredient: "Go'sht", amount: 200, unit: "g" },
+      { ingredient: "Dumba", amount: 40, unit: "g" },
+      { ingredient: "Tuz", amount: 4, unit: "g" }
+    ]
+  },
+  {
+    id: 42,
+    name: "Qovurma shashlik",
+    category: "Kaboblar",
+    internal_price: 19000,
+    sale_price: 29000,
+    is_visible: true,
+    recipe: [
+      { ingredient: "Go'sht", amount: 180, unit: "g" },
+      { ingredient: "Yog'", amount: 30, unit: "ml" },
+      { ingredient: "Tuz", amount: 4, unit: "g" }
+    ]
+  },
+  {
+    id: 43,
+    name: "Quyruq kabob (Dumba kabob)",
+    category: "Kaboblar",
+    internal_price: 17000,
+    sale_price: 27000,
+    is_visible: true,
+    recipe: [
+      { ingredient: "Dumba", amount: 200, unit: "g" },
+      { ingredient: "Ziravor", amount: 5, unit: "g" },
+      { ingredient: "Tuz", amount: 4, unit: "g" }
+    ]
+  },
+  {
+    id: 44,
+    name: "Bifshteks kabob",
+    category: "Kaboblar",
+    internal_price: 21000,
+    sale_price: 32000,
+    is_visible: true,
+    recipe: [
+      { ingredient: "Qiyma go'sht", amount: 200, unit: "g" },
+      { ingredient: "Tuz", amount: 4, unit: "g" }
+    ]
+  },
+  {
+    id: 45,
+    name: "Tabaka kabob",
+    category: "Kaboblar",
+    internal_price: 28000,
+    sale_price: 42000,
+    is_visible: true,
+    recipe: [
+      { ingredient: "Tovuq", amount: 400, unit: "g" },
+      { ingredient: "Sariyog'", amount: 20, unit: "g" },
+      { ingredient: "Tuz", amount: 5, unit: "g" }
+    ]
+  },
+  {
+    id: 46,
+    name: "Ovoza kabob",
+    category: "Kaboblar",
+    internal_price: 23000,
+    sale_price: 35000,
+    is_visible: true,
+    recipe: [
+      { ingredient: "Go'sht", amount: 200, unit: "g" },
+      { ingredient: "Maxsus sous", amount: 30, unit: "g" },
+      { ingredient: "Tuz", amount: 4, unit: "g" }
+    ]
+  },
+  {
+    id: 47,
+    name: "Sabzavotli kabob",
+    category: "Kaboblar",
+    internal_price: 10000,
+    sale_price: 16000,
+    is_visible: true,
+    recipe: [
+      { ingredient: "Pomidor, baqlajon, bulg'or", amount: 250, unit: "g" },
+      { ingredient: "Yog'", amount: 20, unit: "ml" },
+      { ingredient: "Tuz", amount: 4, unit: "g" }
+    ]
+  },
+  {
+    id: 48,
+    name: "Qanotcha shashligi (Tovuq qanoti)",
+    category: "Kaboblar",
+    internal_price: 13000,
+    sale_price: 20000,
+    is_visible: true,
+    recipe: [
+      { ingredient: "Tovuq qanoti", amount: 250, unit: "g" },
+      { ingredient: "Marinad", amount: 30, unit: "g" },
+      { ingredient: "Tuz", amount: 4, unit: "g" }
+    ]
+  },
+  {
+    id: 49,
+    name: "Piyozli kabob",
+    category: "Kaboblar",
+    internal_price: 11000,
+    sale_price: 18000,
+    is_visible: true,
+    recipe: [
+      { ingredient: "Go'sht va ko'p piyoz", amount: 200, unit: "g" },
+      { ingredient: "Tuz", amount: 4, unit: "g" }
+    ]
+  },
+  {
+    id: 50,
+    name: "Qovurgʻa kabob (Ribs)",
+    category: "Kaboblar",
+    internal_price: 30000,
+    sale_price: 45000,
+    is_visible: true,
+    recipe: [
+      { ingredient: "Qo'y/Mol qovurg'asi", amount: 300, unit: "g" },
+      { ingredient: "Ziravor", amount: 10, unit: "g" },
+      { ingredient: "Tuz", amount: 5, unit: "g" }
+    ]
+  },
+  {
+    id: 51,
+    name: "Kavkazcha shashlik (Kars)",
+    category: "Kaboblar",
+    internal_price: 24000,
+    sale_price: 36000,
+    is_visible: true,
+    recipe: [
+      { ingredient: "Qo'y go'shti (katta bo'lak)", amount: 250, unit: "g" },
+      { ingredient: "Dumba", amount: 50, unit: "g" },
+      { ingredient: "Tuz", amount: 5, unit: "g" }
+    ]
+  },
+  {
+    id: 52,
+    name: "Baliq kabob",
+    category: "Kaboblar",
+    internal_price: 28000,
+    sale_price: 42000,
+    is_visible: true,
+    recipe: [
+      { ingredient: "Baliq filesi", amount: 220, unit: "g" },
+      { ingredient: "Limon", amount: 30, unit: "g" },
+      { ingredient: "Tuz", amount: 4, unit: "g" }
+    ]
+  },
+  {
+    id: 53,
+    name: "Mushroom (Qoʻziqorin) kabob",
+    category: "Kaboblar",
+    internal_price: 12000,
+    sale_price: 20000,
+    is_visible: true,
+    recipe: [
+      { ingredient: "Qo'ziqorin (Shampinon)", amount: 200, unit: "g" },
+      { ingredient: "Yog'", amount: 20, unit: "ml" },
+      { ingredient: "Tuz", amount: 3, unit: "g" }
+    ]
+  },
+  {
+    id: 54,
+    name: "Gilos kabob (Mevali kabob)",
+    category: "Kaboblar",
+    internal_price: 25000,
+    sale_price: 38000,
+    is_visible: true,
+    recipe: [
+      { ingredient: "Go'sht va gilos/meva", amount: 220, unit: "g" },
+      { ingredient: "Tuz", amount: 4, unit: "g" }
+    ]
+  },
+  {
+    id: 55,
+    name: "Asalli shashlik",
+    category: "Kaboblar",
+    internal_price: 20000,
+    sale_price: 30000,
+    is_visible: true,
+    recipe: [
+      { ingredient: "Tovuq yoki go'sht", amount: 200, unit: "g" },
+      { ingredient: "Asal", amount: 30, unit: "g" },
+      { ingredient: "Tuz", amount: 4, unit: "g" }
+    ]
+  },
+  {
+    id: 56,
+    name: "Achchiq (Laza) shashlik",
+    category: "Kaboblar",
+    internal_price: 18000,
+    sale_price: 28000,
+    is_visible: true,
+    recipe: [
+      { ingredient: "Go'sht", amount: 180, unit: "g" },
+      { ingredient: "Achchiq qalampir pasta", amount: 25, unit: "g" },
+      { ingredient: "Tuz", amount: 4, unit: "g" }
+    ]
+  },
+  {
+    id: 57,
+    name: "Minora kabob",
+    category: "Kaboblar",
+    internal_price: 35000,
+    sale_price: 52000,
+    is_visible: true,
+    recipe: [
+      { ingredient: "Aralash go'sht mahsulotlari", amount: 350, unit: "g" },
+      { ingredient: "Ziravorlar", amount: 10, unit: "g" },
+      { ingredient: "Tuz", amount: 6, unit: "g" }
+    ]
+  },
+  {
+    id: 58,
+    name: "Kletchatka kabob",
+    category: "Kaboblar",
+    internal_price: 15000,
+    sale_price: 24000,
+    is_visible: true,
+    recipe: [
+      { ingredient: "Go'sht va sabzavotlar", amount: 220, unit: "g" },
+      { ingredient: "Tuz", amount: 4, unit: "g" }
+    ]
+  },
+  {
+    id: 59,
+    name: "Jigar-dumba kabob",
+    category: "Kaboblar",
+    internal_price: 17000,
+    sale_price: 27000,
+    is_visible: true,
+    recipe: [
+      { ingredient: "Jigar", amount: 120, unit: "g" },
+      { ingredient: "Dumba", amount: 80, unit: "g" },
+      { ingredient: "Tuz", amount: 4, unit: "g" }
+    ]
+  },
+
+  // --- Somsalar ---
+  {
+    id: 60,
+    name: "Tandir somsa",
+    category: "Somsalar",
+    internal_price: 8000,
+    sale_price: 14000,
+    is_visible: true,
+    recipe: [
+      { ingredient: "Un", amount: 100, unit: "g" },
+      { ingredient: "Go'sht (Mol)", amount: 80, unit: "g" },
+      { ingredient: "Piyoz", amount: 70, unit: "g" },
+      { ingredient: "Dumba", amount: 20, unit: "g" },
+      { ingredient: "Tuz", amount: 3, unit: "g" }
+    ]
+  },
+  {
+    id: 61,
+    name: "Qatlama (varaqi) somsa",
+    category: "Somsalar",
+    internal_price: 8500,
+    sale_price: 15000,
+    is_visible: true,
+    recipe: [
+      { ingredient: "Un", amount: 100, unit: "g" },
+      { ingredient: "Sariyog'/Margarin", amount: 30, unit: "g" },
+      { ingredient: "Go'sht va piyoz", amount: 130, unit: "g" },
+      { ingredient: "Tuz", amount: 3, unit: "g" }
+    ]
+  },
+  {
+    id: 62,
+    name: "Koʻk somsa",
+    category: "Somsalar",
+    internal_price: 6000,
+    sale_price: 10000,
+    is_visible: true,
+    recipe: [
+      { ingredient: "Un", amount: 100, unit: "g" },
+      { ingredient: "Ko'katlar (ismaloq, yalpiz)", amount: 120, unit: "g" },
+      { ingredient: "Dumba/Yog'", amount: 20, unit: "g" },
+      { ingredient: "Tuz", amount: 3, unit: "g" }
+    ]
+  },
+  {
+    id: 63,
+    name: "Qovoqli somsa",
+    category: "Somsalar",
+    internal_price: 5500,
+    sale_price: 9000,
+    is_visible: true,
+    recipe: [
+      { ingredient: "Un", amount: 100, unit: "g" },
+      { ingredient: "Qovoq", amount: 130, unit: "g" },
+      { ingredient: "Piyoz", amount: 40, unit: "g" },
+      { ingredient: "Dumba/Yog'", amount: 20, unit: "g" },
+      { ingredient: "Tuz", amount: 3, unit: "g" }
+    ]
+  },
+  {
+    id: 64,
+    name: "Kartoshkali somsa",
+    category: "Somsalar",
+    internal_price: 5000,
+    sale_price: 8000,
+    is_visible: true,
+    recipe: [
+      { ingredient: "Un", amount: 100, unit: "g" },
+      { ingredient: "Kartoshka", amount: 130, unit: "g" },
+      { ingredient: "Piyoz", amount: 40, unit: "g" },
+      { ingredient: "Yog'", amount: 20, unit: "ml" },
+      { ingredient: "Tuz", amount: 3, unit: "g" }
+    ]
+  },
+  {
+    id: 65,
+    name: "G‘umma somsa (Qovurma somsa)",
+    category: "Somsalar",
+    internal_price: 7000,
+    sale_price: 12000,
+    is_visible: true,
+    recipe: [
+      { ingredient: "Un", amount: 100, unit: "g" },
+      { ingredient: "Qiyma", amount: 80, unit: "g" },
+      { ingredient: "Piyoz", amount: 50, unit: "g" },
+      { ingredient: "Yog' (qovurish uchun)", amount: 40, unit: "ml" },
+      { ingredient: "Tuz", amount: 3, unit: "g" }
+    ]
+  },
+  {
+    id: 66,
+    name: "Go‘shtli-kartoshkali somsa",
+    category: "Somsalar",
+    internal_price: 7500,
+    sale_price: 13000,
+    is_visible: true,
+    recipe: [
+      { ingredient: "Un", amount: 100, unit: "g" },
+      { ingredient: "Go'sht", amount: 50, unit: "g" },
+      { ingredient: "Kartoshka", amount: 80, unit: "g" },
+      { ingredient: "Piyoz", amount: 40, unit: "g" },
+      { ingredient: "Tuz", amount: 3, unit: "g" }
+    ]
+  },
+  {
+    id: 67,
+    name: "Pishloqli somsa",
+    category: "Somsalar",
+    internal_price: 8000,
+    sale_price: 14000,
+    is_visible: true,
+    recipe: [
+      { ingredient: "Un", amount: 100, unit: "g" },
+      { ingredient: "Pishloq (Mozzarella)", amount: 80, unit: "g" },
+      { ingredient: "Sariyog'", amount: 20, unit: "g" },
+      { ingredient: "Tuz", amount: 2, unit: "g" }
+    ]
+  },
+  {
+    id: 68,
+    name: "Tovuqli somsa",
+    category: "Somsalar",
+    internal_price: 7000,
+    sale_price: 12000,
+    is_visible: true,
+    recipe: [
+      { ingredient: "Un", amount: 100, unit: "g" },
+      { ingredient: "Tovuq filesi", amount: 90, unit: "g" },
+      { ingredient: "Piyoz", amount: 50, unit: "g" },
+      { ingredient: "Yog'", amount: 20, unit: "ml" },
+      { ingredient: "Tuz", amount: 3, unit: "g" }
+    ]
+  },
+  {
+    id: 69,
+    name: "Qiyma somsa",
+    category: "Somsalar",
+    internal_price: 7000,
+    sale_price: 12000,
+    is_visible: true,
+    recipe: [
+      { ingredient: "Un", amount: 100, unit: "g" },
+      { ingredient: "Qiyma", amount: 90, unit: "g" },
+      { ingredient: "Piyoz", amount: 50, unit: "g" },
+      { ingredient: "Tuz", amount: 3, unit: "g" }
+    ]
+  },
+  {
+    id: 70,
+    name: "Moshli somsa",
+    category: "Somsalar",
+    internal_price: 6000,
+    sale_price: 10000,
+    is_visible: true,
+    recipe: [
+      { ingredient: "Un", amount: 100, unit: "g" },
+      { ingredient: "Mosh (qaynatilgan)", amount: 80, unit: "g" },
+      { ingredient: "Piyoz", amount: 40, unit: "g" },
+      { ingredient: "Yog'", amount: 20, unit: "ml" },
+      { ingredient: "Tuz", amount: 3, unit: "g" }
+    ]
+  },
+  {
+    id: 71,
+    name: "Zig‘ir somsa",
+    category: "Somsalar",
+    internal_price: 9000,
+    sale_price: 16000,
+    is_visible: true,
+    recipe: [
+      { ingredient: "Un", amount: 100, unit: "g" },
+      { ingredient: "Zig'ir yog'i va go'sht", amount: 130, unit: "g" },
+      { ingredient: "Piyoz", amount: 50, unit: "g" },
+      { ingredient: "Tuz", amount: 3, unit: "g" }
+    ]
+  },
+  {
+    id: 72,
+    name: "Asal solingan shirin somsa",
+    category: "Somsalar",
+    internal_price: 7000,
+    sale_price: 12000,
+    is_visible: true,
+    recipe: [
+      { ingredient: "Un", amount: 100, unit: "g" },
+      { ingredient: "Asal", amount: 40, unit: "g" },
+      { ingredient: "Yong'oq", amount: 30, unit: "g" }
+    ]
+  },
+  {
+    id: 73,
+    name: "Qora zira (yoki kunjutli) somsa",
+    category: "Somsalar",
+    internal_price: 8000,
+    sale_price: 14000,
+    is_visible: true,
+    recipe: [
+      { ingredient: "Un", amount: 100, unit: "g" },
+      { ingredient: "Go'sht va piyoz", amount: 120, unit: "g" },
+      { ingredient: "Qora zira/Kunjut", amount: 5, unit: "g" },
+      { ingredient: "Tuz", amount: 3, unit: "g" }
+    ]
+  },
+  {
+    id: 74,
+    name: "Katta to‘y somsasi",
+    category: "Somsalar",
+    internal_price: 50000,
+    sale_price: 80000,
+    is_visible: true,
+    recipe: [
+      { ingredient: "Un", amount: 500, unit: "g" },
+      { ingredient: "Go'sht", amount: 600, unit: "g" },
+      { ingredient: "Piyoz", amount: 400, unit: "g" },
+      { ingredient: "Dumba", amount: 100, unit: "g" },
+      { ingredient: "Tuz", amount: 15, unit: "g" }
+    ]
+  },
+  {
+    id: 75,
+    name: "Piyozli somsa (piyoz-dumba)",
+    category: "Somsalar",
+    internal_price: 5000,
+    sale_price: 8000,
+    is_visible: true,
+    recipe: [
+      { ingredient: "Un", amount: 100, unit: "g" },
+      { ingredient: "Piyoz", amount: 150, unit: "g" },
+      { ingredient: "Dumba", amount: 40, unit: "g" },
+      { ingredient: "Tuz", amount: 3, unit: "g" }
+    ]
+  },
+  {
+    id: 76,
+    name: "Qo‘ziqorinli somsa",
+    category: "Somsalar",
+    internal_price: 7000,
+    sale_price: 12000,
+    is_visible: true,
+    recipe: [
+      { ingredient: "Un", amount: 100, unit: "g" },
+      { ingredient: "Qo'ziqorin", amount: 100, unit: "g" },
+      { ingredient: "Piyoz", amount: 40, unit: "g" },
+      { ingredient: "Yog'", amount: 20, unit: "ml" },
+      { ingredient: "Tuz", amount: 3, unit: "g" }
+    ]
+  },
+  {
+    id: 77,
+    name: "Uyg‘urcha somsa",
+    category: "Somsalar",
+    internal_price: 9000,
+    sale_price: 15000,
+    is_visible: true,
+    recipe: [
+      { ingredient: "Un", amount: 100, unit: "g" },
+      { ingredient: "Go'sht (maxsus ziravor)", amount: 130, unit: "g" },
+      { ingredient: "Piyoz", amount: 50, unit: "g" },
+      { ingredient: "Tuz", amount: 3, unit: "g" }
+    ]
+  },
+  {
+    id: 78,
+    name: "Jigar somsasi",
+    category: "Somsalar",
+    internal_price: 7000,
+    sale_price: 12000,
+    is_visible: true,
+    recipe: [
+      { ingredient: "Un", amount: 100, unit: "g" },
+      { ingredient: "Jigar", amount: 100, unit: "g" },
+      { ingredient: "Dumba", amount: 30, unit: "g" },
+      { ingredient: "Piyoz", amount: 40, unit: "g" },
+      { ingredient: "Tuz", amount: 3, unit: "g" }
+    ]
+  },
+  {
+    id: 79,
+    name: "Sutli xamirdan tayyorlangan somsa",
+    category: "Somsalar",
+    internal_price: 8000,
+    sale_price: 14000,
+    is_visible: true,
+    recipe: [
+      { ingredient: "Un", amount: 100, unit: "g" },
+      { ingredient: "Sut (xamirga)", amount: 40, unit: "ml" },
+      { ingredient: "Go'sht va piyoz", amount: 120, unit: "g" },
+      { ingredient: "Tuz", amount: 3, unit: "g" }
+    ]
+  },
+
+  // --- Fast Food ---
+  {
+    id: 80,
+    name: "Lavash",
+    category: "Fast Food",
+    internal_price: 16000,
+    sale_price: 28000,
+    is_visible: true,
+    recipe: [
+      { ingredient: "Lavash noni", amount: 1, unit: "dona" },
+      { ingredient: "Tovuq/Mol go'shti", amount: 120, unit: "g" },
+      { ingredient: "Pomidor, bodring", amount: 50, unit: "g" },
+      { ingredient: "Sous", amount: 30, unit: "g" },
+      { ingredient: "Kartoshka fri", amount: 40, unit: "g" }
+    ]
+  },
+  {
+    id: 81,
+    name: "Gamburger",
+    category: "Fast Food",
+    internal_price: 14000,
+    sale_price: 24000,
+    is_visible: true,
+    recipe: [
+      { ingredient: "Burger bulochkasi", amount: 1, unit: "dona" },
+      { ingredient: "Kotlet (mol go'shti)", amount: 100, unit: "g" },
+      { ingredient: "Salat bargi, pomidor", amount: 40, unit: "g" },
+      { ingredient: "Sous", amount: 25, unit: "g" }
+    ]
+  },
+  {
+    id: 82,
+    name: "Cheeseburger",
+    category: "Fast Food",
+    internal_price: 15000,
+    sale_price: 26000,
+    is_visible: true,
+    recipe: [
+      { ingredient: "Burger bulochkasi", amount: 1, unit: "dona" },
+      { ingredient: "Kotlet", amount: 100, unit: "g" },
+      { ingredient: "Pishloq (Cheddar)", amount: 20, unit: "g" },
+      { ingredient: "Sabzavotlar va sous", amount: 40, unit: "g" }
+    ]
+  },
+  {
+    id: 83,
+    name: "Shaurma (Doner)",
+    category: "Fast Food",
+    internal_price: 15000,
+    sale_price: 27000,
+    is_visible: true,
+    recipe: [
+      { ingredient: "Non/Lavash", amount: 1, unit: "dona" },
+      { ingredient: "Tovuq go'shti", amount: 130, unit: "g" },
+      { ingredient: "Bodring, pomidor, sous", amount: 60, unit: "g" }
+    ]
+  },
+  {
+    id: 84,
+    name: "Hot-dog",
+    category: "Fast Food",
+    internal_price: 8000,
+    sale_price: 15000,
+    is_visible: true,
+    recipe: [
+      { ingredient: "Hot-dog bulochkasi", amount: 1, unit: "dona" },
+      { ingredient: "Sosiska", amount: 1, unit: "dona" },
+      { ingredient: "Ketchup, mayonez", amount: 20, unit: "g" }
+    ]
+  },
+  {
+    id: 85,
+    name: "Kartoshka fri",
+    category: "Fast Food",
+    internal_price: 6000,
+    sale_price: 12000,
+    is_visible: true,
+    recipe: [
+      { ingredient: "Kartoshka", amount: 150, unit: "g" },
+      { ingredient: "Yog' (qovurish)", amount: 30, unit: "ml" },
+      { ingredient: "Tuz", amount: 3, unit: "g" }
+    ]
+  },
+  {
+    id: 86,
+    name: "Pitsa (30 sm / 25 sm / 20 sm)",
+    category: "Fast Food",
+    internal_price: 35000,
+    sale_price: 65000,
+    is_visible: true,
+    recipe: [
+      { ingredient: "Un (xamir)", amount: 250, unit: "g" },
+      { ingredient: "Pishloq (Mozzarella)", amount: 150, unit: "g" },
+      { ingredient: "Kolbasa/Go'sht", amount: 100, unit: "g" },
+      { ingredient: "Pomidor pastasi", amount: 40, unit: "g" }
+    ]
+  },
+  {
+    id: 87,
+    name: "Klab-sendvich",
+    category: "Fast Food",
+    internal_price: 14000,
+    sale_price: 25000,
+    is_visible: true,
+    recipe: [
+      { ingredient: "Tost noni", amount: 3, unit: "dona" },
+      { ingredient: "Tovuq filesi", amount: 80, unit: "g" },
+      { ingredient: "Tuxum", amount: 1, unit: "dona" },
+      { ingredient: "Bodring, pomidor, mayonez", amount: 50, unit: "g" }
+    ]
+  },
+  {
+    id: 88,
+    name: "Xaggi (Haggi)",
+    category: "Fast Food",
+    internal_price: 16000,
+    sale_price: 28000,
+    is_visible: true,
+    recipe: [
+      { ingredient: "Non/Lavash", amount: 1, unit: "dona" },
+      { ingredient: "Go'sht va pishloq", amount: 130, unit: "g" },
+      { ingredient: "Sous", amount: 30, unit: "g" }
+    ]
+  },
+  {
+    id: 89,
+    name: "Tovuq nuggetslari",
+    category: "Fast Food",
+    internal_price: 12000,
+    sale_price: 22000,
+    is_visible: true,
+    recipe: [
+      { ingredient: "Tovuq filesi", amount: 130, unit: "g" },
+      { ingredient: "Suxari (non uvoqlari)", amount: 30, unit: "g" },
+      { ingredient: "Yog'", amount: 30, unit: "ml" }
+    ]
+  },
+  {
+    id: 90,
+    name: "Tovuq tenderslari (Tenders)",
+    category: "Fast Food",
+    internal_price: 13000,
+    sale_price: 23000,
+    is_visible: true,
+    recipe: [
+      { ingredient: "Tovuq filesi (uzun)", amount: 140, unit: "g" },
+      { ingredient: "Maxsus qobiq", amount: 30, unit: "g" },
+      { ingredient: "Yog'", amount: 30, unit: "ml" }
+    ]
+  },
+  {
+    id: 91,
+    name: "Chikken burger",
+    category: "Fast Food",
+    internal_price: 13000,
+    sale_price: 22000,
+    is_visible: true,
+    recipe: [
+      { ingredient: "Bulochka", amount: 1, unit: "dona" },
+      { ingredient: "Tovuq kotleti", amount: 100, unit: "g" },
+      { ingredient: "Salat, sous", amount: 30, unit: "g" }
+    ]
+  },
+  {
+    id: 92,
+    name: "Fransuzcha hot-dog",
+    category: "Fast Food",
+    internal_price: 9000,
+    sale_price: 16000,
+    is_visible: true,
+    recipe: [
+      { ingredient: "Fransuz bulochkasi", amount: 1, unit: "dona" },
+      { ingredient: "Sosiska", amount: 1, unit: "dona" },
+      { ingredient: "Maxsus sous", amount: 20, unit: "g" }
+    ]
+  },
+  {
+    id: 93,
+    name: "Piyoz halqalari (Onion rings)",
+    category: "Fast Food",
+    internal_price: 7000,
+    sale_price: 13000,
+    is_visible: true,
+    recipe: [
+      { ingredient: "Piyoz", amount: 100, unit: "g" },
+      { ingredient: "Kler (xamir)", amount: 40, unit: "g" },
+      { ingredient: "Yog'", amount: 30, unit: "ml" }
+    ]
+  },
+  {
+    id: 94,
+    name: "Burrito",
+    category: "Fast Food",
+    internal_price: 17000,
+    sale_price: 30000,
+    is_visible: true,
+    recipe: [
+      { ingredient: "Tortilya noni", amount: 1, unit: "dona" },
+      { ingredient: "Go'sht/Tovuq, loviya, makkajo'xori", amount: 150, unit: "g" },
+      { ingredient: "Pishloq", amount: 30, unit: "g" }
+    ]
+  },
+  {
+    id: 95,
+    name: "Tako",
+    category: "Fast Food",
+    internal_price: 16000,
+    sale_price: 28000,
+    is_visible: true,
+    recipe: [
+      { ingredient: "Tako qobig'i", amount: 2, unit: "dona" },
+      { ingredient: "Qiyma go'sht", amount: 100, unit: "g" },
+      { ingredient: "Sabzavot va sous", amount: 50, unit: "g" }
+    ]
+  },
+  {
+    id: 96,
+    name: "Panini",
+    category: "Fast Food",
+    internal_price: 14000,
+    sale_price: 25000,
+    is_visible: true,
+    recipe: [
+      { ingredient: "Panini noni", amount: 1, unit: "dona" },
+      { ingredient: "Go'sht/kolbasa va pishloq", amount: 100, unit: "g" },
+      { ingredient: "Pomidor, sous", amount: 30, unit: "g" }
+    ]
+  },
+  {
+    id: 97,
+    name: "Wok lapshasi",
+    category: "Fast Food",
+    internal_price: 18000,
+    sale_price: 32000,
+    is_visible: true,
+    recipe: [
+      { ingredient: "Lapsha", amount: 120, unit: "g" },
+      { ingredient: "Tovuq/Sabzavot", amount: 100, unit: "g" },
+      { ingredient: "Wok sousi", amount: 40, unit: "ml" }
+    ]
+  },
+  {
+    id: 98,
+    name: "Korn-dog",
+    category: "Fast Food",
+    internal_price: 8000,
+    sale_price: 15000,
+    is_visible: true,
+    recipe: [
+      { ingredient: "Sosiska", amount: 1, unit: "dona" },
+      { ingredient: "Makkajo'xori uni xamiri", amount: 100, unit: "g" },
+      { ingredient: "Yog'", amount: 30, unit: "ml" }
+    ]
+  },
+  {
+    id: 99,
+    name: "Pishloqli tayoqchalar (Cheese-sticks)",
+    category: "Fast Food",
+    internal_price: 10000,
+    sale_price: 18000,
+    is_visible: true,
+    recipe: [
+      { ingredient: "Mozzarella pishloqi", amount: 100, unit: "g" },
+      { ingredient: "Suxari", amount: 30, unit: "g" },
+      { ingredient: "Yog'", amount: 30, unit: "ml" }
+    ]
+  },
+
+  // --- Ichimliklar (Gazli va Limonadlar) ---
+  { id: 100, name: "Coca-Cola (klassik): 0.33L", category: "Ichimliklar", internal_price: 4000, sale_price: 7000, is_visible: true, recipe: [{ ingredient: "Coca-Cola 0.33", amount: 1, unit: "dona" }] },
+  { id: 101, name: "Coca-Cola (klassik): 0.5L", category: "Ichimliklar", internal_price: 5500, sale_price: 9000, is_visible: true, recipe: [{ ingredient: "Coca-Cola 0.5", amount: 1, unit: "dona" }] },
+  { id: 102, name: "Coca-Cola (klassik): 1L", category: "Ichimliklar", internal_price: 9000, sale_price: 14000, is_visible: true, recipe: [{ ingredient: "Coca-Cola 1L", amount: 1, unit: "dona" }] },
+  { id: 103, name: "Coca-Cola (klassik): 1.5L", category: "Ichimliklar", internal_price: 12000, sale_price: 18000, is_visible: true, recipe: [{ ingredient: "Coca-Cola 1.5L", amount: 1, unit: "dona" }] },
+  { id: 104, name: "Coca-Cola (klassik): 2.0L", category: "Ichimliklar", internal_price: 15000, sale_price: 22000, is_visible: true, recipe: [{ ingredient: "Coca-Cola 2.0L", amount: 1, unit: "dona" }] },
+
+  { id: 105, name: "Coca-Cola Zero: 0.33L", category: "Ichimliklar", internal_price: 4000, sale_price: 7000, is_visible: true, recipe: [{ ingredient: "Cola Zero 0.33", amount: 1, unit: "dona" }] },
+  { id: 106, name: "Coca-Cola Zero: 0.5L", category: "Ichimliklar", internal_price: 5500, sale_price: 9000, is_visible: true, recipe: [{ ingredient: "Cola Zero 0.5", amount: 1, unit: "dona" }] },
+  { id: 107, name: "Coca-Cola Zero: 1L", category: "Ichimliklar", internal_price: 9000, sale_price: 14000, is_visible: true, recipe: [{ ingredient: "Cola Zero 1L", amount: 1, unit: "dona" }] },
+  { id: 108, name: "Coca-Cola Zero: 1.5L", category: "Ichimliklar", internal_price: 12000, sale_price: 18000, is_visible: true, recipe: [{ ingredient: "Cola Zero 1.5L", amount: 1, unit: "dona" }] },
+  { id: 109, name: "Coca-Cola Zero: 2.0L", category: "Ichimliklar", internal_price: 15000, sale_price: 22000, is_visible: true, recipe: [{ ingredient: "Cola Zero 2.0L", amount: 1, unit: "dona" }] },
+
+  { id: 110, name: "Fanta (apelsin): 0.33L", category: "Ichimliklar", internal_price: 4000, sale_price: 7000, is_visible: true, recipe: [{ ingredient: "Fanta 0.33", amount: 1, unit: "dona" }] },
+  { id: 111, name: "Fanta (apelsin): 0.5L", category: "Ichimliklar", internal_price: 5500, sale_price: 9000, is_visible: true, recipe: [{ ingredient: "Fanta 0.5", amount: 1, unit: "dona" }] },
+  { id: 112, name: "Fanta (apelsin): 1L", category: "Ichimliklar", internal_price: 9000, sale_price: 14000, is_visible: true, recipe: [{ ingredient: "Fanta 1L", amount: 1, unit: "dona" }] },
+  { id: 113, name: "Fanta (apelsin): 1.5L", category: "Ichimliklar", internal_price: 12000, sale_price: 18000, is_visible: true, recipe: [{ ingredient: "Fanta 1.5L", amount: 1, unit: "dona" }] },
+  { id: 114, name: "Fanta (apelsin): 2.0L", category: "Ichimliklar", internal_price: 15000, sale_price: 22000, is_visible: true, recipe: [{ ingredient: "Fanta 2.0L", amount: 1, unit: "dona" }] },
+
+  { id: 115, name: "Sprite: 0.33L", category: "Ichimliklar", internal_price: 4000, sale_price: 7000, is_visible: true, recipe: [{ ingredient: "Sprite 0.33", amount: 1, unit: "dona" }] },
+  { id: 116, name: "Sprite: 0.5L", category: "Ichimliklar", internal_price: 5500, sale_price: 9000, is_visible: true, recipe: [{ ingredient: "Sprite 0.5", amount: 1, unit: "dona" }] },
+  { id: 117, name: "Sprite: 1L", category: "Ichimliklar", internal_price: 9000, sale_price: 14000, is_visible: true, recipe: [{ ingredient: "Sprite 1L", amount: 1, unit: "dona" }] },
+  { id: 118, name: "Sprite: 1.5L", category: "Ichimliklar", internal_price: 12000, sale_price: 18000, is_visible: true, recipe: [{ ingredient: "Sprite 1.5L", amount: 1, unit: "dona" }] },
+  { id: 119, name: "Sprite: 2.0L", category: "Ichimliklar", internal_price: 15000, sale_price: 22000, is_visible: true, recipe: [{ ingredient: "Sprite 2.0L", amount: 1, unit: "dona" }] },
+
+  { id: 120, name: "Pepsi: 0.33L", category: "Ichimliklar", internal_price: 4000, sale_price: 7000, is_visible: true, recipe: [{ ingredient: "Pepsi 0.33", amount: 1, unit: "dona" }] },
+  { id: 121, name: "Pepsi: 0.5L", category: "Ichimliklar", internal_price: 5500, sale_price: 9000, is_visible: true, recipe: [{ ingredient: "Pepsi 0.5", amount: 1, unit: "dona" }] },
+  { id: 122, name: "Pepsi: 1L", category: "Ichimliklar", internal_price: 9000, sale_price: 14000, is_visible: true, recipe: [{ ingredient: "Pepsi 1L", amount: 1, unit: "dona" }] },
+  { id: 123, name: "Pepsi: 1.5L", category: "Ichimliklar", internal_price: 12000, sale_price: 18000, is_visible: true, recipe: [{ ingredient: "Pepsi 1.5L", amount: 1, unit: "dona" }] },
+  { id: 124, name: "Pepsi: 2.0L", category: "Ichimliklar", internal_price: 15000, sale_price: 22000, is_visible: true, recipe: [{ ingredient: "Pepsi 2.0L", amount: 1, unit: "dona" }] },
+
+  { id: 125, name: "7Up: 0.33L", category: "Ichimliklar", internal_price: 4000, sale_price: 7000, is_visible: true, recipe: [{ ingredient: "7Up 0.33", amount: 1, unit: "dona" }] },
+  { id: 126, name: "7Up: 0.5L", category: "Ichimliklar", internal_price: 5500, sale_price: 9000, is_visible: true, recipe: [{ ingredient: "7Up 0.5", amount: 1, unit: "dona" }] },
+  { id: 127, name: "7Up: 1L", category: "Ichimliklar", internal_price: 9000, sale_price: 14000, is_visible: true, recipe: [{ ingredient: "7Up 1L", amount: 1, unit: "dona" }] },
+  { id: 128, name: "7Up: 1.5L", category: "Ichimliklar", internal_price: 12000, sale_price: 18000, is_visible: true, recipe: [{ ingredient: "7Up 1.5L", amount: 1, unit: "dona" }] },
+  { id: 129, name: "7Up: 2.0L", category: "Ichimliklar", internal_price: 15000, sale_price: 22000, is_visible: true, recipe: [{ ingredient: "7Up 2.0L", amount: 1, unit: "dona" }] },
+
+  { id: 130, name: "Mirinda: 0.33L", category: "Ichimliklar", internal_price: 4000, sale_price: 7000, is_visible: true, recipe: [{ ingredient: "Mirinda 0.33", amount: 1, unit: "dona" }] },
+  { id: 131, name: "Mirinda: 0.5L", category: "Ichimliklar", internal_price: 5500, sale_price: 9000, is_visible: true, recipe: [{ ingredient: "Mirinda 0.5", amount: 1, unit: "dona" }] },
+  { id: 132, name: "Mirinda: 1L", category: "Ichimliklar", internal_price: 9000, sale_price: 14000, is_visible: true, recipe: [{ ingredient: "Mirinda 1L", amount: 1, unit: "dona" }] },
+  { id: 133, name: "Mirinda: 1.5L", category: "Ichimliklar", internal_price: 12000, sale_price: 18000, is_visible: true, recipe: [{ ingredient: "Mirinda 1.5L", amount: 1, unit: "dona" }] },
+  { id: 134, name: "Mirinda: 2.0L", category: "Ichimliklar", internal_price: 15000, sale_price: 22000, is_visible: true, recipe: [{ ingredient: "Mirinda 2.0L", amount: 1, unit: "dona" }] },
+
+  { id: 135, name: "Mountain Dew: 0.33L", category: "Ichimliklar", internal_price: 4000, sale_price: 7000, is_visible: true, recipe: [{ ingredient: "Mountain Dew 0.33", amount: 1, unit: "dona" }] },
+  { id: 136, name: "Mountain Dew: 0.5L", category: "Ichimliklar", internal_price: 5500, sale_price: 9000, is_visible: true, recipe: [{ ingredient: "Mountain Dew 0.5", amount: 1, unit: "dona" }] },
+  { id: 137, name: "Mountain Dew: 1L", category: "Ichimliklar", internal_price: 9000, sale_price: 14000, is_visible: true, recipe: [{ ingredient: "Mountain Dew 1L", amount: 1, unit: "dona" }] },
+  { id: 138, name: "Mountain Dew: 1.5L", category: "Ichimliklar", internal_price: 12000, sale_price: 18000, is_visible: true, recipe: [{ ingredient: "Mountain Dew 1.5L", amount: 1, unit: "dona" }] },
+
+  { id: 139, name: "Schweppes (Tonic / Bitter Lemon): 0.33L", category: "Ichimliklar", internal_price: 5000, sale_price: 9000, is_visible: true, recipe: [{ ingredient: "Schweppes 0.33", amount: 1, unit: "dona" }] },
+  { id: 140, name: "Schweppes (Tonic / Bitter Lemon): 0.5L", category: "Ichimliklar", internal_price: 7000, sale_price: 12000, is_visible: true, recipe: [{ ingredient: "Schweppes 0.5", amount: 1, unit: "dona" }] },
+  { id: 141, name: "Schweppes (Tonic / Bitter Lemon): 1L", category: "Ichimliklar", internal_price: 11000, sale_price: 17000, is_visible: true, recipe: [{ ingredient: "Schweppes 1L", amount: 1, unit: "dona" }] },
+
+  { id: 142, name: "Limonad klassik (stakan yoki grafinda)", category: "Ichimliklar", internal_price: 8000, sale_price: 15000, is_visible: true, recipe: [{ ingredient: "Limon, shakar, suv", amount: 300, unit: "ml" }] },
+  { id: 143, name: "Mojito (alkogolsiz, shaftoli yoki qulupnayli)", category: "Ichimliklar", internal_price: 12000, sale_price: 22000, is_visible: true, recipe: [{ ingredient: "Mint, sharbat, sprite, muz", amount: 350, unit: "ml" }] },
+
+  { id: 144, name: "Tarhun: 0.5L", category: "Ichimliklar", internal_price: 4500, sale_price: 8000, is_visible: true, recipe: [{ ingredient: "Tarhun 0.5", amount: 1, unit: "dona" }] },
+  { id: 145, name: "Tarhun: 1L", category: "Ichimliklar", internal_price: 8000, sale_price: 13000, is_visible: true, recipe: [{ ingredient: "Tarhun 1L", amount: 1, unit: "dona" }] },
+  { id: 146, name: "Tarhun: 1.5L", category: "Ichimliklar", internal_price: 11000, sale_price: 16000, is_visible: true, recipe: [{ ingredient: "Tarhun 1.5L", amount: 1, unit: "dona" }] },
+
+  { id: 147, name: "Baykal: 0.5L", category: "Ichimliklar", internal_price: 4500, sale_price: 8000, is_visible: true, recipe: [{ ingredient: "Baykal 0.5", amount: 1, unit: "dona" }] },
+  { id: 148, name: "Baykal: 1L", category: "Ichimliklar", internal_price: 8000, sale_price: 13000, is_visible: true, recipe: [{ ingredient: "Baykal 1L", amount: 1, unit: "dona" }] },
+  { id: 149, name: "Baykal: 1.5L", category: "Ichimliklar", internal_price: 11000, sale_price: 16000, is_visible: true, recipe: [{ ingredient: "Baykal 1.5L", amount: 1, unit: "dona" }] },
+
+  { id: 150, name: "Dushes: 0.5L", category: "Ichimliklar", internal_price: 4500, sale_price: 8000, is_visible: true, recipe: [{ ingredient: "Dushes 0.5", amount: 1, unit: "dona" }] },
+  { id: 151, name: "Dushes: 1L", category: "Ichimliklar", internal_price: 8000, sale_price: 13000, is_visible: true, recipe: [{ ingredient: "Dushes 1L", amount: 1, unit: "dona" }] },
+  { id: 152, name: "Dushes: 1.5L", category: "Ichimliklar", internal_price: 11000, sale_price: 16000, is_visible: true, recipe: [{ ingredient: "Dushes 1.5L", amount: 1, unit: "dona" }] },
+
+  { id: 153, name: "Red Bull (energetik): 0.25L", category: "Ichimliklar", internal_price: 12000, sale_price: 18000, is_visible: true, recipe: [{ ingredient: "Red Bull 0.25", amount: 1, unit: "dona" }] },
+  { id: 154, name: "Red Bull (energetik): 0.5L", category: "Ichimliklar", internal_price: 20000, sale_price: 30000, is_visible: true, recipe: [{ ingredient: "Red Bull 0.5", amount: 1, unit: "dona" }] },
+  { id: 155, name: "Flash Up (energetik): 0.45L", category: "Ichimliklar", internal_price: 6000, sale_price: 10000, is_visible: true, recipe: [{ ingredient: "Flash Up 0.45", amount: 1, unit: "dona" }] },
+  { id: 156, name: "Flash Up (energetik): 0.5L", category: "Ichimliklar", internal_price: 6500, sale_price: 11000, is_visible: true, recipe: [{ ingredient: "Flash Up 0.5", amount: 1, unit: "dona" }] },
+  { id: 157, name: "Adrenaline Rush (energetik): 0.25L", category: "Ichimliklar", internal_price: 10000, sale_price: 16000, is_visible: true, recipe: [{ ingredient: "Adrenaline 0.25", amount: 1, unit: "dona" }] },
+  { id: 158, name: "Adrenaline Rush (energetik): 0.5L", category: "Ichimliklar", internal_price: 17000, sale_price: 26000, is_visible: true, recipe: [{ ingredient: "Adrenaline 0.5", amount: 1, unit: "dona" }] },
+
+  // --- Suvlar ---
+  { id: 159, name: "Suv (Gazli): 0.33L", category: "Suvlar", internal_price: 2000, sale_price: 4000, is_visible: true, recipe: [{ ingredient: "Gazli suv 0.33", amount: 1, unit: "dona" }] },
+  { id: 160, name: "Suv (Gazli): 0.5L", category: "Suvlar", internal_price: 3000, sale_price: 5000, is_visible: true, recipe: [{ ingredient: "Gazli suv 0.5", amount: 1, unit: "dona" }] },
+  { id: 161, name: "Suv (Gazli): 1.0L", category: "Suvlar", internal_price: 4500, sale_price: 7000, is_visible: true, recipe: [{ ingredient: "Gazli suv 1.0", amount: 1, unit: "dona" }] },
+  { id: 162, name: "Suv (Gazli): 1.5L", category: "Suvlar", internal_price: 6000, sale_price: 9000, is_visible: true, recipe: [{ ingredient: "Gazli suv 1.5", amount: 1, unit: "dona" }] },
+
+  { id: 163, name: "Suv (Gazsiz / Oddiy): 0.33L", category: "Suvlar", internal_price: 1800, sale_price: 3500, is_visible: true, recipe: [{ ingredient: "Gazsiz suv 0.33", amount: 1, unit: "dona" }] },
+  { id: 164, name: "Suv (Gazsiz / Oddiy): 0.5L", category: "Suvlar", internal_price: 2500, sale_price: 4500, is_visible: true, recipe: [{ ingredient: "Gazsiz suv 0.5", amount: 1, unit: "dona" }] },
+  { id: 165, name: "Suv (Gazsiz / Oddiy): 1.0L", category: "Suvlar", internal_price: 4000, sale_price: 6500, is_visible: true, recipe: [{ ingredient: "Gazsiz suv 1.0", amount: 1, unit: "dona" }] },
+  { id: 166, name: "Suv (Gazsiz / Oddiy): 1.5L", category: "Suvlar", internal_price: 5000, sale_price: 8000, is_visible: true, recipe: [{ ingredient: "Gazsiz suv 1.5", amount: 1, unit: "dona" }] },
+  { id: 167, name: "Suv (Gazsiz / Oddiy): 2.0L", category: "Suvlar", internal_price: 6500, sale_price: 10000, is_visible: true, recipe: [{ ingredient: "Gazsiz suv 2.0", amount: 1, unit: "dona" }] },
+
+  // --- Soklar va Nektarlar ---
+  { id: 168, name: "Olma soki (stakanda / 1L paket)", category: "Soklar", internal_price: 8000, sale_price: 15000, is_visible: true, recipe: [{ ingredient: "Olma sharbati", amount: 1, unit: "L" }] },
+  { id: 169, name: "Apelsin soki (stakanda / 1L paket)", category: "Soklar", internal_price: 9000, sale_price: 16000, is_visible: true, recipe: [{ ingredient: "Apelsin sharbati", amount: 1, unit: "L" }] },
+  { id: 170, name: "Olcha soki (stakanda / 1L paket)", category: "Soklar", internal_price: 9000, sale_price: 16000, is_visible: true, recipe: [{ ingredient: "Olcha sharbati", amount: 1, unit: "L" }] },
+  { id: 171, name: "Shaftoli soki (stakanda / 1L paket)", category: "Soklar", internal_price: 9000, sale_price: 16000, is_visible: true, recipe: [{ ingredient: "Shaftoli sharbati", amount: 1, unit: "L" }] },
+  { id: 172, name: "Anor soki (stakanda / 1L paket)", category: "Soklar", internal_price: 12000, sale_price: 22000, is_visible: true, recipe: [{ ingredient: "Anor sharbati", amount: 1, unit: "L" }] },
+  { id: 173, name: "Multifrukt soki (stakanda / 1L paket)", category: "Soklar", internal_price: 9500, sale_price: 17000, is_visible: true, recipe: [{ ingredient: "Multifrukt sharbati", amount: 1, unit: "L" }] },
+  { id: 174, name: "Tropik meva soki (stakanda / 1L paket)", category: "Soklar", internal_price: 10000, sale_price: 18000, is_visible: true, recipe: [{ ingredient: "Tropik sharbat", amount: 1, unit: "L" }] },
+  { id: 175, name: "Ananas soki (stakanda / 1L paket)", category: "Soklar", internal_price: 10000, sale_price: 18000, is_visible: true, recipe: [{ ingredient: "Ananas sharbati", amount: 1, unit: "L" }] },
+  { id: 176, name: "Pomidor soki (tuz va murch bilan)", category: "Soklar", internal_price: 8000, sale_price: 15000, is_visible: true, recipe: [{ ingredient: "Pomidor sharbati, tuz, murch", amount: 1, unit: "L" }] },
+
+  // --- Choylar ---
+  { id: 177, name: "Koʻk choy (klassik choynakda)", category: "Choylar", internal_price: 3000, sale_price: 6000, is_visible: true, recipe: [{ ingredient: "Ko'k choy bargi", amount: 10, unit: "g" }] },
+  { id: 178, name: "Qora choy (klassik choynakda)", category: "Choylar", internal_price: 3000, sale_price: 6000, is_visible: true, recipe: [{ ingredient: "Qora choy bargi", amount: 10, unit: "g" }] },
+  { id: 179, name: "Limonli qora choy", category: "Choylar", internal_price: 4500, sale_price: 9000, is_visible: true, recipe: [{ ingredient: "Qora choy, limon", amount: 1, unit: "dona" }] },
+  { id: 180, name: "Limonli koʻk choy", category: "Choylar", internal_price: 4500, sale_price: 9000, is_visible: true, recipe: [{ ingredient: "Ko'k choy, limon", amount: 1, unit: "dona" }] },
+  { id: 181, name: "Imbir va limonli choy", category: "Choylar", internal_price: 6000, sale_price: 12000, is_visible: true, recipe: [{ ingredient: "Choy, imbir, limon", amount: 1, unit: "dona" }] },
+  { id: 182, name: "Mevali choy (mevali assorti)", category: "Choylar", internal_price: 7000, sale_price: 14000, is_visible: true, recipe: [{ ingredient: "Choy va quritilgan mevalar", amount: 30, unit: "g" }] },
+  { id: 183, name: "Muzli choy (Ice Tea - Shaftoli): 0.5L", category: "Choylar", internal_price: 5000, sale_price: 10000, is_visible: true, recipe: [{ ingredient: "Ice tea shaftoli", amount: 0.5, unit: "L" }] },
+  { id: 184, name: "Muzli choy (Ice Tea - Shaftoli): 1L", category: "Choylar", internal_price: 9000, sale_price: 16000, is_visible: true, recipe: [{ ingredient: "Ice tea shaftoli", amount: 1, unit: "L" }] },
+  { id: 185, name: "Muzli choy (Ice Tea - Limon): 0.5L", category: "Choylar", internal_price: 5000, sale_price: 10000, is_visible: true, recipe: [{ ingredient: "Ice tea limon", amount: 0.5, unit: "L" }] },
+  { id: 186, name: "Muzli choy (Ice Tea - Limon): 1L", category: "Choylar", internal_price: 9000, sale_price: 16000, is_visible: true, recipe: [{ ingredient: "Ice tea limon", amount: 1, unit: "L" }] },
+  { id: 187, name: "Koʻk choy yalpiz bilan", category: "Choylar", internal_price: 4000, sale_price: 8000, is_visible: true, recipe: [{ ingredient: "Ko'k choy, yalpiz", amount: 15, unit: "g" }] },
+  { id: 188, name: "Asalli va limonga boy isituvchi choy", category: "Choylar", internal_price: 8000, sale_price: 15000, is_visible: true, recipe: [{ ingredient: "Choy, asal, limon", amount: 1, unit: "dona" }] },
+
+  // --- Milliy va Salqin Ichimliklar ---
+  { id: 189, name: "Ayron (muzdek, ko‘katli): stakanda", category: "Milliy ichimliklar", internal_price: 3500, sale_price: 7000, is_visible: true, recipe: [{ ingredient: "Qatiq, suv, ko'kat", amount: 300, unit: "ml" }] },
+  { id: 190, name: "Ayron: 0.5L", category: "Milliy ichimliklar", internal_price: 5000, sale_price: 10000, is_visible: true, recipe: [{ ingredient: "Ayron", amount: 0.5, unit: "L" }] },
+  { id: 191, name: "Ayron: 1L", category: "Milliy ichimliklar", internal_price: 9000, sale_price: 18000, is_visible: true, recipe: [{ ingredient: "Ayron", amount: 1, unit: "L" }] },
+
+  { id: 192, name: "Muzqaymoqli kokteyl (Milkshake - vanilli)", category: "Milliy ichimliklar", internal_price: 8000, sale_price: 16000, is_visible: true, recipe: [{ ingredient: "Sut, muzqaymoq", amount: 350, unit: "ml" }] },
+  { id: 193, name: "Shokoladli milkshake", category: "Milliy ichimliklar", internal_price: 9000, sale_price: 18000, is_visible: true, recipe: [{ ingredient: "Sut, muzqaymoq, shokolad", amount: 350, unit: "ml" }] },
+  { id: 194, name: "Qulupnayli milkshake", category: "Milliy ichimliklar", internal_price: 9000, sale_price: 18000, is_visible: true, recipe: [{ ingredient: "Sut, muzqaymoq, qulupnay", amount: 350, unit: "ml" }] },
+
+  { id: 195, name: "Tabiiy apelsin fresh", category: "Milliy ichimliklar", internal_price: 15000, sale_price: 28000, is_visible: true, recipe: [{ ingredient: "Apelsin", amount: 400, unit: "g" }] },
+  { id: 196, name: "Tabiiy olma fresh", category: "Milliy ichimliklar", internal_price: 10000, sale_price: 20000, is_visible: true, recipe: [{ ingredient: "Olma", amount: 400, unit: "g" }] },
+  { id: 197, name: "Tabiiy sabzi fresh", category: "Milliy ichimliklar", internal_price: 8000, sale_price: 16000, is_visible: true, recipe: [{ ingredient: "Sabzi", amount: 400, unit: "g" }] },
+  { id: 198, name: "Greyprut fresh", category: "Milliy ichimliklar", internal_price: 18000, sale_price: 32000, is_visible: true, recipe: [{ ingredient: "Greyprut", amount: 400, unit: "g" }] },
+
+  { id: 199, name: "Kompot (quritilgan mevalardan)", category: "Milliy ichimliklar", internal_price: 4000, sale_price: 8000, is_visible: true, recipe: [{ ingredient: "Quritilgan meva, shakar", amount: 300, unit: "ml" }] },
+  { id: 200, name: "Mors (reza mevali)", category: "Milliy ichimliklar", internal_price: 5000, sale_price: 10000, is_visible: true, recipe: [{ ingredient: "Reza meva, shakar", amount: 300, unit: "ml" }] },
+
+  { id: 201, name: "Kofe (Americano)", category: "Milliy ichimliklar", internal_price: 6000, sale_price: 12000, is_visible: true, recipe: [{ ingredient: "Kofe donachalari", amount: 10, unit: "g" }] },
+  { id: 202, name: "Kofe (Cappuccino)", category: "Milliy ichimliklar", internal_price: 8000, sale_price: 16000, is_visible: true, recipe: [{ ingredient: "Kofe, sut", amount: 200, unit: "ml" }] }
+];

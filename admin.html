@@ -420,21 +420,22 @@
 
         function initLiveClock() {
             updateClock();
-            setInterval(updateClock, 1000);
-        }
+            // Eski setInterval o'rniga faqat kerakliligicha tekshirish
+let lastDataStr = "";
 
-        function updateClock() {
-            const now = new Date();
-            const day = String(now.getDate()).padStart(2, '0');
-            const month = String(now.getMonth() + 1).padStart(2, '0');
-            const year = now.getFullYear();
-            document.getElementById('live-date').innerText = `${day}.${month}.${year}`;
+setInterval(() => {
+    let rawWaiter = localStorage.getItem('waiter_orders') || "";
+    let rawActive = localStorage.getItem('active_orders') || "";
+    let combinedStr = rawWaiter + "_" + rawActive;
 
-            const hours = String(now.getHours()).padStart(2, '0');
-            const minutes = String(now.getMinutes()).padStart(2, '0');
-            const seconds = String(now.getSeconds()).padStart(2, '0');
-            document.getElementById('live-time').innerText = `${hours}:${minutes}:${seconds}`;
-        }
+    // Faqat ofitsiant tomondan yangi buyurtma qo'shilsagina qayta chizish
+    if (combinedStr !== lastDataStr) {
+        lastDataStr = combinedStr;
+        loadOrdersFromStorage();
+        renderOrders();
+        renderIncome();
+    }
+}, 2000);
 
         let defaultMenu = [
             { id: 1, name: "Toshkent oshi (Toʻy oshi)", category: "Osh", internal_price: 25000, sale_price: 38000, is_visible: true },

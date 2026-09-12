@@ -196,7 +196,6 @@
         <div class="modal-content">
             <h2 id="modal-title" style="margin-top:0;">Stol Boshqaruvi</h2>
             
-            <!-- Mijozlar sonini boshqarish -->
             <div style="background: #f5f5f5; padding: 10px 15px; border-radius: 8px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px;">
                 <span style="font-weight: bold;">👥 Mijozlar (odam) soni:</span>
                 <div>
@@ -206,7 +205,6 @@
                 </div>
             </div>
 
-            <!-- Kategoriyalar filtri -->
             <div class="category-tabs">
                 <button class="tab-btn active" onclick="filterModalMenu('all', event)">Barchasi</button>
                 <button class="tab-btn" onclick="filterModalMenu('osh', event)">Osh</button>
@@ -218,7 +216,7 @@
                 <button class="tab-btn" onclick="filterModalMenu('fastfood', event)">Fast Food</button>
             </div>
 
-            <h3 style="margin-bottom: 8px;">Menyu (To'liq ro'yxat)</h3>
+            <h3 style="margin-bottom: 8px;">Menyu</h3>
             <div id="menu-selection-list" style="max-height: 250px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; border-radius: 8px;"></div>
             
             <h3 style="margin: 15px 0 8px 0;">Tanlangan Buyurtmalar</h3>
@@ -250,7 +248,6 @@
             { login: "ofitsant4", pass: "4444", name: "Bobur" }
         ];
 
-        // Siz yuborgan barcha taomlar ro'yxati to'liq kiritildi
         const fullMenu = [
             // Osh
             { id: 1, category: "osh", name: "Toshkent oshi (Toʻy oshi)", price: 40000, img: "https://images.unsplash.com/photo-1633964913295-ceb43826e7c9?w=100" },
@@ -288,7 +285,7 @@
             { id: 27, category: "hamirli", name: "Beshbarmoq", price: 45000, img: "https://images.unsplash.com/photo-1496116218417-1a781b1c416c?w=100" },
             { id: 28, category: "hamirli", name: "Uygʻur shivit oshi", price: 33000, img: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=100" },
 
-            // Kaboblar
+            // Kaboblar (yangi qo'shilganlar bilan)
             { id: 29, category: "kabob", name: "Qiyma kabob", price: 15000, img: "https://images.unsplash.com/photo-1529193591184-b1d58069ecdd?w=100" },
             { id: 30, category: "kabob", name: "Qoʻy goʻshti shashligi (Klassik shashlik)", price: 20000, img: "https://images.unsplash.com/photo-1603048588665-791ca8aea617?w=100" },
             { id: 31, category: "kabob", name: "Jigar shashligi", price: 18000, img: "https://images.unsplash.com/photo-1529193591184-b1d58069ecdd?w=100" },
@@ -319,6 +316,8 @@
             { id: 56, category: "kabob", name: "Minora kabob", price: 28000, img: "https://images.unsplash.com/photo-1603048588665-791ca8aea617?w=100" },
             { id: 57, category: "kabob", name: "Kletchatka kabob", price: 16000, img: "https://images.unsplash.com/photo-1529193591184-b1d58069ecdd?w=100" },
             { id: 58, category: "kabob", name: "Jigar-dumba kabob", price: 20000, img: "https://images.unsplash.com/photo-1603048588665-791ca8aea617?w=100" },
+            { id: 581, category: "kabob", name: "O'rama kabob", price: 27000, img: "https://images.unsplash.com/photo-1529193591184-b1d58069ecdd?w=100" },
+            { id: 582, category: "kabob", name: "Napoleon kabob", price: 30000, img: "https://images.unsplash.com/photo-1603048588665-791ca8aea617?w=100" },
 
             // Somsalar
             { id: 59, category: "somsa", name: "Tandir somsa", price: 12000, img: "https://images.unsplash.com/photo-1626777552726-4a6b54c97e46?w=100" },
@@ -407,9 +406,10 @@
             for (let i = 1; i <= 12; i++) {
                 let tableData = JSON.parse(localStorage.getItem(`table_${i}_data`)) || { busy: false, guests: 0, items: [] };
                 
+                // Stul (chair) ikonka rasmi qo'yildi
                 grid.innerHTML += `
                     <div class="table-card ${tableData.busy ? 'busy' : ''}" onclick="openTable(${i})">
-                        <img src="https://cdn-icons-png.flaticon.com/512/869/869636.png" class="table-icon" alt="Stol">
+                        <img src="https://cdn-icons-png.flaticon.com/512/2932/2932845.png" class="table-icon" alt="Stul">
                         <h4 style="margin:5px 0;">Stol #${i}</h4>
                         <p style="font-size: 13px; margin: 0; font-weight: bold;">${tableData.busy ? `🔴 Band (${tableData.guests} kishi)` : '🟢 Bo\'sh'}</p>
                     </div>
@@ -554,19 +554,24 @@
                 return;
             }
             
+            let totalAmount = tableData.items.reduce((sum, i) => sum + (i.qty * i.price), 0);
+
             let history = JSON.parse(localStorage.getItem('service_history')) || [];
             history.push({
                 table: currentActiveTable,
                 waiter: activeWaiter,
                 time: new Date().toLocaleString(),
                 items: tableData.items,
-                guests: tableData.guests
+                guests: tableData.guests,
+                total: totalAmount // Jami to'lov miqdori tarixga qo'shildi
             });
             localStorage.setItem('service_history', JSON.stringify(history));
 
             alert(`Stol #${currentActiveTable} uchun QR-kodli chek chop etildi va inkassa apparatiga yuborildi!`);
             
-            localStorage.removeItem(`table_${currentActiveTable}_data`);
+            // Diqqat: Ofitsant yopish/chek chiqarishni bosganda stol darhol bo'shamaydi. 
+            // Stol faqat admin tomonidan to'lov qabul qilingach tozalanadi. 
+            // Bu yerda faqat buyurtma yakuniy to'lovga tayyor holatga o'tadi, stol bandligicha qoladi.
             closeModal();
             renderTables();
         }
@@ -579,9 +584,10 @@
                 container.innerHTML = '<p>Hozircha tarix bo\'sh.</p>';
             } else {
                 history.reverse().forEach(h => {
+                    let sumText = h.total ? ` | To'lov: <b>${h.total.toLocaleString()} so'm</b>` : '';
                     container.innerHTML += `
                         <div style="border-bottom: 1px solid #ccc; padding: 8px 0;">
-                            <strong>Stol #${h.table}</strong> | Ofitsant: ${h.waiter} | Vaqt: ${h.time} | Mehmonlar: ${h.guests} ta
+                            <strong>Stol #${h.table}</strong> | Ofitsant: ${h.waiter} | Vaqt: ${h.time} | Mehmonlar: ${h.guests} ta${sumText}
                         </div>
                     `;
                 });

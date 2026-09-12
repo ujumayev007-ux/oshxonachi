@@ -288,12 +288,12 @@
     </div>
 
     <script>
-        // 4 ta ofitsiant bazasi va parollari
+        // Yangi kiritilgan ofitsiant bazasi va parollari
         const waitersDB = [
-            { login: "valijon", pass: "1234", name: "Valijon" },
-            { login: "sherzod", pass: "1234", name: "Sherzod" },
-            { login: "jasur", pass: "1234", name: "Jasur" },
-            { login: "bekzod", pass: "1234", name: "Bekzod" }
+            { login: "Akmal", pass: "112233", name: "Akmal" },
+            { login: "Bek", pass: "223344", name: "Bek" },
+            { login: "Lola", pass: "334455", name: "Lola" },
+            { login: "Guli", pass: "445566", name: "Guli" }
         ];
 
         // To'liq menyu ro'yxati (kategoriyalarga ajratilgan)
@@ -422,7 +422,7 @@
             if (activeWaiter) {
                 document.getElementById('login-screen').style.display = 'none';
                 document.getElementById('main-panel').style.display = 'block';
-                document.getElementById('logged-waiter-name').innerText = `Ofitsant: ${activeWaiter}`;
+                document.getElementById('logged-waiter-name').innerText = `Ofitsiant: ${activeWaiter}`;
             }
             renderItems();
             startRealTimeClock();
@@ -437,7 +437,6 @@
                 const dateStr = now.toLocaleDateString('uz-UZ', optionsDate);
                 const timeStr = now.toLocaleTimeString('uz-UZ', optionsTime);
                 
-                // So'ralgan maxsus ikonkalarni HTML formatda joylash
                 document.getElementById('realtime-clock').innerHTML = `
                     <div style="display: flex; align-items: center; gap: 5px; margin-bottom: 2px;">
                         <img src="https://cdn-icons-png.flaticon.com/256/19029/19029065.png" style="width: 14px; height: 14px; object-fit: contain;" alt="Kalendar">
@@ -462,7 +461,7 @@
                 localStorage.setItem('active_waiter', activeWaiter);
                 document.getElementById('login-screen').style.display = 'none';
                 document.getElementById('main-panel').style.display = 'block';
-                document.getElementById('logged-waiter-name').innerText = `Ofitsant: ${activeWaiter}`;
+                document.getElementById('logged-waiter-name').innerText = `Ofitsiant: ${activeWaiter}`;
                 renderItems();
             } else {
                 alert("Login yoki parol noto'g'ri!");
@@ -503,9 +502,6 @@
                 
                 let titlePrefix = (currentActiveSection === 'zal') ? 'Stol #' : 'Xona #';
 
-                // Talabga ko'ra maxsus rasmlar qo'yildi:
-                // 1. Stol uchun: https://cdn-icons-png.flaticon.com/512/7067/7067120.png
-                // 2. Xona uchun: https://cdn-icons-png.flaticon.com/512/7845/7845744.png
                 let iconSrc = (currentActiveSection === 'zal') 
                     ? 'https://cdn-icons-png.flaticon.com/512/7067/7067120.png' 
                     : 'https://cdn-icons-png.flaticon.com/512/7845/7845744.png';
@@ -643,7 +639,7 @@
 
             itemData.busy = true;
             itemData.guests = guests;
-            itemData.waiter = activeWaiter; // Qaysi ofitsant buyurtma bergani saqlanadi
+            itemData.waiter = activeWaiter; // Admin uchun qaysi ofitsiant buyurtma bergani saqlanadi
             itemData.status = 'Tayyorlanyapti';
 
             localStorage.setItem(key, JSON.stringify(itemData));
@@ -657,7 +653,7 @@
             });
             localStorage.setItem('admin_orders', JSON.stringify(allOrders));
 
-            alert(`Buyurtma Admin paneliga yuborildi! (Ofitsant: ${activeWaiter})`);
+            alert(`Buyurtma Admin paneliga yuborildi! (Ofitsiant: ${activeWaiter})`);
             closeModal();
             renderItems();
         }
@@ -684,7 +680,7 @@
             });
             localStorage.setItem('service_history', JSON.stringify(history));
 
-            let checkHtml = `<b>Joy:</b> ${locName}<br><b>Ofitsant:</b> ${activeWaiter}<br><b>Vaqt:</b> ${new Date().toLocaleString()}<br><hr style="border:0; border-top:1px dashed #aaa">`;
+            let checkHtml = `<b>Joy:</b> ${locName}<br><b>Ofitsiant:</b> ${activeWaiter}<br><b>Vaqt:</b> ${new Date().toLocaleString()}<br><hr style="border:0; border-top:1px dashed #aaa">`;
             itemData.items.forEach(i => {
                 checkHtml += `${i.name} x ${i.qty} = ${(i.qty * i.price).toLocaleString()} so'm<br>`;
             });
@@ -712,7 +708,7 @@
                     let sumText = h.total ? ` | To'lov: <b>${h.total.toLocaleString()} so'm</b>` : '';
                     container.innerHTML += `
                         <div style="border-bottom: 1px solid #ccc; padding: 8px 0;">
-                            <strong>${h.location}</strong> | Ofitsant: ${h.waiter} | Vaqt: ${h.time} | Mehmonlar: ${h.guests} ta${sumText}
+                            <strong>${h.location}</strong> | Ofitsiant: ${h.waiter} | Vaqt: ${h.time} | Mehmonlar: ${h.guests} ta${sumText}
                         </div>
                     `;
                 });

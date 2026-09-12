@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="uz" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mingchinor — Super Admin Paneli</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>tailwind.config = { darkMode: 'class', theme: { extend: { colors: { darkBg: '#0f172a', cardBg: '#1e293b', accent: '#8b5cf6' } } } }</script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>body { background-color: #0b0f19; color: #f8fafc; font-family: system-ui, sans-serif; }</style>
+</head>
+<body class="min-h-screen p-4 max-w-6xl mx-auto space-y-6">
+    <header class="bg-cardBg p-4 rounded-2xl border border-slate-800 flex justify-between items-center">
+        <h1 class="text-xl font-bold flex items-center gap-2"><i class="fa-solid fa-shield-halved text-purple-500"></i> Super Admin Markazi</h1>
+        <span class="text-xs text-purple-400 font-semibold">Global Boshqaruv</span>
+    </header>
+
+    <div class="bg-cardBg p-6 rounded-2xl border border-slate-800 space-y-4">
+        <h2 class="font-bold text-lg">Filiallar ro'yxati (?cafe=ID)</h2>
+        <div class="flex gap-3">
+            <input id="cafeIdInput" type="text" placeholder="Yangi kafe ID (masalan: mingchinor)" class="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-purple-500">
+            <button onclick="goToCafe()" class="bg-purple-600 hover:bg-purple-700 text-white font-bold px-6 py-2.5 rounded-xl text-sm transition">O'tish</button>
+        </div>
+    </div>
+
+    <script>
+        function goToCafe() {
+            const cafeId = document.getElementById('cafeIdInput').value.trim().toLowerCase();
+            if (!cafeId) return alert("Kafe ID kiriting!");
+            window.location.href = `mijoz.html?cafe=${cafeId}`;
+        }
+    </script>
+</body>
+</html>

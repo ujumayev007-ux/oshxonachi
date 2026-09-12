@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="uz" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mingchinor — Ofitsant Paneli</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = { darkMode: 'class', theme: { extend: { colors: { darkBg: '#0f172a', cardBg: '#1e293b', accent: '#3b82f6' } } } }
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>body { background-color: #0b0f19; color: #f8fafc; font-family: system-ui, sans-serif; }</style>
+</head>
+<body class="min-h-screen flex flex-col p-4 max-w-6xl mx-auto">
+    <header class="flex justify-between items-center mb-6 bg-cardBg p-4 rounded-2xl border border-slate-800">
+        <h1 class="text-xl font-bold flex items-center gap-2"><i class="fa-solid fa-user-tie text-blue-500"></i> Ofitsant Paneli</h1>
+        <div id="notificationsBadge" class="bg-rose-500/20 border border-rose-500/40 text-rose-400 px-3 py-1.5 rounded-lg text-xs font-semibold">Chaqiruvlar: 0</div>
+    </header>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Stollat holati -->
+        <div class="bg-cardBg border border-slate-800 rounded-2xl p-4">
+            <h2 class="font-bold text-lg mb-4">Stollar</h2>
+            <div id="tablesGrid" class="grid grid-cols-3 gap-3"></div>
+        </div>
+
+        <!-- Faol Chaqiruvlar va Buyurtmalar -->
+        <div class="space-y-6">
+            <div class="bg-cardBg border border-slate-800 rounded-2xl p-4">
+                <h2 class="font-bold text-lg mb-4 text-rose-400">Chaqiruvlar</h2>
+                <div id="callsList" class="space-y-2"><p class="text-slate-500 text-sm">Chaqiruvlar yo'q</p></div>
+            </div>
+            <div class="bg-cardBg border border-slate-800 rounded-2xl p-4">
+                <h2 class="font-bold text-lg mb-4 text-accent">Faol Buyurtmalar</h2>
+                <div id="ordersList" class="space-y-3"><p class="text-slate-500 text-sm">Buyurtmalar yo'q</p></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script>const FIREBASE_CONFIG = {}; const DEFAULT_CAFE_ID = "mingchinor";</script>
+    <script src="data.js"></script>
+    <script>
+        window.addEventListener('mc:db_ready', () => { renderAll(); });
+        window.addEventListener('mc:data_changed', () => { renderAll(); });
+
+        function renderAll() {
+            renderTables();
+            renderCalls();
+            renderOrders();
+        }
+
+        function renderTables() {
+            const grid = document.getElementById('tablesGrid');
+            if (!DB.tables) return;
+            grid.innerHTML = DB.tables.map(t => `
+                <div class="p-3 rounded-xl border ${t.status === 'busy' ? 'bg-rose-500/10 border-rose-500/30 text-rose-400' : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'} flex flex-col justify-between items-center text-center">
+                    <span class="font-bold">${t.name}</span>
+                    <span class="text-xs uppercase mt-1">${t.status}</span>
+                </div>
+            `).join('');
+        }
+
+        function renderCalls() {
+            const list = document.getElementById('callsList');
+            const calls = DB.waiterCalls || [];
+            document.getElementById('notificationsBadge').textContent = `Chaqiruvlar: ${calls.length}`;
+            if (calls.length === 0) { list.innerHTML = `<p class="text-slate-500 text-sm">Chaqiruvlar yo'q</p>`; return; }
+            list.innerHTML = calls.map((c, idx) => `
+                <div class="flex justify-between items-center bg-slate-900 p-3 rounded-xl border border-slate-800">
+                    <div><span class="font-bold text-rose-400">${c.tableName || 'Stol'}</span><span class="text-xs text-slate-400 block">${new Date(c.createdAt).toLocaleTimeString()}</span></div>
+                    <button onclick="resolveCall(${idx})" class="px-3 py-1.5 bg-rose-500 hover:bg-rose-600 text-white rounded-lg text-xs font-bold">Bajarildi</button>
+                </div>
+            `).join('');
+        }
+
+        function resolveCall(index) {
+            DB.waiterCalls.splice(index, 1);
+            DB.save('waiterCalls');
+            renderCalls();
+        }
+
+        function renderOrders() {
+            const list = document.getElementById('ordersList');
+            const orders = DB.orders || [];
+            if (orders.length === 0) { list.innerHTML = `<p class="text-slate-500 text-sm">Buyurtmalar yo'q</p>`; return; }
+            list.innerHTML = orders.map(o => `
+                <div class="bg-slate-900 p-3 rounded-xl border border-slate-800 space-y-2">
+                    <div class="flex justify-between font-bold text-sm"><span>${o.tableName}</span><span class="text-accent">${o.total} so'm</span></div>
+                    <div class="text-xs text-slate-400">${o.items.map(i => `${i.name} x${i.qty}`).join(', ')}</div>
+                </div>
+            `).join('');
+        }
+    </script>
+</body>
+</html>

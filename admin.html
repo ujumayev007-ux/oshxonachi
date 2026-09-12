@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="uz" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mingchinor — Admin Paneli</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>tailwind.config = { darkMode: 'class', theme: { extend: { colors: { darkBg: '#0f172a', cardBg: '#1e293b', accent: '#10b981' } } } }</script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>body { background-color: #0b0f19; color: #f8fafc; font-family: system-ui, sans-serif; }</style>
+</head>
+<body class="min-h-screen p-4 max-w-6xl mx-auto space-y-6">
+    <header class="bg-cardBg p-4 rounded-2xl border border-slate-800 flex justify-between items-center">
+        <h1 class="text-xl font-bold flex items-center gap-2"><i class="fa-solid fa-gauge text-emerald-500"></i> Admin Boshqaruvi</h1>
+        <span class="text-xs text-slate-400">Mingchinor Kompleks</span>
+    </header>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="bg-cardBg p-4 rounded-2xl border border-slate-800">
+            <h3 class="text-sm font-semibold text-slate-400">Kategoriyalar</h3>
+            <p id="catCount" class="text-2xl font-black mt-2 text-emerald-400">0</p>
+        </div>
+        <div class="bg-cardBg p-4 rounded-2xl border border-slate-800">
+            <h3 class="text-sm font-semibold text-slate-400">Taomlar</h3>
+            <p id="menuCount" class="text-2xl font-black mt-2 text-emerald-400">0</p>
+        </div>
+        <div class="bg-cardBg p-4 rounded-2xl border border-slate-800">
+            <h3 class="text-sm font-semibold text-slate-400">Faol Buyurtmalar</h3>
+            <p id="orderCount" class="text-2xl font-black mt-2 text-emerald-400">0</p>
+        </div>
+    </div>
+
+    <div class="bg-cardBg p-6 rounded-2xl border border-slate-800 space-y-4">
+        <h2 class="font-bold text-lg">Yangi Taom Qo'shish</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <input id="dishName" type="text" placeholder="Taom nomi" class="bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-emerald-500">
+            <input id="dishPrice" type="number" placeholder="Narxi (so'm)" class="bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-emerald-500">
+            <button onclick="addDish()" class="bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold rounded-xl text-sm transition py-2.5">Qo'shish</button>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script>const FIREBASE_CONFIG = {}; const DEFAULT_CAFE_ID = "mingchinor";</script>
+    <script src="data.js"></script>
+    <script>
+        window.addEventListener('mc:db_ready', () => { updateStats(); });
+        window.addEventListener('mc:data_changed', () => { updateStats(); });
+
+        function updateStats() {
+            document.getElementById('catCount').textContent = DB.categories ? DB.categories.length : 0;
+            document.getElementById('menuCount').textContent = DB.menuItems ? DB.menuItems.length : 0;
+            document.getElementById('orderCount').textContent = DB.orders ? DB.orders.length : 0;
+        }
+
+        function addDish() {
+            const name = document.getElementById('dishName').value.trim();
+            const price = parseFloat(document.getElementById('dishPrice').value);
+            if (!name || isNaN(price)) return alert("Ma'lumotlarni to'liq kiriting!");
+            if (!DB.menuItems) DB.menuItems = [];
+            DB.menuItems.push({ id: DB.nextId(DB.menuItems), name, price, categoryId: null });
+            DB.save('menuItems');
+            document.getElementById('dishName').value = '';
+            document.getElementById('dishPrice').value = '';
+            updateStats();
+            alert("Taom muvaffaqiyatli qo'shildi!");
+        }
+    </script>
+</body>
+</html>

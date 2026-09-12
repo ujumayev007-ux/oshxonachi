@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="uz" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mingchinor Kompleks — Mijoz Paneli</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: { extend: { colors: { darkBg: '#0f172a', cardBg: '#1e293b', accent: '#eab308', accentHover: '#ca8a04' } } }
+        }
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { background-color: #0b0f19; color: #f8fafc; font-family: system-ui, -apple-system, sans-serif; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between selection:bg-accent selection:text-black">
+
+    <!-- SETUP SCREEN -->
+    <div id="setupScreen" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
+        <div class="bg-cardBg border border-slate-800 rounded-2xl w-full max-w-md p-6 shadow-2xl text-center space-y-6">
+            <div class="space-y-2">
+                <div class="w-16 h-16 mx-auto rounded-full bg-accent/10 border-2 border-accent flex items-center justify-center text-accent text-2xl font-bold shadow-lg">
+                    <i class="fa-solid fa-utensils"></i>
+                </div>
+                <h1 class="text-2xl font-bold tracking-wide">Mingchinor Kompleks</h1>
+                <p class="text-sm text-slate-400">Buyurtma berish uchun stol va kishilar sonini tanlang</p>
+            </div>
+
+            <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-800 space-y-2">
+                <label class="text-xs font-semibold tracking-wider text-slate-400 uppercase block">Stol Raqami</label>
+                <div class="flex items-center justify-between">
+                    <button onclick="changeTable(-1)" class="w-12 h-12 rounded-lg bg-slate-800 hover:bg-slate-700 flex items-center justify-center text-accent text-xl font-bold transition">
+                        <i class="fa-solid fa-minus"></i>
+                    </button>
+                    <div id="tableDisplay" class="text-2xl font-black text-accent">Stol 1</div>
+                    <button onclick="changeTable(1)" class="w-12 h-12 rounded-lg bg-slate-800 hover:bg-slate-700 flex items-center justify-center text-accent text-xl font-bold transition">
+                        <i class="fa-solid fa-plus"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-800 space-y-2">
+                <label class="text-xs font-semibold tracking-wider text-slate-400 uppercase block">Necha Kishi?</label>
+                <div class="flex items-center justify-between">
+                    <button onclick="changePersons(-1)" class="w-12 h-12 rounded-lg bg-slate-800 hover:bg-slate-700 flex items-center justify-center text-accent text-xl font-bold transition">
+                        <i class="fa-solid fa-minus"></i>
+                    </button>
+                    <div id="personsDisplay" class="text-2xl font-black text-accent">1</div>
+                    <button onclick="changePersons(1)" class="w-12 h-12 rounded-lg bg-slate-800 hover:bg-slate-700 flex items-center justify-center text-accent text-xl font-bold transition">
+                        <i class="fa-solid fa-plus"></i>
+                    </button>
+                </div>
+            </div>
+
+            <button onclick="openMenu()" class="w-full py-4 bg-accent hover:bg-accentHover text-slate-950 font-bold rounded-xl transition shadow-lg shadow-accent/20 text-base">
+                Menyuni ochish <i class="fa-solid fa-arrow-right ml-2"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- MAIN APP -->
+    <div id="mainApp" class="hidden flex-col min-h-screen">
+        <header class="sticky top-0 z-30 bg-cardBg/90 backdrop-blur-md border-b border-slate-800 px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-full bg-accent/10 border border-accent/30 flex items-center justify-center text-accent font-bold">
+                    <i class="fa-solid fa-utensils"></i>
+                </div>
+                <div>
+                    <h2 class="font-bold text-sm leading-tight">Mingchinor</h2>
+                    <span id="activeTableBadge" class="text-xs text-accent font-medium">Stol 1 • 1 kishi</span>
+                </div>
+            </div>
+            <button onclick="callWaiter()" class="px-3 py-2 bg-rose-500/10 border border-rose-500/30 text-rose-400 hover:bg-rose-500 hover:text-white text-xs font-semibold rounded-lg transition flex items-center space-x-1.5">
+                <i class="fa-solid fa-bell"></i>
+                <span>Ofitsant</span>
+            </button>
+        </header>
+
+        <nav class="sticky top-[61px] z-20 bg-darkBg/95 border-b border-slate-800/80 px-4 py-2.5 overflow-x-auto hide-scrollbar">
+            <div id="categoriesContainer" class="flex space-x-2"></div>
+        </nav>
+
+        <main class="flex-1 p-4 max-w-4xl mx-auto w-full pb-28">
+            <div id="menuGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4"></div>
+        </main>
+
+        <div id="cartBar" class="fixed bottom-0 left-0 right-0 z-40 bg-cardBg border-t border-slate-800 p-4 transform translate-y-full transition-transform duration-300 shadow-2xl">
+            <div class="max-w-4xl mx-auto flex items-center justify-between">
+                <div>
+                    <span class="text-xs text-slate-400 block">Jami summa:</span>
+                    <span id="cartTotalPrice" class="text-lg font-black text-accent">0 so'm</span>
+                </div>
+                <button onclick="submitOrder()" class="px-6 py-3 bg-accent hover:bg-accentHover text-slate-950 font-bold rounded-xl transition shadow-lg shadow-accent/20 text-sm flex items-center space-x-2">
+                    <i class="fa-solid fa-paper-plane"></i>
+                    <span>Buyurtma berish</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script>
+        const FIREBASE_CONFIG = {};
+        const DEFAULT_CAFE_ID = "mingchinor";
+    </script>
+    <script src="data.js"></script>
+    <script>
+        let selectedTableIndex = 0;
+        let personCount = 1;
+        let activeCategoryId = null;
+        const cart = {};
+
+        window.addEventListener('mc:db_ready', () => { updateSetupUI(); });
+        setTimeout(() => { if (typeof DB !== 'undefined') updateSetupUI(); }, 1000);
+
+        function changeTable(delta) {
+            if (!DB.tables || DB.tables.length === 0) return;
+            selectedTableIndex = (selectedTableIndex + delta + DB.tables.length) % DB.tables.length;
+            updateSetupUI();
+        }
+
+        function changePersons(delta) {
+            personCount = Math.max(1, personCount + delta);
+            document.getElementById('personsDisplay').textContent = personCount;
+        }
+
+        function updateSetupUI() {
+            if (DB.tables && DB.tables.length > 0) {
+                const table = DB.tables[selectedTableIndex];
+                document.getElementById('tableDisplay').textContent = table.name || `Stol ${table.id}`;
+            }
+        }
+
+        function openMenu() {
+            document.getElementById('setupScreen').classList.add('hidden');
+            document.getElementById('mainApp').classList.remove('hidden');
+            document.getElementById('mainApp').classList.add('flex');
+            const table = DB.tables[selectedTableIndex] || { id: 1, name: 'Stol 1' };
+            document.getElementById('activeTableBadge').textContent = `${table.name} • ${personCount} kishi`;
+            renderCategories();
+            renderMenu();
+        }
+
+        function renderCategories() {
+            const container = document.getElementById('categoriesContainer');
+            let html = `<button onclick="filterCategory(null)" class="px-4 py-1.5 rounded-full text-xs font-semibold transition ${activeCategoryId === null ? 'bg-accent text-slate-950' : 'bg-slate-800 text-slate-300'}">Barchasi</button>`;
+            if (DB.categories) {
+                DB.categories.forEach(cat => {
+                    html += `<button onclick="filterCategory(${cat.id})" class="px-4 py-1.5 rounded-full text-xs font-semibold transition ${activeCategoryId === cat.id ? 'bg-accent text-slate-950' : 'bg-slate-800 text-slate-300'}">${cat.name}</button>`;
+                });
+            }
+            container.innerHTML = html;
+        }
+
+        function filterCategory(catId) {
+            activeCategoryId = catId;
+            renderCategories();
+            renderMenu();
+        }
+
+        function renderMenu() {
+            const grid = document.getElementById('menuGrid');
+            let items = DB.menuItems || [];
+            if (activeCategoryId !== null) items = items.filter(m => m.categoryId == activeCategoryId);
+            if (items.length === 0) {
+                grid.innerHTML = `<div class="col-span-full text-center py-12 text-slate-500">Hozircha taomlar mavjud emas</div>`;
+                return;
+            }
+            grid.innerHTML = items.map(item => {
+                const qty = cart[item.id] ? cart[item.id].qty : 0;
+                return `
+                    <div class="bg-cardBg border border-slate-800/80 rounded-2xl p-4 flex flex-col justify-between shadow-lg">
+                        <div>
+                            <h3 class="font-bold text-base mb-1">${item.name}</h3>
+                            <p class="text-xs text-slate-400 line-clamp-2 mb-3">${item.description || ''}</p>
+                        </div>
+                        <div class="flex items-center justify-between mt-2">
+                            <span class="text-accent font-black">${item.price} so'm</span>
+                            <div class="flex items-center space-x-2">
+                                ${qty > 0 ? `<button onclick="updateCart(${item.id}, -1)" class="w-8 h-8 rounded-lg bg-slate-800 text-accent font-bold flex items-center justify-center">-</button><span class="font-bold text-sm w-5 text-center">${qty}</span>` : ''}
+                                <button onclick="updateCart(${item.id}, 1)" class="px-3 py-1.5 bg-accent hover:bg-accentHover text-slate-950 font-bold rounded-lg text-xs transition">${qty > 0 ? '+' : "Qo'shish"}</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function updateCart(itemId, delta) {
+            const item = DB.menuItems.find(m => m.id == itemId);
+            if (!item) return;
+            if (!cart[itemId]) cart[itemId] = { ...item, qty: 0 };
+            cart[itemId].qty += delta;
+            if (cart[itemId].qty <= 0) delete cart[itemId];
+            renderMenu();
+            updateCartBar();
+        }
+
+        function updateCartBar() {
+            const cartBar = document.getElementById('cartBar');
+            const totalItems = Object.values(cart).reduce((sum, i) => sum + i.qty, 0);
+            const totalPrice = Object.values(cart).reduce((sum, i) => sum + (i.price * i.qty), 0);
+            document.getElementById('cartTotalPrice').textContent = totalPrice.toLocaleString() + " so'm";
+            if (totalItems > 0) cartBar.classList.remove('translate-y-full');
+            else cartBar.classList.add('translate-y-full');
+        }
+
+        function submitOrder() {
+            const table = DB.tables[selectedTableIndex] || { id: 1 };
+            const itemsArr = Object.values(cart).map(i => ({ id: i.id, name: i.name, price: i.price, qty: i.qty }));
+            if (itemsArr.length === 0) return;
+            DB.addOrder({ tableId: table.id, tableName: table.name || `Stol ${table.id}`, persons: personCount, items: itemsArr, total: itemsArr.reduce((sum, i) => sum + (i.price * i.qty), 0) });
+            alert("Buyurtmangiz muvaffaqiyatli yuborildi!");
+            Object.keys(cart).forEach(k => delete cart[k]);
+            updateCartBar();
+            renderMenu();
+        }
+
+        function callWaiter() {
+            const table = DB.tables[selectedTableIndex] || { id: 1 };
+            if (typeof DB.waiterCalls !== 'undefined') {
+                DB.waiterCalls.push({ tableId: table.id, tableName: table.name || `Stol ${table.id}`, createdAt: new Date().toISOString() });
+                DB.save('waiterCalls');
+                DB.broadcast('waiter_called', { tableId: table.id, tableName: table.name });
+            }
+            alert("Ofitsant chaqirildi!");
+        }
+    </script>
+</body>
+</html>

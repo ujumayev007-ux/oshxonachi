@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <title>Ofitsiant Paneli</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f4f4f9; }
+        .container { max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .order-card { background: #fff3cd; border: 1px solid #ffeeba; padding: 15px; margin-bottom: 10px; border-radius: 5px; }
+        .status-qabul { color: #856404; font-weight: bold; }
+        .status-jarayonda { color: #0c5460; font-weight: bold; }
+        .status-tayyor { color: #155724; font-weight: bold; }
+        input, button { padding: 10px; margin: 5px 0; width: 100%; box-sizing: border-box; }
+        button { background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #218838; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Ofitsiant Paneli - Buyurtma berish</h2>
+        <div>
+            <input type="text" id="tableNum" placeholder="Stol raqami (masalan: 4-stol)">
+            <input type="text" id="orderItems" placeholder="Buyurtma nomi (masalan: Osh, Non)">
+            <button id="sendOrderBtn">Buyurtmani yuborish</button>
+        </div>
+
+        <h3>Mening buyurtmalarim va ularning holati</h3>
+        <div id="waiterOrdersList"></div>
+    </div>
+
+    <!-- Socket.io kutubxonasi -->
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+
+        const tableNumInput = document.getElementById('tableNum');
+        const orderItemsInput = document.getElementById('orderItems');
+        const sendOrderBtn = document.getElementById('sendOrderBtn');
+        const waiterOrdersList = document.getElementById('waiterOrdersList');
+
+        // Buyurtma yuborish tugmasi bosilganda
+        sendOrderBtn.addEventListener('click', () => {
+            const table = tableNumInput.value.trim();
+            const items = orderItemsInput.value.trim();
+
+            if (!table || !items) {
+                alert('Iltimos, stol raqami va buyurtmani kiriting!');
+                return;
+            }
+
+            // Serverga yangi buyurtma yuborish
+            socket.emit('new_order', { table, items });
+
+            // Maydonlarni tozalash
+            orderItemsInput.value = '';
+            tableNumInput.value = '';
+        });
+
+        // Serverdan buyurtmalar ro'yxati kelganda yangilash
+        socket.on('init_orders', renderOrders);
+        socket.on('update_orders', renderOrders);
+
+        function renderOrders(orders) {
+            waiterOrdersList.innerHTML = '';
+            if (orders.length === 0) {
+                waiterOrdersList.innerHTML = '<p>Hozircha faol buyurtmalar yo‘q.</p>';
+                return;
+            }
+
+            orders.forEach(order => {
+                let statusClass = '';
+                if (order.status === 'Qabul qilindi') statusClass = 'status-qabul';
+                else if (order.status === 'Jarayonda') statusClass = 'status-jarayonda';
+                else if (order.status === 'Tayyor') statusClass = 'status-tayyor';
+
+                const div = document.createElement('div');
+                div.className = 'order-card';
+                div.innerHTML = `
+                    <strong>Stol: ${order.table}</strong><br>
+                    Buyurtma: ${order.items}<br>
+                    Vaqti: ${order.createdAt}<br>
+                    Holati: <span class="${statusClass}">${order.status}</span>
+                `;
+                waiterOrdersList.appendChild(div);
+            });
+        }
+    </script>
+</body>
+</html>

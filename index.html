@@ -1,1 +1,45 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <title>Restoran Menyusi — Oshxonachi</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header>
+        <h2>Restoran Menyusi</h2>
+        <button onclick="openWaiterModal()" style="background: #ff9800;">🔔 Ofitsantni chaqirish</button>
+    </header>
 
+    <div class="container">
+        <div id="menu-container" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px;">
+            <!-- Taomlar dinamik chiqadi -->
+        </div>
+
+        <div style="margin-top: 40px;" class="card">
+            <h3>Fikr-mulohaza (Otziv) qoldirish</h3>
+            <select id="review-type" onchange="toggleNameInput()">
+                <option value="anonim">Anonim qolsin</option>
+                <option value="named">Ism-sharifimni yozaman</option>
+            </select>
+            <input type="text" id="reviewer-name" placeholder="Ismingiz" style="padding: 8px; margin: 5px 0; width: 100%; display:none;">
+            <textarea id="review-text" placeholder="Fikr va taklifingizni yozing..." style="width:100%; padding: 8px; margin: 5px 0;"></textarea>
+            <button onclick="submitReview()">Yuborish</button>
+        </div>
+    </div>
+
+    <div class="cart-floating" onclick="submitOrder()">
+        🛒 Buyurtma berish (<span id="cart-count">0</span> ta | <span id="cart-total">0</span> so'm)
+    </div>
+
+    <!-- Ofitsant chaqirish modali -->
+    <div id="waiter-modal" style="display:none; position:fixed; top:30%; left:35%; background:white; padding:20px; border-radius:10px; box-shadow:0 0 15px rgba(0,0,0,0.3); z-index:100;">
+        <h3>Stol raqamingizni tanlang:</h3>
+        <div id="tables-list" style="display:grid; grid-template-columns: repeat(3, 1fr); gap:10px; margin-top:10px;"></div>
+        <button onclick="closeWaiterModal()" style="margin-top:15px; background:#f44336; width:100%;">Yopish</button>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script src="js/customer.js"></script>
+</body>
+</html>

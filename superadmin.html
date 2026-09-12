@@ -1,1 +1,36 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <title>Superadmin Paneli & AI</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header>
+        <h2>Superadmin Paneli & Gemini AI Maslahatchisi</h2>
+    </header>
 
+    <div class="container">
+        <div class="card">
+            <h3>AI Tahlil</h3>
+            <input type="text" id="ai-prompt" placeholder="Masalan: Omvorda nima yetishmayapti?" style="width:70%; padding:8px;">
+            <button onclick="askGeminiAI()">So'rash</button>
+            <p id="ai-response" style="margin-top:15px; font-weight:bold;"></p>
+        </div>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script>
+        async function askGeminiAI() {
+            const prompt = document.getElementById('ai-prompt').value;
+            const res = await fetch(`${API_URL}/api/gemini-ai`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ prompt })
+            });
+            const data = await res.json();
+            document.getElementById('ai-response').innerText = "Gemini AI: " + data.reply;
+        }
+    </script>
+</body>
+</html>

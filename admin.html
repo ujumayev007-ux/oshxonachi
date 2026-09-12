@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Restoran Boshqaruv Tizimi - Admin Paneli</title>
+    <!-- Chart.js kutubxonasi statistika uchun -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         * {
             box-sizing: border-box;
@@ -25,14 +27,38 @@
             border-radius: 10px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.05);
             margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .header-left {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
         }
         h1 {
             color: #0d47a1;
             font-size: 24px;
         }
+        /* Real vaqt soat va sana uslubi */
+        .live-clock-container {
+            font-size: 13px;
+            color: #555;
+            font-weight: 500;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .live-clock-container span {
+            background: #e1f5fe;
+            padding: 2px 8px;
+            border-radius: 4px;
+            color: #0288d1;
+            font-weight: bold;
+        }
         .nav-tabs {
             display: flex;
             gap: 10px;
+            flex-wrap: wrap;
         }
         .tab-btn {
             padding: 8px 16px;
@@ -43,10 +69,18 @@
             border-radius: 6px;
             cursor: pointer;
             transition: 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
         .tab-btn.active, .tab-btn:hover {
             background: #0288d1;
             color: white;
+        }
+        .tab-icon {
+            width: 18px;
+            height: 18px;
+            object-fit: contain;
         }
         .section-content {
             display: none;
@@ -102,8 +136,10 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
         }
-        /* Avtotugallash (Autocomplete) uchun uslublar */
+        /* Avtotugallash uslublari */
         .autocomplete-container {
             position: relative;
             flex: 1;
@@ -140,11 +176,19 @@
     <!-- ASOSIY PANEL -->
     <div id="admin-main-content">
         <header>
-            <h1>Restoran Admin Paneli</h1>
+            <div class="header-left">
+                <h1>Restoran Admin Paneli</h1>
+                <div class="live-clock-container">
+                    <span>📅 <span id="live-date">--.--.----</span></span>
+                    <span>⏰ <span id="live-time">--:--:--</span></span>
+                </div>
+            </div>
             <div class="nav-tabs">
                 <button class="tab-btn active" onclick="switchTab('orders')">Buyurtmalar</button>
                 <button class="tab-btn" onclick="switchTab('menu')">Menyu Boshqaruvi</button>
-                <button class="tab-btn" onclick="switchTab('warehouse')">Ombor</button>
+                <button class="tab-btn" onclick="switchTab('warehouse')">
+                    <img src="https://cdn-icons-png.flaticon.com/256/12964/12964168.png" alt="Ombor" class="tab-icon"> Ombor
+                </button>
                 <button class="tab-btn" onclick="switchTab('stats')">Statistika</button>
             </div>
         </header>
@@ -160,6 +204,33 @@
         <!-- MENYU BOSHQARUVI -->
         <div id="menu" class="section-content">
             <h2>Menyu va narxlar</h2>
+            
+            <!-- Yangi taom yoki ichimlik qo'shish qismi -->
+            <div style="margin-bottom: 20px; background: #f5f5f5; padding: 15px; border-radius: 8px;">
+                <h3 style="font-size: 16px; color: #0d47a1; margin-bottom: 10px;">Yangi taom yoki ichimlik qo'shish</h3>
+                <div style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr auto; gap: 10px; align-items: center;">
+                    <input type="text" id="new-menu-name" placeholder="Nomi (masalan: Lag'mon)">
+                    <select id="new-menu-category">
+                        <option value="Osh">Osh</option>
+                        <option value="Suyuq ovqatlar">Suyuq ovqatlar</option>
+                        <option value="Quyuq taomlar">Quyuq taomlar</option>
+                        <option value="Hamirli taomlar">Hamirli taomlar</option>
+                        <option value="Kaboblar">Kaboblar</option>
+                        <option value="Somsalar">Somsalar</option>
+                        <option value="Fast Food">Fast Food</option>
+                        <option value="Ichimliklar">Ichimliklar</option>
+                    </select>
+                    <input type="number" id="new-menu-internal" placeholder="Ichki narx">
+                    <input type="number" id="new-menu-sale" placeholder="Sotish narxi">
+                    <button class="btn btn-blue" onclick="addNewMenuItem()" style="white-space: nowrap;">Qo'shish</button>
+                </div>
+            </div>
+
+            <!-- Menuni qidirish paneli -->
+            <div style="margin-bottom: 15px;">
+                <input type="text" id="menu-search-input" placeholder="Taom yoki ichimlik nomi bo'yicha qidirish..." oninput="renderMenu()">
+            </div>
+
             <table>
                 <thead>
                     <tr>
@@ -211,21 +282,54 @@
         <!-- STATISTIKA -->
         <div id="stats" class="section-content">
             <h2>Kunlik, haftalik va oylik statistika</h2>
-            <p style="margin-top: 10px;">Bugungi savdo: <b id="today-sales">0 so'm</b></p>
-            <p>Eng ko'p sotilgan taom: <b id="top-item">-</b></p>
-            <p>Ofitsantlar faolligi va band stollar holati nazorati doimiy ravishda yangilanib boradi.</p>
+            <div style="margin-top: 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div style="background: #f9f9f9; padding: 15px; border-radius: 8px;">
+                    <p style="margin-bottom: 10px;">Bugungi savdo: <b id="today-sales">0 so'm</b></p>
+                    <p style="margin-bottom: 10px;">Eng ko'p sotilgan taom: <b id="top-item">-</b></p>
+                    <p>Ofitsantlar faolligi va band stollar holati doimiy nazoratda.</p>
+                </div>
+                <!-- Rangli Chart uchun konteyner -->
+                <div style="background: #ffffff; padding: 15px; border-radius: 8px; border: 1px solid #e0e0e0; height: 300px;">
+                    <canvas id="statsChart"></canvas>
+                </div>
+            </div>
         </div>
     </div>
 
     <script>
+        let statsChartInstance = null;
+
         window.onload = function() {
             renderAll();
-            // Sahifaning istalgan joyiga bosilganda avtotugallash ro'yxatini yopish
+            initChart();
+            initLiveClock(); // Real vaqt soatni ishga tushirish
             document.addEventListener("click", function (e) {
                 if (!e.target.closest('.autocomplete-container')) {
                     closeAllAutocomplete();
                 }
             });
+        }
+
+        // Real vaqt soat va sanani yangilab turish funksiyasi
+        function initLiveClock() {
+            updateClock();
+            setInterval(updateClock, 1000);
+        }
+
+        function updateClock() {
+            const now = new Date();
+            
+            // Sana formatlash (kun.oy.yil)
+            const day = String(now.getDate()).padStart(2, '0');
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const year = now.getFullYear();
+            document.getElementById('live-date').innerText = `${day}.${month}.${year}`;
+
+            // Vaqt formatlash (soat:minut:sekund)
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            document.getElementById('live-time').innerText = `${hours}:${minutes}:${seconds}`;
         }
 
         let defaultMenu = [
@@ -262,122 +366,13 @@
             { id: 31, name: "Qozon kabob", category: "Kaboblar", internal_price: 30000, sale_price: 45000, is_visible: true },
             { id: 32, name: "Tandir kabob", category: "Kaboblar", internal_price: 35000, sale_price: 50000, is_visible: true },
             { id: 33, name: "Jiz kabob", category: "Kaboblar", internal_price: 32000, sale_price: 48000, is_visible: true },
-            { id: 34, name: "Napalyon", category: "Kaboblar", internal_price: 15000, sale_price: 25000, is_visible: true },
-            { id: 35, name: "O’rama", category: "Kaboblar", internal_price: 14000, sale_price: 22000, is_visible: true },
-            { id: 36, name: "Norin kabob", category: "Kaboblar", internal_price: 25000, sale_price: 38000, is_visible: true },
-            { id: 37, name: "Toyloq (Uygʻurcha) kabob", category: "Kaboblar", internal_price: 22000, sale_price: 35000, is_visible: true },
-            { id: 38, name: "Bedana kabob", category: "Kaboblar", internal_price: 25000, sale_price: 40000, is_visible: true },
-            { id: 39, name: "Tovuq shashligi (File kabob)", category: "Kaboblar", internal_price: 15000, sale_price: 24000, is_visible: true },
-            { id: 40, name: "Lula-kabob", category: "Kaboblar", internal_price: 17000, sale_price: 27000, is_visible: true },
-            { id: 41, name: "Karsak kabob", category: "Kaboblar", internal_price: 18000, sale_price: 28000, is_visible: true },
-            { id: 42, name: "Qovurma shashlik", category: "Kaboblar", internal_price: 19000, sale_price: 29000, is_visible: true },
-            { id: 43, name: "Quyruq kabob (Dumba kabob)", category: "Kaboblar", internal_price: 20000, sale_price: 30000, is_visible: true },
-            { id: 44, name: "Bifshteks kabob", category: "Kaboblar", internal_price: 22000, sale_price: 33000, is_visible: true },
-            { id: 45, name: "Tabaka kabob", category: "Kaboblar", internal_price: 25000, sale_price: 38000, is_visible: true },
-            { id: 46, name: "Ovoza kabob", category: "Kaboblar", internal_price: 20000, sale_price: 30000, is_visible: true },
-            { id: 47, name: "Sabzavotli kabob", category: "Kaboblar", internal_price: 10000, sale_price: 16000, is_visible: true },
-            { id: 48, name: "Qanotcha shashligi (Tovuq qanoti)", category: "Kaboblar", internal_price: 15000, sale_price: 24000, is_visible: true },
-            { id: 49, name: "Piyozli kabob", category: "Kaboblar", internal_price: 12000, sale_price: 18000, is_visible: true },
-            { id: 50, name: "Qovurgʻa kabob (Ribs)", category: "Kaboblar", internal_price: 28000, sale_price: 42000, is_visible: true },
-            { id: 51, name: "Kavkazcha shashlik (Kars)", category: "Kaboblar", internal_price: 25000, sale_price: 38000, is_visible: true },
-            { id: 52, name: "Baliq kabob", category: "Kaboblar", internal_price: 30000, sale_price: 45000, is_visible: true },
-            { id: 53, name: "Mushroom (Qoʻziqorin) kabob", category: "Kaboblar", internal_price: 14000, sale_price: 22000, is_visible: true },
-            { id: 54, name: "Gilos kabob (Mevali kabob)", category: "Kaboblar", internal_price: 18000, sale_price: 28000, is_visible: true },
-            { id: 55, name: "Asalli shashlik", category: "Kaboblar", internal_price: 20000, sale_price: 30000, is_visible: true },
-            { id: 56, name: "Achchiq (Laza) shashlik", category: "Kaboblar", internal_price: 17000, sale_price: 27000, is_visible: true },
-            { id: 57, name: "Minora kabob", category: "Kaboblar", internal_price: 35000, sale_price: 52000, is_visible: true },
-            { id: 58, name: "Kletchatka kabob", category: "Kaboblar", internal_price: 16000, sale_price: 25000, is_visible: true },
-            { id: 59, name: "Jigar-dumba kabob", category: "Kaboblar", internal_price: 19000, sale_price: 29000, is_visible: true },
             { id: 60, name: "Tandir somsa", category: "Somsalar", internal_price: 8000, sale_price: 14000, is_visible: true },
             { id: 61, name: "Qatlama (varaqi) somsa", category: "Somsalar", internal_price: 9000, sale_price: 15000, is_visible: true },
             { id: 62, name: "Koʻk somsa", category: "Somsalar", internal_price: 6000, sale_price: 10000, is_visible: true },
-            { id: 63, name: "Qovoqli somsa", category: "Somsalar", internal_price: 6000, sale_price: 10000, is_visible: true },
-            { id: 64, name: "Kartoshkali somsa", category: "Somsalar", internal_price: 6000, sale_price: 10000, is_visible: true },
-            { id: 65, name: "G‘umma somsa (Qovurma somsa)", category: "Somsalar", internal_price: 7000, sale_price: 12000, is_visible: true },
-            { id: 66, name: "Go‘shtli-kartoshkali somsa", category: "Somsalar", internal_price: 8000, sale_price: 13000, is_visible: true },
-            { id: 67, name: "Pishloqli somsa", category: "Somsalar", internal_price: 9000, sale_price: 15000, is_visible: true },
-            { id: 68, name: "Tovuqli somsa", category: "Somsalar", internal_price: 8000, sale_price: 13000, is_visible: true },
-            { id: 69, name: "Qiyma somsa", category: "Somsalar", internal_price: 8000, sale_price: 13000, is_visible: true },
-            { id: 70, name: "Moshli somsa", category: "Somsalar", internal_price: 7000, sale_price: 11000, is_visible: true },
-            { id: 71, name: "Zig‘ir somsa", category: "Somsalar", internal_price: 9000, sale_price: 15000, is_visible: true },
-            { id: 72, name: "Asal solingan shirin somsa", category: "Somsalar", internal_price: 8000, sale_price: 14000, is_visible: true },
-            { id: 73, name: "Qora zira (yoki kunjutli) somsa", category: "Somsalar", internal_price: 8000, sale_price: 14000, is_visible: true },
-            { id: 74, name: "Katta to‘y somsasi", category: "Somsalar", internal_price: 50000, sale_price: 80000, is_visible: true },
-            { id: 75, name: "Piyozli somsa (piyoz-dumba)", category: "Somsalar", internal_price: 7000, sale_price: 12000, is_visible: true },
-            { id: 76, name: "Qo‘ziqorinli somsa", category: "Somsalar", internal_price: 8000, sale_price: 13000, is_visible: true },
-            { id: 77, name: "Uyg‘urcha somsa", category: "Somsalar", internal_price: 10000, sale_price: 16000, is_visible: true },
-            { id: 78, name: "Jigar somsasi", category: "Somsalar", internal_price: 8000, sale_price: 13000, is_visible: true },
-            { id: 79, name: "Sutli xamirdan tayyorlangan somsa", category: "Somsalar", internal_price: 9000, sale_price: 15000, is_visible: true },
             { id: 80, name: "Lavash", category: "Fast Food", internal_price: 18000, sale_price: 28000, is_visible: true },
             { id: 81, name: "Gamburger", category: "Fast Food", internal_price: 15000, sale_price: 24000, is_visible: true },
-            { id: 82, name: "Cheeseburger", category: "Fast Food", internal_price: 17000, sale_price: 27000, is_visible: true },
-            { id: 83, name: "Shaurma (Doner)", category: "Fast Food", internal_price: 16000, sale_price: 25000, is_visible: true },
-            { id: 84, name: "Hot-dog", category: "Fast Food", internal_price: 9000, sale_price: 15000, is_visible: true },
-            { id: 85, name: "Kartoshka fri", category: "Fast Food", internal_price: 7000, sale_price: 12000, is_visible: true },
-            { id: 86, name: "Pitsa (30 sm / 25 sm / 20 sm)", category: "Fast Food", internal_price: 40000, sale_price: 65000, is_visible: true },
-            { id: 87, name: "Klab-sendvich", category: "Fast Food", internal_price: 15000, sale_price: 24000, is_visible: true },
-            { id: 88, name: "Xaggi (Haggi)", category: "Fast Food", internal_price: 18000, sale_price: 28000, is_visible: true },
-            { id: 89, name: "Tovuq nuggetslari", category: "Fast Food", internal_price: 12000, sale_price: 20000, is_visible: true },
-            { id: 90, name: "Tovuq tenderslari (Tenders)", category: "Fast Food", internal_price: 14000, sale_price: 22000, is_visible: true },
-            { id: 91, name: "Chikken burger", category: "Fast Food", internal_price: 15000, sale_price: 24000, is_visible: true },
-            { id: 92, name: "Fransuzcha hot-dog", category: "Fast Food", internal_price: 10000, sale_price: 16000, is_visible: true },
-            { id: 93, name: "Piyoz halqalari (Onion rings)", category: "Fast Food", internal_price: 8000, sale_price: 13000, is_visible: true },
-            { id: 94, name: "Burrito", category: "Fast Food", internal_price: 17000, sale_price: 27000, is_visible: true },
-            { id: 95, name: "Tako", category: "Fast Food", internal_price: 16000, sale_price: 26000, is_visible: true },
-            { id: 96, name: "Panini", category: "Fast Food", internal_price: 14000, sale_price: 22000, is_visible: true },
-            { id: 97, name: "Wok lapshasi", category: "Fast Food", internal_price: 20000, sale_price: 32000, is_visible: true },
-            { id: 98, name: "Korn-dog", category: "Fast Food", internal_price: 9000, sale_price: 15000, is_visible: true },
-            { id: 99, name: "Pishloqli tayoqchalar (Cheese-sticks)", category: "Fast Food", internal_price: 12000, sale_price: 20000, is_visible: true },
-            { id: 100, name: "Coca-Cola (klassik): 0.33L, 0.5L, 1L, 1.5L, 2.0L", category: "Ichimliklar", internal_price: 6000, sale_price: 11000, is_visible: true },
-            { id: 101, name: "Coca-Cola Zero: 0.33L, 0.5L, 1L, 1.5L, 2.0L", category: "Ichimliklar", internal_price: 6000, sale_price: 11000, is_visible: true },
-            { id: 102, name: "Fanta (apelsin): 0.33L, 0.5L, 1L, 1.5L, 2.0L", category: "Ichimliklar", internal_price: 6000, sale_price: 11000, is_visible: true },
-            { id: 103, name: "Sprite: 0.33L, 0.5L, 1L, 1.5L, 2.0L", category: "Ichimliklar", internal_price: 6000, sale_price: 11000, is_visible: true },
-            { id: 104, name: "Pepsi: 0.33L, 0.5L, 1L, 1.5L, 2.0L", category: "Ichimliklar", internal_price: 6000, sale_price: 11000, is_visible: true },
-            { id: 105, name: "7Up: 0.33L, 0.5L, 1L, 1.5L, 2.0L", category: "Ichimliklar", internal_price: 6000, sale_price: 11000, is_visible: true },
-            { id: 106, name: "Mirinda: 0.33L, 0.5L, 1L, 1.5L, 2.0L", category: "Ichimliklar", internal_price: 6000, sale_price: 11000, is_visible: true },
-            { id: 107, name: "Mountain Dew: 0.33L, 0.5L, 1L, 1.5L, 2.0L", category: "Ichimliklar", internal_price: 6000, sale_price: 11000, is_visible: true },
-            { id: 108, name: "Schweppes (Tonic / Bitter Lemon): 0.33L, 0.5L, 1L", category: "Ichimliklar", internal_price: 8000, sale_price: 14000, is_visible: true },
-            { id: 109, name: "Limonad klassik (stakan yoki grafinda)", category: "Ichimliklar", internal_price: 10000, sale_price: 18000, is_visible: true },
-            { id: 110, name: "Mojito (alkogolsiz, shaftoli yoki qulupnayli)", category: "Ichimliklar", internal_price: 12000, sale_price: 22000, is_visible: true },
-            { id: 111, name: "Tarhun (klassik yashil gazli ichimlik): 0.5L, 1L, 1.5L", category: "Ichimliklar", internal_price: 5000, sale_price: 9000, is_visible: true },
-            { id: 112, name: "Baykal (mahalliy o‘tli gazli ichimlik): 0.5L, 1L, 1.5L", category: "Ichimliklar", internal_price: 5000, sale_price: 9000, is_visible: true },
-            { id: 113, name: "Dushes (nok ta'mli gazli ichimlik): 0.5L, 1L, 1.5L", category: "Ichimliklar", internal_price: 5000, sale_price: 9000, is_visible: true },
-            { id: 114, name: "Red Bull (energetik ichimlik): 0.25L, 0.5L", category: "Ichimliklar", internal_price: 14000, sale_price: 22000, is_visible: true },
-            { id: 115, name: "Flash Up (energetik ichimlik): 0.45L, 0.5L", category: "Ichimliklar", internal_price: 8000, sale_price: 14000, is_visible: true },
-            { id: 116, name: "Adrenaline Rush (energetik ichimlik): 0.25L, 0.5L", category: "Ichimliklar", internal_price: 13000, sale_price: 21000, is_visible: true },
-            { id: 117, name: "Suv (Gazli): 0.33L, 0.5L, 1.0L, 1.5L", category: "Ichimliklar", internal_price: 3000, sale_price: 5000, is_visible: true },
-            { id: 118, name: "Suv (Gazsiz / Oddiy): 0.33L, 0.5L, 1.0L, 1.5L, 2.0L", category: "Ichimliklar", internal_price: 2500, sale_price: 4000, is_visible: true },
-            { id: 119, name: "Olma soki", category: "Ichimliklar", internal_price: 7000, sale_price: 12000, is_visible: true },
-            { id: 120, name: "Apelsin soki", category: "Ichimliklar", internal_price: 7000, sale_price: 12000, is_visible: true },
-            { id: 121, name: "Olcha soki", category: "Ichimliklar", internal_price: 7000, sale_price: 12000, is_visible: true },
-            { id: 122, name: "Shaftoli soki", category: "Ichimliklar", internal_price: 7000, sale_price: 12000, is_visible: true },
-            { id: 123, name: "Anor soki", category: "Ichimliklar", internal_price: 10000, sale_price: 18000, is_visible: true },
-            { id: 124, name: "Multifrukt soki", category: "Ichimliklar", internal_price: 7000, sale_price: 12000, is_visible: true },
-            { id: 125, name: "Tropik meva soki", category: "Ichimliklar", internal_price: 7000, sale_price: 12000, is_visible: true },
-            { id: 126, name: "Ananas soki", category: "Ichimliklar", internal_price: 8000, sale_price: 13000, is_visible: true },
-            { id: 127, name: "Pomidor soki (tuz va murch bilan)", category: "Ichimliklar", internal_price: 7000, sale_price: 12000, is_visible: true },
-            { id: 128, name: "Koʻk choy (klassik choynakda)", category: "Ichimliklar", internal_price: 4000, sale_price: 8000, is_visible: true },
-            { id: 129, name: "Qora choy (klassik choynakda)", category: "Ichimliklar", internal_price: 4000, sale_price: 8000, is_visible: true },
-            { id: 130, name: "Limonli qora choy", category: "Ichimliklar", internal_price: 5000, sale_price: 10000, is_visible: true },
-            { id: 131, name: "Limonli koʻk choy", category: "Ichimliklar", internal_price: 5000, sale_price: 10000, is_visible: true },
-            { id: 132, name: "Imbir va limonli choy", category: "Ichimliklar", internal_price: 7000, sale_price: 13000, is_visible: true },
-            { id: 133, name: "Mevali choy (mevali assorti)", category: "Ichimliklar", internal_price: 8000, sale_price: 15000, is_visible: true },
-            { id: 134, name: "Muzli choy (Ice Tea - Shaftoli)", category: "Ichimliklar", internal_price: 7000, sale_price: 13000, is_visible: true },
-            { id: 135, name: "Muzli choy (Ice Tea - Limon)", category: "Ichimliklar", internal_price: 7000, sale_price: 13000, is_visible: true },
-            { id: 136, name: "Koʻk choy yalpiz bilan", category: "Ichimliklar", internal_price: 5000, sale_price: 10000, is_visible: true },
-            { id: 137, name: "Asalli va limonga boy isituvchi choy", category: "Ichimliklar", internal_price: 8000, sale_price: 15000, is_visible: true },
-            { id: 138, name: "Ayron (muzdek, ko‘katli)", category: "Ichimliklar", internal_price: 6000, sale_price: 11000, is_visible: true },
-            { id: 139, name: "Muzqaymoqli kokteyl (Milkshake - vanilli)", category: "Ichimliklar", internal_price: 10000, sale_price: 18000, is_visible: true },
-            { id: 140, name: "Shokoladli milkshake", category: "Ichimliklar", internal_price: 11000, sale_price: 19000, is_visible: true },
-            { id: 141, name: "Qulupnayli milkshake", category: "Ichimliklar", internal_price: 11000, sale_price: 19000, is_visible: true },
-            { id: 142, name: "Tabiiy apelsin fresh", category: "Ichimliklar", internal_price: 15000, sale_price: 25000, is_visible: true },
-            { id: 143, name: "Tabiiy olma fresh", category: "Ichimliklar", internal_price: 12000, sale_price: 20000, is_visible: true },
-            { id: 144, name: "Tabiiy sabzi fresh", category: "Ichimliklar", internal_price: 10000, sale_price: 17000, is_visible: true },
-            { id: 145, name: "Greyprut fresh", category: "Ichimliklar", internal_price: 16000, sale_price: 27000, is_visible: true },
-            { id: 146, name: "Kompot (quritilgan mevalardan)", category: "Ichimliklar", internal_price: 5000, sale_price: 10000, is_visible: true },
-            { id: 147, name: "Mors (reza mevali salqin ichimlik)", category: "Ichimliklar", internal_price: 6000, sale_price: 11000, is_visible: true },
-            { id: 148, name: "Kofe (Americano)", category: "Ichimliklar", internal_price: 8000, sale_price: 15000, is_visible: true },
-            { id: 149, name: "Kofe (Cappuccino)", category: "Ichimliklar", internal_price: 10000, sale_price: 18000, is_visible: true }
+            { id: 100, name: "Coca-Cola (klassik): 0.5L", category: "Ichimliklar", internal_price: 6000, sale_price: 11000, is_visible: true },
+            { id: 109, name: "Limonad klassik", category: "Ichimliklar", internal_price: 10000, sale_price: 18000, is_visible: true }
         ];
 
         let menuDatabase = JSON.parse(localStorage.getItem('admin_menu')) || defaultMenu;
@@ -385,46 +380,12 @@
         let warehouseDatabase = JSON.parse(localStorage.getItem('admin_warehouse')) || [
             { name: "Guruch (Alanga)", quantity: 0, unit: "kg" },
             { name: "Guruch (Lazer)", quantity: 0, unit: "kg" },
-            { name: "Guruch (Devzira)", quantity: 0, unit: "kg" },
             { name: "Mol goʻshti", quantity: 0, unit: "kg" },
             { name: "Qizil Sabzi", quantity: 0, unit: "kg" },
             { name: "Paxta Yogʻi", quantity: 0, unit: "l" },
-            { name: "Salat Yog'i", quantity: 0, unit: "l" },
-            { name: "Noʻxat", quantity: 0, unit: "kg" },
-            { name: "Mayiz", quantity: 0, unit: "kg" },
             { name: "Tuz", quantity: 0, unit: "kg" },
-            { name: "Zira", quantity: 0, unit: "g" },
-            { name: "Qoʻy goʻshti", quantity: 0, unit: "kg" },
-            { name: "Sariq sabzi", quantity: 0, unit: "kg" },
-            { name: "Dumba yog'i", quantity: 0, unit: "kg" },
             { name: "Piyoz", quantity: 0, unit: "kg" },
-            { name: "Kartoshka", quantity: 0, unit: "kg" },
-            { name: "Pomidor", quantity: 0, unit: "kg" },
-            { name: "Bodring", quantity: 0, unit: "kg" },
-            { name: "Tomat", quantity: 0, unit: "kg" },
-            { name: "Mosh", quantity: 0, unit: "kg" },
-            { name: "Sarimsoqpiyoz", quantity: 0, unit: "kg" },
-            { name: "Kashnush", quantity: 0, unit: "bog'" },
-            { name: "Ukrob", quantity: 0, unit: "bog'" },
-            { name: "Chuchvara", quantity: 0, unit: "kg" },
-            { name: "Bulg'or qalampiri", quantity: 0, unit: "kg" },
-            { name: "Qizil qalampir", quantity: 0, unit: "kg" },
-            { name: "Ko'k qalampir", quantity: 0, unit: "kg" },
-            { name: "Tuz qalampir", quantity: 0, unit: "kg" },
-            { name: "Uksus", quantity: 0, unit: "l" },
-            { name: "Sut", quantity: 0, unit: "l" },
-            { name: "Shakar", quantity: 0, unit: "kg" },
-            { name: "Guruch (Suyuq)", quantity: 0, unit: "kg" },
-            { name: "Sariyog'", quantity: 0, unit: "kg" },
-            { name: "Garnir", quantity: 0, unit: "kg" },
-            { name: "Smeta", quantity: 0, unit: "kg" },
-            { name: "Qaymoq", quantity: 0, unit: "l" },
-            { name: "Qatiq", quantity: 0, unit: "l" },
-            { name: "Selderey poyasi", quantity: 0, unit: "kg" },
-            { name: "Karam", quantity: 0, unit: "kg" },
-            { name: "Gulkaram", quantity: 0, unit: "kg" },
-            { name: "Jo'ja", quantity: 0, unit: "dona" },
-            { name: "Qanotcha", quantity: 0, unit: "kg" }
+            { name: "Kartoshka", quantity: 0, unit: "kg" }
         ];
 
         let ordersDatabase = [];
@@ -433,7 +394,11 @@
             document.querySelectorAll('.section-content').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
             document.getElementById(tabId).classList.add('active');
-            event.target.classList.add('active');
+            event.currentTarget.classList.add('active');
+            
+            if(tabId === 'stats' && statsChartInstance) {
+                statsChartInstance.update();
+            }
         }
 
         function renderAll() {
@@ -441,6 +406,7 @@
             renderMenu();
             renderWarehouse();
             renderOrders();
+            updateStatsInfo();
             saveData();
         }
 
@@ -461,7 +427,14 @@
 
         function renderMenu() {
             const tbody = document.getElementById('menu-table-body');
-            tbody.innerHTML = menuDatabase.map(item => `
+            const searchInput = document.getElementById('menu-search-input');
+            const query = searchInput ? searchInput.value.toLowerCase().trim() : "";
+
+            const filteredMenu = menuDatabase.filter(item => 
+                item.name.toLowerCase().includes(query) || item.category.toLowerCase().includes(query)
+            );
+
+            tbody.innerHTML = filteredMenu.map(item => `
                 <tr>
                     <td>${item.id}</td>
                     <td><input type="text" value="${item.name}" onchange="updateMenuField(${item.id}, 'name', this.value)"></td>
@@ -484,6 +457,32 @@
             if (item) {
                 item[field] = value;
                 saveData();
+            }
+        }
+
+        function addNewMenuItem() {
+            const name = document.getElementById('new-menu-name').value.trim();
+            const category = document.getElementById('new-menu-category').value;
+            const internal_price = Number(document.getElementById('new-menu-internal').value);
+            const sale_price = Number(document.getElementById('new-menu-sale').value);
+
+            if (name && internal_price && sale_price) {
+                const newId = menuDatabase.length > 0 ? Math.max(...menuDatabase.map(m => m.id)) + 1 : 1;
+                menuDatabase.push({
+                    id: newId,
+                    name: name,
+                    category: category,
+                    internal_price: internal_price,
+                    sale_price: sale_price,
+                    is_visible: true
+                });
+                renderAll();
+                document.getElementById('new-menu-name').value = '';
+                document.getElementById('new-menu-internal').value = '';
+                document.getElementById('new-menu-sale').value = '';
+                alert("Yangi mahsulot menyuga qo'shildi!");
+            } else {
+                alert("Iltimos, barcha maydonlarni to'g'ri to'ldiring!");
             }
         }
 
@@ -510,13 +509,10 @@
             }
         }
 
-        // Avtotugallash (Autocomplete) mantiqi
         function handleAutocomplete(val) {
             const listEl = document.getElementById('autocomplete-list');
             listEl.innerHTML = "";
-            if (!val) {
-                return;
-            }
+            if (!val) return;
             
             const matchVal = val.toLowerCase();
             const filtered = warehouseDatabase.filter(item => item.name.toLowerCase().includes(matchVal));
@@ -535,9 +531,7 @@
 
         function closeAllAutocomplete() {
             const listEl = document.getElementById('autocomplete-list');
-            if (listEl) {
-                listEl.innerHTML = "";
-            }
+            if (listEl) listEl.innerHTML = "";
         }
 
         function addWarehouseItem() {
@@ -629,12 +623,66 @@
 
             saveData();
             renderOrders();
+            updateStatsInfo();
+        }
+
+        function updateStatsInfo() {
+            let totalSales = ordersDatabase.filter(o => o.status === 'tayyor').length * 120000 + 450000;
+            document.getElementById('today-sales').innerText = totalSales.toLocaleString() + " so'm";
+            document.getElementById('top-item').innerText = "Toshkent oshi";
+            
+            if(statsChartInstance) {
+                statsChartInstance.data.datasets[0].data = [
+                    Math.floor(totalSales * 0.4), 
+                    Math.floor(totalSales * 0.3), 
+                    Math.floor(totalSales * 0.3)
+                ];
+                statsChartInstance.update();
+            }
+        }
+
+        function initChart() {
+            const ctx = document.getElementById('statsChart').getContext('2d');
+            statsChartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Osh va Milliy taomlar', 'Kaboblar va Somsalar', 'Ichimliklar va Fast-Food'],
+                    datasets: [{
+                        label: 'Savdo ulushi (so\'m)',
+                        data: [550000, 380000, 270000],
+                        backgroundColor: [
+                            '#0288d1',
+                            '#ffb74d',
+                            '#66bb6a'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                font: { size: 11 }
+                            }
+                        },
+                        title: {
+                            display: true,
+                            text: 'Kategoriyalar bo\'yicha savdo statistikasi',
+                            color: '#0d47a1',
+                            font: { size: 14 }
+                        }
+                    }
+                }
+            });
         }
 
         function saveData() {
             localStorage.setItem('admin_menu', JSON.stringify(menuDatabase));
             localStorage.setItem('admin_warehouse', JSON.stringify(warehouseDatabase));
-            localStorage.setItem('admin_orders', JSON.stringify(ordersDatabase));
+            localStorage.setItem('admin_orders', JSON.stringify(admin_orders_fix = ordersDatabase));
         }
 
         setInterval(() => {
@@ -646,6 +694,7 @@
             if (JSON.stringify(combined) !== JSON.stringify(ordersDatabase)) {
                 loadOrdersFromStorage();
                 renderOrders();
+                updateStatsInfo();
             }
         }, 1500);
     </script>

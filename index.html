@@ -126,7 +126,7 @@
     
     <header>
         <h2>Restoran Menyusi</h2>
-        <button onclick="openWaiterModal()" style="background: #ff5722; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-weight: bold;">🔔 Ofitsantni chaqirish</button>
+        <button onclick="openWaiterModal()" style="background: #ff5722; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-weight: bold;">🔔 Ofitsiantni chaqirish</button>
     </header>
 
     <div class="container">
@@ -175,12 +175,16 @@
         </div>
     </div>
 
-    <!-- Ofitsant chaqirish modali -->
+    <!-- Ofitsiant chaqirish modali -->
     <div id="waiter-modal" class="modal">
         <div class="modal-content">
-            <h3>Stol raqamingizni tanlang:</h3>
-            <div id="tables-list" style="display:grid; grid-template-columns: repeat(3, 1fr); gap:10px; margin-top:15px;">
-                <!-- Stollar ro'yxati -->
+            <h3>Stol yoki xonani tanlang:</h3>
+            <div style="display: flex; gap: 10px; margin-top: 10px;">
+                <button id="modal-tab-zal" class="tab-btn active" onclick="switchWaiterModalSection('zal')" style="flex:1; padding: 8px;">Zal (16 stol)</button>
+                <button id="modal-tab-xonalar" class="tab-btn" onclick="switchWaiterModalSection('xonalar')" style="flex:1; padding: 8px;">Xonalar (12 xona)</button>
+            </div>
+            <div id="tables-list" style="display:grid; grid-template-columns: repeat(3, 1fr); gap:10px; margin-top:15px; max-height: 250px; overflow-y: auto;">
+                <!-- Stollar va xonalar ro'yxati dinamik chiqadi -->
             </div>
             <button onclick="closeWaiterModal()" style="margin-top:15px; background:#f44336; color: white; border: none; padding: 10px; width: 100%; border-radius: 5px; cursor: pointer;">Yopish</button>
         </div>
@@ -212,20 +216,62 @@
             }, 5000);
         });
 
+        let currentWaiterModalSection = 'zal';
+
         function openWaiterModal() {
             const modal = document.getElementById('waiter-modal');
+            currentWaiterModalSection = 'zal';
+            updateWaiterModalTabs();
+            renderWaiterModalItems();
+            modal.style.display = 'flex';
+        }
+
+        function switchWaiterModalSection(section) {
+            currentWaiterModalSection = section;
+            updateWaiterModalTabs();
+            renderWaiterModalItems();
+        }
+
+        function updateWaiterModalTabs() {
+            const zalBtn = document.getElementById('modal-tab-zal');
+            const xonalarBtn = document.getElementById('modal-tab-xonalar');
+            if(zalBtn && xonalarBtn) {
+                if(currentWaiterModalSection === 'zal') {
+                    zalBtn.classList.add('active');
+                    zalBtn.style.background = '#1976d2';
+                    zalBtn.style.color = 'white';
+                    xonalarBtn.classList.remove('active');
+                    xonalarBtn.style.background = '#fff';
+                    xonalarBtn.style.color = '#333';
+                } else {
+                    xonalarBtn.classList.add('active');
+                    xonalarBtn.style.background = '#1976d2';
+                    xonalarBtn.style.color = 'white';
+                    zalBtn.classList.remove('active');
+                    zalBtn.style.background = '#fff';
+                    zalBtn.style.color = '#333';
+                }
+            }
+        }
+
+        function renderWaiterModalItems() {
             const tablesList = document.getElementById('tables-list');
             tablesList.innerHTML = '';
             
-            // Misol uchun 12 ta stol hosil qilish (keragicha o'zgartirishingiz mumkin)
-            for(let i = 1; i <= 12; i++) {
+            let count = (currentWaiterModalSection === 'zal') ? 16 : 12;
+            let titlePrefix = (currentWaiterModalSection === 'zal') ? 'Stol #' : 'Xona #';
+            let iconSrc = (currentWaiterModalSection === 'zal') 
+                ? 'https://cdn-icons-png.flaticon.com/512/7067/7067120.png' 
+                : 'https://cdn-icons-png.flaticon.com/512/7845/7845744.png';
+
+            for(let i = 1; i <= count; i++) {
                 tablesList.innerHTML += `
-                    <button class="table-btn" onclick="callWaiter('Stol #${i}')">
-                        <span>Stol #${i}</span>
+                    <button class="table-btn" onclick="callWaiter('${titlePrefix}${i}')">
+                        <img src="${iconSrc}" style="width: 24px; height: 24px; object-fit: contain;" alt="Ikonka">
+                        <span>${titlePrefix}${i}</span>
                     </button>
                 `;
             }
-            modal.style.display = 'flex';
         }
 
         function closeWaiterModal() {

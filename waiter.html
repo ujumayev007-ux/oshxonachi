@@ -171,7 +171,7 @@
             </div>
 
             <div class="header-right">
-                <span id="logged-waiter-name" style="font-weight: bold;">Ofitsiant: Admin</span>
+                <span id="logged-waiter-name" style="font-weight: bold;cursor: pointer;" onclick="changeWaiterName()" title="Ofitsiantni o'zgartirish uchun bosing">Ofitsiant: Admin</span>
                 <button onclick="openHistory()" style="padding: 6px 12px; background: #ff9800; color: white; border: none; border-radius: 5px; cursor: pointer;">Tarix</button>
             </div>
         </div>
@@ -473,9 +473,29 @@
 
         let currentActiveSection = 'zal';
         let currentActiveTableId = null;
-        let activeWaiter = "Ofitsiant";
+        let activeWaiter = localStorage.getItem('activeWaiter') || "Ofitsiant";
         let currentCategoryFilter = 'all';
+        let currentEditingItemIndex = null;
 
+        // Sahifa yuklanganda ofitsiant nomini ekranga chiqarish
+        window.addEventListener('DOMContentLoaded', () => {
+            let waiterSpan = document.getElementById('logged-waiter-name');
+            if(waiterSpan) {
+                waiterSpan.innerText = "Ofitsiant: " + activeWaiter;
+            }
+        });
+
+        function changeWaiterName() {
+            let newName = prompt("Ofitsiant ismini kiriting:", activeWaiter);
+            if(newName && newName.trim() !== "") {
+                activeWaiter = newName.trim();
+                localStorage.setItem('activeWaiter', activeWaiter);
+                let waiterSpan = document.getElementById('logged-waiter-name');
+                if(waiterSpan) {
+                    waiterSpan.innerText = "Ofitsiant: " + activeWaiter;
+                }
+            }
+        }
         window.onload = function() {
             renderItems();
             startRealTimeClock();

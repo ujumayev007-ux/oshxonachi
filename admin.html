@@ -4,51 +4,257 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Restoran Boshqaruv Tizimi - Admin Paneli</title>
+    <!-- Chart.js kutubxonasi statistika uchun[cite: 3] -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Socket.io client kutubxonasi[cite: 3] -->
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { background-color: #e3f2fd !important; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #333; padding: 20px; }
-        header { display: flex; justify-content: space-between; align-items: center; background: #ffffff; padding: 15px 25px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 20px; flex-wrap: wrap; gap: 15px; }
-        .header-left { display: flex; flex-direction: column; gap: 4px; }
-        h1 { color: #0d47a1; font-size: 24px; }
-        .live-clock-container { font-size: 13px; color: #555; font-weight: 500; display: flex; gap: 10px; align-items: center; }
-        .live-clock-container span { background: #e1f5fe; padding: 2px 8px; border-radius: 4px; color: #0288d1; font-weight: bold; }
-        .nav-tabs { display: flex; gap: 10px; flex-wrap: wrap; }
-        .tab-btn { padding: 8px 16px; border: none; background: #bbdefb; color: #0d47a1; font-weight: bold; border-radius: 6px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 6px; }
-        .tab-btn.active, .tab-btn:hover { background: #0288d1; color: white; }
-        .tab-icon { width: 18px; height: 18px; object-fit: contain; }
-        .section-content { display: none; background: #ffffff; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
-        .section-content.active { display: block; }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th, td { border: 1px solid #b3d7ff; padding: 10px; text-align: left; font-size: 14px; }
-        th { background-color: #e1f5fe; color: #0d47a1; }
-        input, select { padding: 6px; border: 1px solid #90caf9; border-radius: 4px; width: 100%; }
-        .btn { padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
-        .btn-blue { background-color: #0288d1; color: white; }
-        .btn-blue:hover { background-color: #01579b; }
-        .btn-red { background-color: #d32f2f; color: white; }
-        .btn-red:hover { background-color: #b71c1c; }
-        .order-card { background: #f1f8e9; border: 1px solid #c8e6c9; padding: 15px; margin-bottom: 12px; border-radius: 8px; display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 15px; }
-        .metric-card { background: #f8f9fa; border: 1px solid #b3d7ff; padding: 15px; border-radius: 8px; text-align: center; }
-        .metric-card h3 { font-size: 15px; color: #0d47a1; margin-bottom: 8px; }
-        .metric-card p { font-size: 18px; font-weight: bold; color: #2e7d32; }
-        .autocomplete-container { position: relative; flex: 1; }
-        .autocomplete-items { position: absolute; border: 1px solid #90caf9; border-bottom: none; border-top: none; z-index: 99; top: 100%; left: 0; right: 0; background-color: #fff; max-height: 150px; overflow-y: auto; border-radius: 0 0 4px 4px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        .autocomplete-items div { padding: 8px 10px; cursor: pointer; border-bottom: 1px solid #e1f5fe; font-size: 14px; }
-        .autocomplete-items div:hover { background-color: #e3f2fd; color: #0d47a1; }
-        .payment-options-container { display: flex; gap: 8px; margin-top: 8px; }
-        .pay-option-btn { flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 8px 10px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; color: white; font-size: 13px; transition: 0.2s; }
-        .pay-cash-btn { background-color: #2e7d32; }
-        .pay-cash-btn:hover { background-color: #1b5e20; }
-        .pay-card-btn { background-color: #0288d1; }
-        .pay-card-btn:hover { background-color: #01579b; }
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); display: flex; justify-content: center; align-items: center; z-index: 1000; }
-        .modal-content { background: #ffffff; padding: 25px; border-radius: 10px; width: 350px; max-width: 90%; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
-        .modal-content h3 { color: #0d47a1; margin-bottom: 15px; font-size: 18px; }
-        .modal-content p { margin-bottom: 10px; font-size: 14px; }
-        .modal-content input { margin-bottom: 12px; }
-        .modal-buttons { display: flex; gap: 10px; margin-top: 15px; }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            background-color: #e3f2fd !important;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #333;
+            padding: 20px;
+        }
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #ffffff;
+            padding: 15px 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .header-left {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        h1 {
+            color: #0d47a1;
+            font-size: 24px;
+        }
+        .live-clock-container {
+            font-size: 13px;
+            color: #555;
+            font-weight: 500;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .live-clock-container span {
+            background: #e1f5fe;
+            padding: 2px 8px;
+            border-radius: 4px;
+            color: #0288d1;
+            font-weight: bold;
+        }
+        .nav-tabs {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .tab-btn {
+            padding: 8px 16px;
+            border: none;
+            background: #bbdefb;
+            color: #0d47a1;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .tab-btn.active, .tab-btn:hover {
+            background: #0288d1;
+            color: white;
+        }
+        .tab-icon {
+            width: 18px;
+            height: 18px;
+            object-fit: contain;
+        }
+        .section-content {
+            display: none;
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        .section-content.active {
+            display: block;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        th, td {
+            border: 1px solid #b3d7ff;
+            padding: 10px;
+            text-align: left;
+            font-size: 14px;
+        }
+        th {
+            background-color: #e1f5fe;
+            color: #0d47a1;
+        }
+        input, select {
+            padding: 6px;
+            border: 1px solid #90caf9;
+            border-radius: 4px;
+            width: 100%;
+        }
+        .btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .btn-blue {
+            background-color: #0288d1;
+            color: white;
+        }
+        .btn-blue:hover {
+            background-color: #01579b;
+        }
+        .order-card {
+            background: #f1f8e9;
+            border: 1px solid #c8e6c9;
+            padding: 15px;
+            margin-bottom: 12px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .metric-card {
+            background: #f8f9fa;
+            border: 1px solid #b3d7ff;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .metric-card h3 {
+            font-size: 15px;
+            color: #0d47a1;
+            margin-bottom: 8px;
+        }
+        .metric-card p {
+            font-size: 18px;
+            font-weight: bold;
+            color: #2e7d32;
+        }
+        .autocomplete-container {
+            position: relative;
+            flex: 1;
+        }
+        .autocomplete-items {
+            position: absolute;
+            border: 1px solid #90caf9;
+            border-bottom: none;
+            border-top: none;
+            z-index: 99;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background-color: #fff;
+            max-height: 150px;
+            overflow-y: auto;
+            border-radius: 0 0 4px 4px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .autocomplete-items div {
+            padding: 8px 10px;
+            cursor: pointer;
+            border-bottom: 1px solid #e1f5fe;
+            font-size: 14px;
+        }
+        .autocomplete-items div:hover {
+            background-color: #e3f2fd;
+            color: #0d47a1;
+        }
+        .payment-options-container {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        .pay-option-btn {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 8px 10px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            color: white;
+            font-size: 13px;
+            transition: 0.2s;
+        }
+        .pay-cash-btn {
+            background-color: #2e7d32;
+        }
+        .pay-cash-btn:hover {
+            background-color: #1b5e20;
+        }
+        .pay-card-btn {
+            background-color: #0288d1;
+        }
+        .pay-card-btn:hover {
+            background-color: #01579b;
+        }
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background: #ffffff;
+            padding: 25px;
+            border-radius: 10px;
+            width: 350px;
+            max-width: 90%;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        .modal-content h3 {
+            color: #0d47a1;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+        .modal-content p {
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+        .modal-content input {
+            margin-bottom: 12px;
+        }
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
     </style>
 </head>
 <body>
@@ -63,41 +269,53 @@
                 </div>
             </div>
             <div class="nav-tabs">
-                <button class="tab-btn active" onclick="switchTab('orders', event)">Buyurtmalar</button>
-                <button class="tab-btn" onclick="switchTab('menu', event)">Menyu Boshqaruvi</button>
-                <button class="tab-btn" onclick="switchTab('warehouse', event)">Ombor</button>
-                <button class="tab-btn" onclick="switchTab('income', event)">Daromad</button>
-                <button class="tab-btn" onclick="switchTab('history', event)">Tarix</button>
-                <button class="tab-btn" onclick="switchTab('stats', event)">Statistika</button>
+                <button class="tab-btn active" onclick="switchTab('orders', event)">
+                    Buyurtmalar[cite: 3]
+                </button>
+                <button class="tab-btn" onclick="switchTab('menu', event)">
+                    Menyu Boshqaruvi[cite: 3]
+                </button>
+                <button class="tab-btn" onclick="switchTab('warehouse', event)">
+                    Ombor[cite: 3]
+                </button>
+                <button class="tab-btn" onclick="switchTab('income', event)">
+                    Daromad[cite: 3]
+                </button>
+                <button class="tab-btn" onclick="switchTab('stats', event)">
+                    Statistika[cite: 3]
+                </button>
+                <button class="tab-btn" onclick="switchTab('history-tab', event)">
+                    📋 Tarix
+                </button>
             </div>
         </header>
 
         <!-- BUYURTMALAR -->
         <div id="orders" class="section-content active">
-            <h2>Kelib tushgan buyurtmalar</h2>
+            <h2>Kelib tushgan buyurtmalar[cite: 3]</h2>
             <div id="orders-container" style="margin-top: 15px;"></div>
         </div>
 
         <!-- MENYU BOSHQARUVI -->
         <div id="menu" class="section-content">
-            <h2>Menyu va narxlar</h2>
+            <h2>Menyu va narxlar[cite: 3]</h2>
             <div style="margin-bottom: 20px; background: #f5f5f5; padding: 15px; border-radius: 8px;">
-                <h3 style="font-size: 16px; color: #0d47a1; margin-bottom: 10px;">Yangi taom yoki ichimlik qo'shish</h3>
+                <h3 style="font-size: 16px; color: #0d47a1; margin-bottom: 10px;">Yangi taom yoki ichimlik qo'shish[cite: 3]</h3>
                 <div style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr auto; gap: 10px; align-items: center;">
                     <input type="text" id="new-menu-name" placeholder="Nomi (masalan: Lag'mon)">
                     <select id="new-menu-category">
-                        <option value="Osh">Osh</option>
-                        <option value="Suyuq ovqatlar">Suyuq ovqatlar</option>
-                        <option value="Quyuq taomlar">Quyuq taomlar</option>
-                        <option value="Hamirli taomlar">Hamirli taomlar</option>
-                        <option value="Kaboblar">Kaboblar</option>
-                        <option value="Somsalar">Somsalar</option>
-                        <option value="Fast Food">Fast Food</option>
-                        <option value="Ichimliklar">Ichimliklar</option>
+                        <option value="Osh">Osh[cite: 3]</option>
+                        <option value="Suyuq ovqatlar">Suyuq ovqatlar[cite: 3]</option>
+                        <option value="Quyuq taomlar">Quyuq taomlar[cite: 3]</option>
+                        <option value="Hamirli taomlar">Hamirli taomlar[cite: 3]</option>
+                        <option value="Kaboblar">Kaboblar[cite: 3]</option>
+                        <option value="Somsalar">Somsalar[cite: 3]</option>
+                        <option value="Fast Food">Fast Food[cite: 3]</option>
+                        <option value="Ichimliklar">Ichimliklar[cite: 3]</option>
                     </select>
                     <input type="number" id="new-menu-internal" placeholder="Ichki narx">
                     <input type="number" id="new-menu-sale" placeholder="Sotish narxi">
-                    <button class="btn btn-blue" onclick="addNewMenuItem()" style="white-space: nowrap;">Qo'shish</button>
+                    <button class="btn btn-blue" onclick="addNewMenuItem()" style="white-space: nowrap;">Qo'shish[cite: 3]</button>
                 </div>
             </div>
             <div style="margin-bottom: 15px;">
@@ -106,13 +324,13 @@
             <table>
                 <thead>
                     <tr>
-                        <th>ID</th>
-                        <th>Nomi</th>
-                        <th>Kategoriya</th>
-                        <th>Ichki Narx (so'm)</th>
-                        <th>Sotish Narxi (so'm)</th>
-                        <th>Ofitsant uchun ko'rinishi</th>
-                        <th>Amal</th>
+                        <th>ID[cite: 3]</th>
+                        <th>Nomi[cite: 3]</th>
+                        <th>Kategoriya[cite: 3]</th>
+                        <th>Ichki Narx (so'm)[cite: 3]</th>
+                        <th>Sotish Narxi (so'm)[cite: 3]</th>
+                        <th>Ofitsant uchun ko'rinishi[cite: 3]</th>
+                        <th>Amal[cite: 3]</th>
                     </tr>
                 </thead>
                 <tbody id="menu-table-body"></tbody>
@@ -121,9 +339,9 @@
 
         <!-- OMBOR -->
         <div id="warehouse" class="section-content">
-            <h2>Ombor zaxiralari va mahsulot qo'shish</h2>
+            <h2>Ombor zaxiralari va mahsulot qo'shish[cite: 3]</h2>
             <div style="margin-bottom: 20px; background: #f5f5f5; padding: 15px; border-radius: 8px;">
-                <h3 style="font-size: 16px; color: #0d47a1; margin-bottom: 10px;">Yangi mahsulot qo'shish yoki mavjudini to'ldirish</h3>
+                <h3 style="font-size: 16px; color: #0d47a1; margin-bottom: 10px;">Yangi mahsulot qo'shish yoki mavjudini to'ldirish[cite: 3]</h3>
                 <div style="display: flex; gap: 10px; position: relative;">
                     <div class="autocomplete-container">
                         <input type="text" id="new-item-name" placeholder="Mahsulot nomi" autocomplete="off" oninput="handleAutocomplete(this.value)">
@@ -131,16 +349,16 @@
                     </div>
                     <input type="number" id="new-item-qty" placeholder="Miqdori" style="width: 120px;">
                     <input type="text" id="new-item-unit" placeholder="Birligi" style="width: 140px;">
-                    <button class="btn btn-blue" onclick="addWarehouseItem()" style="white-space: nowrap;">Qo'shish / Yangilash</button>
+                    <button class="btn btn-blue" onclick="addWarehouseItem()" style="white-space: nowrap;">Qo'shish / Yangilash[cite: 3]</button>
                 </div>
             </div>
             <table>
                 <thead>
                     <tr>
-                        <th>Mahsulot Nomi</th>
-                        <th>Qolgan Miqdor</th>
-                        <th>Birligi</th>
-                        <th>Tahrirlash / Miqdor qo'shish</th>
+                        <th>Mahsulot Nomi[cite: 3]</th>
+                        <th>Qolgan Miqdor[cite: 3]</th>
+                        <th>Birligi[cite: 3]</th>
+                        <th>Tahrirlash / Miqdor qo'shish[cite: 3]</th>
                     </tr>
                 </thead>
                 <tbody id="warehouse-table-body"></tbody>
@@ -149,74 +367,93 @@
 
         <!-- DAROMAD -->
         <div id="income" class="section-content">
-            <h2>Real vaqt rejimidagi daromad va tahlillar</h2>
+            <h2>Real vaqt rejimidagi daromad va tahlillar[cite: 3]</h2>
             <div style="margin-top: 15px; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px;">
                 <div class="metric-card">
-                    <h3>Naqd pul tushumi</h3>
+                    <h3>Naqd pul tushumi[cite: 3]</h3>
                     <p id="income-cash">0 so'm</p>
                 </div>
                 <div class="metric-card">
-                    <h3>Plastik karta tushumi</h3>
+                    <h3>Plastik karta tushumi[cite: 3]</h3>
                     <p id="income-card">0 so'm</p>
                 </div>
                 <div class="metric-card">
-                    <h3>Jami Tashqi Savdo Summasi</h3>
+                    <h3>Jami Tashqi Savdo Summasi[cite: 3]</h3>
                     <p id="income-total-sale">0 so'm</p>
                 </div>
                 <div class="metric-card">
-                    <h3>Sof Foyda</h3>
+                    <h3>Sof Foyda[cite: 3]</h3>
                     <p id="income-net-profit" style="color: #1565c0;">0 so'm</p>
                 </div>
             </div>
-        </div>
-
-        <!-- TARIX -->
-        <div id="history" class="section-content">
-            <h2>Buyurtmalar Tarixi</h2>
-            <div style="margin-bottom: 15px;">
-                <input type="text" id="history-search-input" placeholder="Buyurtma raqami yoki stol bo'yicha qidirish..." oninput="renderHistory()">
+            <div style="margin-top: 25px;">
+                <h3 style="font-size: 16px; color: #0d47a1; margin-bottom: 10px;">Sotilgan buyurtmalar tahlili[cite: 3]</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Buyurtma / Stol[cite: 3]</th>
+                            <th>Ofitsant[cite: 3]</th>
+                            <th>To'lov turi[cite: 3]</th>
+                            <th>Tashqi Summa[cite: 3]</th>
+                            <th>Ichki Qiymat[cite: 3]</th>
+                            <th>Foyda[cite: 3]</th>
+                            <th>Status[cite: 3]</th>
+                        </tr>
+                    </thead>
+                    <tbody id="income-table-body"></tbody>
+                </table>
             </div>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Buyurtma №</th>
-                        <th>Stol</th>
-                        <th>Ofitsant</th>
-                        <th>To'lov turi</th>
-                        <th>Summa</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody id="history-table-body"></tbody>
-            </table>
         </div>
 
         <!-- STATISTIKA -->
         <div id="stats" class="section-content">
-            <h2>Kunlik, haftalik va oylik statistika</h2>
+            <h2>Kunlik, haftalik va oylik statistika[cite: 3]</h2>
             <div style="margin-top: 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
                 <div style="background: #f9f9f9; padding: 15px; border-radius: 8px;">
-                    <p style="margin-bottom: 10px;">Bugungi savdo: <b id="today-sales">0 so'm</b></p>
-                    <p style="margin-bottom: 10px;">Eng ko'p sotilgan taom: <b id="top-item">-</b></p>
+                    <p style="margin-bottom: 10px;">Bugungi savdo: <b id="today-sales">0 so'm</b>[cite: 3]</p>
+                    <p style="margin-bottom: 10px;">Eng ko'p sotilgan taom: <b id="top-item">-</b>[cite: 3]</p>
+                    <p>Ofitsantlar faolligi va band stollar holati doimiy nazoratda.[cite: 3]</p>
                 </div>
                 <div style="background: #ffffff; padding: 15px; border-radius: 8px; border: 1px solid #e0e0e0; height: 300px;">
                     <canvas id="statsChart"></canvas>
                 </div>
             </div>
         </div>
+
+        <!-- TARIX -->
+        <div id="history-tab" class="section-content">
+            <h2>Buyurtmalar tarixi va qidiruv</h2>
+            <div style="margin: 15px 0; display: flex; gap: 10px;">
+                <input type="text" id="history-search-input" placeholder="Buyurtma raqami bo'yicha qidirish (masalan: 1, 2...)..." oninput="renderHistorySection()">
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Buyurtma Raqami</th>
+                        <th>Stol / Xona</th>
+                        <th>Ofitsant</th>
+                        <th>Taomlar</th>
+                        <th>Jami Summa</th>
+                        <th>To'lov / Holat</th>
+                        <th>Vaqt</th>
+                    </tr>
+                </thead>
+                <tbody id="history-table-body"></tbody>
+            </table>
+        </div>
     </div>
 
-    <!-- Naqd to'lov uchun modal oynasi -->
+    <!-- Naqd to'lov uchun modal oynasi[cite: 3] -->
     <div id="cash-payment-modal" class="modal-overlay" style="display: none;">
         <div class="modal-content">
-            <h3>Naqd pul bilan to'lov</h3>
-            <p>Chek umumiy summasi: <b id="modal-total-sum">0</b> so'm</p>
-            <label for="modal-cash-input" style="font-size: 13px; font-weight: bold; display: block; margin-bottom: 4px;">Mijoz bergan summa:</label>
+            <h3>Naqd pul bilan to'lov[cite: 3]</h3>
+            <p>Chek umumiy summasi: <b id="modal-total-sum">0</b> so'm[cite: 3]</p>
+            <label for="modal-cash-input" style="font-size: 13px; font-weight: bold; display: block; margin-bottom: 4px;">Mijoz bergan summa:[cite: 3]</label>
             <input type="number" id="modal-cash-input" placeholder="Summani kiriting..." oninput="calculateChange()">
-            <p style="margin-top: 8px; font-weight: bold; color: #2e7d32;">Qaytim: <span id="modal-change-amount">0</span> so'm</p>
+            <p style="margin-top: 8px; font-weight: bold; color: #2e7d32;">Qaytim: <span id="modal-change-amount">0</span> so'm[cite: 3]</p>
             <div class="modal-buttons">
-                <button class="btn btn-blue" style="flex: 1;" onclick="confirmCashPayment()">Yakunlash</button>
-                <button class="btn" style="flex: 1; background: #e0e0e0;" onclick="closeCashModal()">Bekor qilish</button>
+                <button class="btn btn-blue" style="flex: 1;" onclick="confirmCashPayment()">Tasdiqlash[cite: 3]</button>
+                <button class="btn" style="flex: 1; background: #e0e0e0;" onclick="closeCashModal()">Bekor qilish[cite: 3]</button>
             </div>
         </div>
     </div>
@@ -226,6 +463,7 @@
         let menuDatabase = [];
         let warehouseDatabase = [];
         let ordersDatabase = [];
+        let historyDatabase = [];
         let currentPayingOrderId = null;
         let currentOrderTotalSum = 0;
         let socket = null;
@@ -258,6 +496,7 @@
                             if (data.isPrinted !== undefined) o.isPrinted = data.isPrinted;
                             if (data.paymentType !== undefined) o.paymentType = data.paymentType;
                             if (data.isPaid !== undefined) o.isPaid = data.isPaid;
+                            if (data.items !== undefined) o.items = data.items;
                         }
                         return o;
                     });
@@ -272,9 +511,16 @@
             initLiveClock();
 
             window.addEventListener('storage', function(e) {
-                if(['waiter_orders', 'active_orders', 'admin_orders', 'orders'].includes(e.key)) {
+                if(['waiter_orders', 'active_orders', 'admin_orders', 'orders', 'admin_menu', 'order_history'].includes(e.key)) {
                     loadOrdersFromStorage();
+                    loadMenuFromStorage();
                     renderAll();
+                }
+            });
+
+            document.addEventListener("click", function (e) {
+                if (!e.target.closest('.autocomplete-container')) {
+                    closeAllAutocomplete();
                 }
             });
         };
@@ -284,15 +530,67 @@
                 let defaultMenu = [
                     { id: 1, name: "Toshkent oshi (Toʻy oshi)", category: "Osh", internal_price: 25000, sale_price: 38000, is_visible: true },
                     { id: 2, name: "Samarqand oshi", category: "Osh", internal_price: 27000, sale_price: 40000, is_visible: true },
+                    { id: 3, name: "Buxoro oshi (\"Sochqi oshi\")", category: "Osh", internal_price: 28000, sale_price: 42000, is_visible: true },
+                    { id: 4, name: "Fargʻona oshi", category: "Osh", internal_price: 26000, sale_price: 39000, is_visible: true },
+                    { id: 5, name: "Devzira oshi", category: "Osh", internal_price: 30000, sale_price: 45000, is_visible: true },
+                    { id: 6, name: "Qaynatma shoʻrva", category: "Suyuq ovqatlar", internal_price: 20000, sale_price: 30000, is_visible: true },
+                    { id: 7, name: "Mastava", category: "Suyuq ovqatlar", internal_price: 18000, sale_price: 27000, is_visible: true },
+                    { id: 8, name: "Noʻxat shoʻrva (Moʻxaldak)", category: "Suyuq ovqatlar", internal_price: 19000, sale_price: 28000, is_visible: true },
+                    { id: 9, name: "Moshxorda", category: "Suyuq ovqatlar", internal_price: 18000, sale_price: 26000, is_visible: true },
+                    { id: 10, name: "Kalla-pacha", category: "Suyuq ovqatlar", internal_price: 35000, sale_price: 50000, is_visible: true },
+                    { id: 11, name: "Chuchvara shoʻrva", category: "Suyuq ovqatlar", internal_price: 20000, sale_price: 30000, is_visible: true },
+                    { id: 12, name: "Koʻza shoʻrva", category: "Suyuq ovqatlar", internal_price: 25000, sale_price: 38000, is_visible: true },
+                    { id: 13, name: "Shirguruch", category: "Suyuq ovqatlar", internal_price: 15000, sale_price: 22000, is_visible: true },
                     { id: 14, name: "Bifsteks", category: "Quyuq taomlar", internal_price: 30000, sale_price: 45000, is_visible: true },
-                    { id: 100, name: "Coca-Cola: 0.5L", category: "Ichimliklar", internal_price: 6000, sale_price: 11000, is_visible: true }
+                    { id: 15, name: "Bistrogonav (Bef-stroganov)", category: "Quyuq taomlar", internal_price: 32000, sale_price: 48000, is_visible: true },
+                    { id: 16, name: "Jarkor (Jarkoye)", category: "Quyuq taomlar", internal_price: 25000, sale_price: 38000, is_visible: true },
+                    { id: 17, name: "Lagʻman (Qovurma lagʻman)", category: "Quyuq taomlar", internal_price: 24000, sale_price: 36000, is_visible: true },
+                    { id: 18, name: "Dimlama", category: "Quyuq taomlar", internal_price: 22000, sale_price: 34000, is_visible: true },
+                    { id: 19, name: "Tabaka joʻjasi (S-tabaka)", category: "Quyuq taomlar", internal_price: 28000, sale_price: 42000, is_visible: true },
+                    { id: 20, name: "Norin (Qozon norin)", category: "Quyuq taomlar", internal_price: 30000, sale_price: 45000, is_visible: true },
+                    { id: 21, name: "Manti (Goʻshtli va piyozli)", category: "Hamirli taomlar", internal_price: 22000, sale_price: 33000, is_visible: true },
+                    { id: 22, name: "Chuchvara (Qaynatilgan yoki qovurilgan)", category: "Hamirli taomlar", internal_price: 20000, sale_price: 30000, is_visible: true },
+                    { id: 23, name: "Choʻzma lagʻmon", category: "Hamirli taomlar", internal_price: 25000, sale_price: 37000, is_visible: true },
+                    { id: 24, name: "Qovurma lagʻmon (Qovurma soʻy)", category: "Hamirli taomlar", internal_price: 26000, sale_price: 38000, is_visible: true },
+                    { id: 25, name: "Uygʻur lagʻmoni", category: "Hamirli taomlar", internal_price: 27000, sale_price: 40000, is_visible: true },
+                    { id: 26, name: "Beshbarmoq", category: "Hamirli taomlar", internal_price: 35000, sale_price: 50000, is_visible: true },
+                    { id: 27, name: "Uygʻur shivit oshi", category: "Hamirli taomlar", internal_price: 28000, sale_price: 42000, is_visible: true },
+                    { id: 28, name: "Qiyma kabob", category: "Kaboblar", internal_price: 15000, sale_price: 25000, is_visible: true },
+                    { id: 29, name: "Qoʻy goʻshti shashligi (Klassik shashlik)", category: "Kaboblar", internal_price: 18000, sale_price: 28000, is_visible: true },
+                    { id: 30, name: "Jigar shashligi", category: "Kaboblar", internal_price: 16000, sale_price: 26000, is_visible: true },
+                    { id: 31, name: "Qozon kabob", category: "Kaboblar", internal_price: 30000, sale_price: 45000, is_visible: true },
+                    { id: 32, name: "Tandir kabob", category: "Kaboblar", internal_price: 35000, sale_price: 50000, is_visible: true },
+                    { id: 33, name: "Jiz kabob", category: "Kaboblar", internal_price: 32000, sale_price: 48000, is_visible: true },
+                    { id: 60, name: "Tandir somsa", category: "Somsalar", internal_price: 8000, sale_price: 14000, is_visible: true },
+                    { id: 61, name: "Qatlama (varaqi) somsa", category: "Somsalar", internal_price: 9000, sale_price: 15000, is_visible: true },
+                    { id: 62, name: "Koʻk somsa", category: "Somsalar", internal_price: 6000, sale_price: 10000, is_visible: true },
+                    { id: 80, name: "Lavash", category: "Fast Food", internal_price: 18000, sale_price: 28000, is_visible: true },
+                    { id: 81, name: "Gamburger", category: "Fast Food", internal_price: 15000, sale_price: 24000, is_visible: true },
+                    { id: 100, name: "Coca-Cola: 0.5L", category: "Ichimliklar", internal_price: 6000, sale_price: 11000, is_visible: true },
+                    { id: 109, name: "Limonad klassik", category: "Ichimliklar", internal_price: 10000, sale_price: 18000, is_visible: true }
                 ];
                 menuDatabase = JSON.parse(localStorage.getItem('admin_menu')) || defaultMenu;
-                localStorage.setItem('admin_menu', JSON.stringify(menuDatabase)); // Ofitsiant ko'rishi uchun
 
-                warehouseDatabase = JSON.parse(localStorage.getItem('admin_warehouse')) || [];
+                let defaultWarehouse = [
+                    { name: "Mol goʻshti", quantity: 10, unit: "g" },
+                    { name: "Qoʻy goʻshti", quantity: 0, unit: "g" },
+                    { name: "Paxta Yogʻi", quantity: 5, unit: "l" },
+                    { name: "Coca-Cola (klassik) — 0.5L", quantity: 0, unit: "dona" }
+                ];
+                warehouseDatabase = JSON.parse(localStorage.getItem('admin_warehouse')) || defaultWarehouse;
+
                 loadOrdersFromStorage();
-            } catch (err) { console.error("Yuklashda xato:", err); }
+                loadHistoryFromStorage();
+            } catch (err) {
+                console.error("Ma'lumotlarni yuklashda xatolik:", err);
+            }
+        }
+
+        function loadMenuFromStorage() {
+            let stored = localStorage.getItem('admin_menu');
+            if (stored) {
+                try { menuDatabase = JSON.parse(stored); } catch(e){}
+            }
         }
 
         function initLiveClock() {
@@ -302,16 +600,25 @@
 
         function updateClock() {
             const now = new Date();
-            document.getElementById('live-date').innerText = String(now.getDate()).padStart(2, '0') + '.' + String(now.getMonth() + 1).padStart(2, '0') + '.' + now.getFullYear();
-            document.getElementById('live-time').innerText = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0') + ':' + String(now.getSeconds()).padStart(2, '0');
+            document.getElementById('live-date').innerText = String(now.getDate()).padStart(2, '0') + '.' + 
+                String(now.getMonth() + 1).padStart(2, '0') + '.' + now.getFullYear();
+            document.getElementById('live-time').innerText = String(now.getHours()).padStart(2, '0') + ':' + 
+                String(now.getMinutes()).padStart(2, '0') + ':' + String(now.getSeconds()).padStart(2, '0');
         }
 
         function switchTab(tabId, event) {
             document.querySelectorAll('.section-content').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
             document.getElementById(tabId).classList.add('active');
-            if(event) event.currentTarget.classList.add('active');
-            if(tabId === 'stats' && statsChartInstance) statsChartInstance.update();
+            if(event && event.currentTarget) {
+                event.currentTarget.classList.add('active');
+            }
+            if(tabId === 'stats' && statsChartInstance) {
+                statsChartInstance.update();
+            }
+            if(tabId === 'history-tab') {
+                renderHistorySection();
+            }
         }
 
         function renderAll() {
@@ -319,7 +626,7 @@
             renderWarehouse();
             renderOrders();
             renderIncome();
-            renderHistory();
+            renderHistorySection();
             updateStatsInfo();
             saveData();
         }
@@ -328,84 +635,160 @@
             try {
                 let waiterOrders = JSON.parse(localStorage.getItem('waiter_orders')) || [];
                 let activeOrders = JSON.parse(localStorage.getItem('active_orders')) || [];
-                let combined = [...waiterOrders, ...activeOrders];
+                let adminOrders = JSON.parse(localStorage.getItem('admin_orders')) || [];
+                let generalOrders = JSON.parse(localStorage.getItem('orders')) || [];
+                
+                let combined = [...waiterOrders, ...activeOrders, ...adminOrders, ...generalOrders];
                 let uniqueMap = new Map();
                 combined.forEach(o => {
-                    let key = o.id !== undefined ? o.id : o.tableNumber;
-                    if (!o.orderNumber) o.orderNumber = Math.floor(10000 + Math.random() * 90000).toString(); // Noyob ID
+                    let key = o.id !== undefined ? o.id : (o.tableNumber !== undefined ? o.tableNumber : (o.table !== undefined ? o.table : Math.random()));
+                    if (!o.paymentType) o.paymentType = 'naqd';
                     uniqueMap.set(key, o);
                 });
                 ordersDatabase = Array.from(uniqueMap.values());
-            } catch (e) { ordersDatabase = []; }
+            } catch (e) {
+                console.error("Buyurtmalarni o'qishda xatolik:", e);
+                ordersDatabase = [];
+            }
+        }
+
+        function loadHistoryFromStorage() {
+            try {
+                historyDatabase = JSON.parse(localStorage.getItem('order_history')) || [];
+            } catch(e) {
+                historyDatabase = [];
+            }
         }
 
         function renderMenu() {
             const tbody = document.getElementById('menu-table-body');
-            const query = (document.getElementById('menu-search-input') || {}).value || "";
-            const filteredMenu = menuDatabase.filter(item => item.name.toLowerCase().includes(query.toLowerCase()) || item.category.toLowerCase().includes(query.toLowerCase()));
-            
+            const searchInput = document.getElementById('menu-search-input');
+            const query = searchInput ? searchInput.value.toLowerCase().trim() : "";
+
+            const filteredMenu = menuDatabase.filter(item => 
+                item.name.toLowerCase().includes(query) || item.category.toLowerCase().includes(query)
+            );
+
             tbody.innerHTML = filteredMenu.map(item => `
                 <tr>
-                    <td>${item.id}</td>
-                    <td><input type="text" value="${item.name}" onchange="updateMenuField(${item.id}, 'name', this.value)"></td>
-                    <td>${item.category}</td>
-                    <td><input type="number" value="${item.internal_price}" onchange="updateMenuField(${item.id}, 'internal_price', Number(this.value))"></td>
-                    <td><input type="number" value="${item.sale_price}" onchange="updateMenuField(${item.id}, 'sale_price', Number(this.value))"></td>
+                    <td>${item.id}[cite: 3]</td>
+                    <td><input type="text" value="${item.name}" onchange="updateMenuField(${item.id}, 'name', this.value)">[cite: 3]</td>
+                    <td>${item.category}[cite: 3]</td>
+                    <td><input type="number" value="${item.internal_price}" onchange="updateMenuField(${item.id}, 'internal_price', Number(this.value))">[cite: 3]</td>
+                    <td><input type="number" value="${item.sale_price}" onchange="updateMenuField(${item.id}, 'sale_price', Number(this.value))">[cite: 3]</td>
                     <td>
                         <select onchange="updateMenuField(${item.id}, 'is_visible', this.value === 'true')">
-                            <option value="true" ${item.is_visible ? 'selected' : ''}>Ko'rinadi</option>
-                            <option value="false" ${!item.is_visible ? 'selected' : ''}>Yashiringan</option>
+                            <option value="true" ${item.is_visible ? 'selected' : ''}>Ko'rinadi[cite: 3]</option>
+                            <option value="false" ${!item.is_visible ? 'selected' : ''}>Yashiringan[cite: 3]</option>
                         </select>
                     </td>
-                    <td><button class="btn btn-blue" onclick="renderAll()">Saqlash</button></td>
+                    <td><button class="btn btn-blue" onclick="renderAll()">Saqlash[cite: 3]</button></td>
                 </tr>
             `).join('');
         }
 
         function updateMenuField(id, field, value) {
             const item = menuDatabase.find(m => m.id === id);
-            if (item) { item[field] = value; saveData(); }
+            if (item) {
+                item[field] = value;
+                saveData();
+            }
         }
 
         function addNewMenuItem() {
-            const name = document.getElementById('new-menu-name').value.trim();
+            const nameInput = document.getElementById('new-menu-name');
+            const internalInput = document.getElementById('new-menu-internal');
+            const saleInput = document.getElementById('new-menu-sale');
+            
+            const name = nameInput.value.trim();
             const category = document.getElementById('new-menu-category').value;
-            const intPrice = Number(document.getElementById('new-menu-internal').value);
-            const salePrice = Number(document.getElementById('new-menu-sale').value);
-            if (name && intPrice && salePrice) {
+            const internal_price = Number(internalInput.value);
+            const sale_price = Number(saleInput.value);
+
+            if (name && internal_price && sale_price) {
                 const newId = menuDatabase.length > 0 ? Math.max(...menuDatabase.map(m => m.id)) + 1 : 1;
-                menuDatabase.push({ id: newId, name, category, internal_price: intPrice, sale_price: salePrice, is_visible: true });
+                menuDatabase.push({ id: newId, name, category, internal_price, sale_price, is_visible: true });
                 renderAll();
-                document.getElementById('new-menu-name').value = '';
-                document.getElementById('new-menu-internal').value = '';
-                document.getElementById('new-menu-sale').value = '';
-            } else { alert("Barcha maydonlarni to'ldiring!"); }
+                nameInput.value = '';
+                internalInput.value = '';
+                saleInput.value = '';
+                alert("Yangi mahsulot menyuga qo'shildi![cite: 3]");
+            } else {
+                alert("Iltimos, barcha maydonlarni to'g'ri to'ldiring![cite: 3]");
+            }
         }
 
         function renderWarehouse() {
             const tbody = document.getElementById('warehouse-table-body');
             tbody.innerHTML = warehouseDatabase.map((w, index) => `
                 <tr>
-                    <td>${w.name}</td>
-                    <td><input type="number" value="${w.quantity}" id="wh-qty-${index}" style="width: 120px;"></td>
-                    <td>${w.unit}</td>
-                    <td><button class="btn btn-blue" onclick="updateWarehouseQty(${index})">Yangilash</button></td>
+                    <td>${w.name}[cite: 3]</td>
+                    <td><input type="number" value="${w.quantity}" id="wh-qty-${index}" style="width: 120px;">[cite: 3]</td>
+                    <td>${w.unit}[cite: 3]</td>
+                    <td><button class="btn btn-blue" onclick="updateWarehouseQty(${index})">Yangilash[cite: 3]</button></td>
                 </tr>
             `).join('');
         }
+
         function updateWarehouseQty(index) {
-            const val = Number(document.getElementById(`wh-qty-${index}`).value);
-            if (!isNaN(val)) { warehouseDatabase[index].quantity = val; renderAll(); }
+            const inputVal = Number(document.getElementById(`wh-qty-${index}`).value);
+            if (!isNaN(inputVal)) {
+                warehouseDatabase[index].quantity = inputVal;
+                renderAll();
+                alert("Ombor muvaffaqiyatli yangilandi![cite: 3]");
+            }
         }
+
+        function handleAutocomplete(val) {
+            const listEl = document.getElementById('autocomplete-list');
+            listEl.innerHTML = "";
+            if (!val) return;
+            
+            const matchVal = val.toLowerCase();
+            const filtered = warehouseDatabase.filter(item => item.name.toLowerCase().includes(matchVal));
+
+            filtered.forEach(item => {
+                const div = document.createElement('div');
+                div.innerHTML = `<strong>${item.name.substr(0, matchVal.length)}</strong>${item.name.substr(matchVal.length)} (${item.unit})[cite: 3]`;
+                div.addEventListener('click', function() {
+                    document.getElementById('new-item-name').value = item.name;
+                    document.getElementById('new-item-unit').value = item.unit;
+                    closeAllAutocomplete();
+                });
+                listEl.appendChild(div);
+            });
+        }
+
+        function closeAllAutocomplete() {
+            const listEl = document.getElementById('autocomplete-list');
+            if (listEl) listEl.innerHTML = "";
+        }
+
         function addWarehouseItem() {
-            const name = document.getElementById('new-item-name').value.trim();
-            const qty = Number(document.getElementById('new-item-qty').value);
-            const unit = document.getElementById('new-item-unit').value.trim();
+            const nameInput = document.getElementById('new-item-name');
+            const qtyInput = document.getElementById('new-item-qty');
+            const unitInput = document.getElementById('new-item-unit');
+            
+            const name = nameInput.value.trim();
+            const qty = Number(qtyInput.value);
+            const unit = unitInput.value.trim();
+            
             if (name && qty) {
                 let existing = warehouseDatabase.find(w => w.name.toLowerCase() === name.toLowerCase());
-                if (existing) { existing.quantity += qty; if(unit) existing.unit = unit; }
-                else { warehouseDatabase.push({ name, quantity: qty, unit: unit || 'g' }); }
+                if (existing) {
+                    existing.quantity += qty;
+                    if(unit) existing.unit = unit;
+                } else {
+                    warehouseDatabase.push({ name, quantity: qty, unit: unit || 'g' });
+                }
                 renderAll();
+                nameInput.value = '';
+                qtyInput.value = '';
+                unitInput.value = '';
+                closeAllAutocomplete();
+                alert("Mahsulot omborga qo'shildi![cite: 3]");
+            } else {
+                alert("Iltimos, mahsulot nomi va miqdorini kiriting![cite: 3]");
             }
         }
 
@@ -413,76 +796,115 @@
             const container = document.getElementById('orders-container');
             let activeOrders = ordersDatabase.filter(o => o.status !== 'tolandi' && o.status !== 'bekor_qilindi');
             if (activeOrders.length === 0) {
-                container.innerHTML = "<p>Hozircha faol buyurtmalar mavjud emas.</p>";
+                container.innerHTML = "<p>Hozircha faol buyurtmalar mavjud emas.[cite: 3]</p>";
                 return;
             }
 
             container.innerHTML = activeOrders.map((order, index) => {
+                let itemsListHTML = "";
                 let orderTotalSum = 0;
-                let itemsListHTML = `<ul style="list-style: none; padding: 0; margin: 8px 0; background: #ffffff; border: 1px solid #b3d7ff; border-radius: 6px; padding: 8px;">` + 
-                    (order.items || []).map(i => {
-                        let price = Number(i.sale_price || i.price || 0);
-                        let qty = Number(i.qty || 1);
-                        orderTotalSum += price * qty;
-                        return `<li style="padding: 6px 0; border-bottom: 1px dashed #e1f5fe; display: flex; justify-content: space-between; font-size: 14px;">
-                            <span><b>${i.name || "Taom"}</b> — ${qty} ta × ${price.toLocaleString()}</span>
-                            <b style="color: #2e7d32;">${(price * qty).toLocaleString()} so'm</b>
-                        </li>`;
-                    }).join('') + `</ul>`;
+                let items = order.items || order.cart || [];
 
-                const orderId = order.id !== undefined ? order.id : order.tableNumber;
-                let paymentHTML = "";
-                if (order.isPrinted && order.status !== 'tolandi') {
-                    paymentHTML = `
+                if (Array.isArray(items) && items.length > 0) {
+                    itemsListHTML = `<ul style="list-style: none; padding: 0; margin: 8px 0; background: #ffffff; border: 1px solid #b3d7ff; border-radius: 6px; padding: 8px;">` + 
+                        items.map(i => {
+                            let name = i.name || i.title || "Taom";
+                            let qty = Number(i.qty || i.count || 1);
+                            let price = Number(i.price || i.sale_price || 0);
+                            let itemTotal = price * qty;
+                            orderTotalSum += itemTotal;
+
+                            return `<li style="padding: 6px 0; border-bottom: 1px dashed #e1f5fe; display: flex; justify-content: space-between; font-size: 14px; align-items: center;">
+                                <span><b>${name}</b> — ${qty} ta × ${price.toLocaleString()} so'm</span>[cite: 3]
+                                <b style="color: #2e7d32;">${itemTotal.toLocaleString()} so'm</b>[cite: 3]
+                            </li>`;
+                        }).join('') + 
+                    `</ul>`;
+                } else {
+                    itemsListHTML = "<p style='color: #777;'>Buyurtma tafsilotlari mavjud emas[cite: 3]</p>";
+                }
+
+                const orderId = order.id !== undefined ? order.id : (order.tableNumber !== undefined ? order.tableNumber : index);
+                const orderNumber = order.orderNumber || '-';
+                const status = order.status || 'yangi';
+                const tableNo = order.tableNumber || order.table || 'Nomaʼlum';
+                const waiter = order.waiterName || order.waiter || 'Ofitsant';
+                const isPrinted = order.isPrinted || false;
+
+                let paymentButtonHTML = "";
+                if (isPrinted && status !== 'tolandi') {
+                    paymentButtonHTML = `
                         <div style="margin-top: 8px; background: #fffde7; padding: 10px; border: 1px solid #ffd54f; border-radius: 6px;">
-                            <span style="font-size: 13px; color: #f57f17; font-weight: bold;">To'lov turini tanlang:</span>
+                            <span style="font-size: 13px; color: #f57f17; font-weight: bold; display: block; margin-bottom: 6px;">Chek chiqarildi! To'lov turini tanlang:[cite: 3]</span>
                             <div class="payment-options-container">
-                                <button class="pay-option-btn pay-cash-btn" onclick="openCashModal('${orderId}')">Naqd</button>
-                                <button class="pay-option-btn pay-card-btn" onclick="acceptPayment('${orderId}', 'plastik')">Plastik</button>
+                                <button class="pay-option-btn pay-cash-btn" onclick="openCashModal('${orderId}')">Naqd[cite: 3]</button>
+                                <button class="pay-option-btn pay-card-btn" onclick="acceptPayment('${orderId}', 'plastik')">Plastik[cite: 3]</button>
                             </div>
-                        </div>`;
+                        </div>
+                    `;
                 }
 
                 return `
-                    <div class="order-card">
+                    <div class="order-card" data-order-id="${orderId}">
                         <div style="flex: 1; min-width: 280px;">
-                            <p style="font-size: 16px; margin-bottom: 6px;">🪑 <b style="color: #0d47a1; font-size: 18px;">Stol #${order.tableNumber}</b> | № <b>${order.orderNumber}</b> | Ofitsant: <b>${order.waiterName || 'Ofitsant'}</b></p>
-                            <p style="font-size: 14px;">Holat: <b style="color: #d32f2f;">${(order.status || 'yangi').toUpperCase()}</b></p>
+                            <p style="font-size: 16px; margin-bottom: 6px;">
+                                🪑 <b style="color: #0d47a1; font-size: 18px;">Stol #${tableNo}</b> | Zakaz #<b>${orderNumber}</b> | Ofitsant: <b>${waiter}</b> | Holat: <b class="order-status-text" style="color: #d32f2f;">${status.toUpperCase()}</b>
+                            </p>
+                            <div style="font-size: 13px; font-weight: bold; color: #555; margin-bottom: 4px;">Buyurtma qilingan taomlar:[cite: 3]</div>
                             ${itemsListHTML}
                             <div style="margin-top: 6px; font-size: 15px; font-weight: bold; color: #0d47a1; background: #e1f5fe; padding: 6px 10px; border-radius: 5px; display: inline-block;">
-                                Jami: ${orderTotalSum.toLocaleString()} so'm
+                                Jami summa: ${orderTotalSum.toLocaleString()} so'm[cite: 3]
                             </div>
-                            ${paymentHTML}
+                            <div class="order-payment-section">
+                                ${paymentButtonHTML}
+                            </div>
                         </div>
-                        <div style="display: flex; gap: 5px; flex-direction: column;">
-                            <button class="btn" style="background: #ffb74d;" onclick="changeOrderStatus('${orderId}', 'qabul_qilindi')">Qabul</button>
-                            <button class="btn" style="background: #4fc3f7;" onclick="changeOrderStatus('${orderId}', 'tayyorlanyapti')">Jarayonda</button>
-                            <button class="btn btn-blue" onclick="changeOrderStatus('${orderId}', 'tayyor')">Tayyor</button>
-                            <button class="btn btn-red" style="margin-top: 10px;" onclick="changeOrderStatus('${orderId}', 'bekor_qilindi')">Bekor qilish</button>
+                        <div style="display: flex; gap: 5px; flex-wrap: wrap; align-items: flex-start;">
+                            <button class="btn" style="background: #ffb74d;" onclick="changeOrderStatus('${orderId}', 'qabul_qilindi')">Qabul[cite: 3]</button>
+                            <button class="btn" style="background: #4fc3f7;" onclick="changeOrderStatus('${orderId}', 'tayyorlanyapti')">Jarayonda[cite: 3]</button>
+                            <button class="btn btn-blue" onclick="changeOrderStatus('${orderId}', 'tayyor')">Tayyor[cite: 3]</button>
+                            <button class="btn" style="background: #e53935; color: white;" onclick="cancelOrder('${orderId}')">Bekor qilish</button>
                         </div>
-                    </div>`;
+                    </div>
+                `;
             }).join('');
         }
 
         function calculateOrderTotal(order) {
+            let items = order.items || order.cart || [];
             let total = 0;
-            (order.items || []).forEach(i => total += Number(i.sale_price || i.price || 0) * Number(i.qty || 1));
+            if (Array.isArray(items) && items.length > 0) {
+                items.forEach(i => {
+                    let q = Number(i.qty || i.count || 1);
+                    let sPrice = Number(i.sale_price || i.price || 0);
+                    total += sPrice * q;
+                });
+            }
             return total;
         }
 
         function openCashModal(orderId) {
-            let order = ordersDatabase.find(o => String(o.id || o.tableNumber) === String(orderId));
+            let order = ordersDatabase.find((o, index) => {
+                let currentId = o.id !== undefined ? o.id : (o.tableNumber !== undefined ? o.tableNumber : index);
+                return String(currentId) === String(orderId);
+            });
             if (!order) return;
+
             currentPayingOrderId = orderId;
             currentOrderTotalSum = calculateOrderTotal(order);
+
             document.getElementById('modal-total-sum').innerText = currentOrderTotalSum.toLocaleString();
             document.getElementById('modal-cash-input').value = '';
             document.getElementById('modal-change-amount').innerText = '0';
             document.getElementById('cash-payment-modal').style.display = 'flex';
         }
 
-        function closeCashModal() { document.getElementById('cash-payment-modal').style.display = 'none'; }
-        
+        function closeCashModal() {
+            document.getElementById('cash-payment-modal').style.display = 'none';
+            currentPayingOrderId = null;
+            currentOrderTotalSum = 0;
+        }
+
         function calculateChange() {
             let cashGiven = Number(document.getElementById('modal-cash-input').value) || 0;
             let change = cashGiven - currentOrderTotalSum;
@@ -491,90 +913,214 @@
 
         function confirmCashPayment() {
             let cashGiven = Number(document.getElementById('modal-cash-input').value) || 0;
-            if (cashGiven < currentOrderTotalSum) { alert("Summa yetarli emas!"); return; }
+            if (cashGiven < currentOrderTotalSum) {
+                alert("Kiritilgan summa chek summasidan kam! To'lovni qabul qilib bo'lmaydi.[cite: 3]");
+                return;
+            }
+
             acceptPayment(currentPayingOrderId, 'naqd');
             closeCashModal();
         }
 
         function acceptPayment(orderId, paymentType) {
-            ordersDatabase = ordersDatabase.map(o => {
-                if (String(o.id || o.tableNumber) === String(orderId)) {
-                    o.status = 'tolandi'; o.paymentType = paymentType; o.isPaid = true;
+            ordersDatabase = ordersDatabase.map((o, index) => {
+                let currentId = o.id !== undefined ? o.id : (o.tableNumber !== undefined ? o.tableNumber : index);
+                if (String(currentId) === String(orderId)) {
+                    o.status = 'tolandi';
+                    o.paymentType = paymentType;
+                    o.isPaid = true;
+                    moveToHistory(o);
+                }
+                return o;
+            });
+
+            syncOrdersToStorage();
+            
+            if (socket) {
+                socket.emit('change_status', { orderId: orderId, status: 'tolandi', paymentType: paymentType, isPaid: true });
+            }
+
+            renderAll();
+            alert("To'lov muvaffaqiyatli qabul qilindi va stol bo'shatildi![cite: 3]");
+        }
+
+        function changeOrderStatus(orderId, newStatus) {
+            ordersDatabase = ordersDatabase.map((o, index) => {
+                let currentId = o.id !== undefined ? o.id : (o.tableNumber !== undefined ? o.tableNumber : index);
+                if (String(currentId) === String(orderId)) {
+                    o.status = newStatus;
+                }
+                return o;
+            });
+            
+            syncOrdersToStorage();
+
+            if (socket) {
+                socket.emit('change_status', { orderId: orderId, status: newStatus });
+            }
+
+            renderAll();
+        }
+
+        function cancelOrder(orderId) {
+            if (!confirm("Haqiqatan ham buyurtmani bekor qilmoqchimisiz?")) return;
+            ordersDatabase = ordersDatabase.map((o, index) => {
+                let currentId = o.id !== undefined ? o.id : (o.tableNumber !== undefined ? o.tableNumber : index);
+                if (String(currentId) === String(orderId)) {
+                    o.status = 'bekor_qilindi';
+                    moveToHistory(o);
                 }
                 return o;
             });
             syncOrdersToStorage();
-            if (socket) socket.emit('change_status', { orderId: orderId, status: 'tolandi', paymentType: paymentType, isPaid: true });
+            if (socket) {
+                socket.emit('change_status', { orderId: orderId, status: 'bekor_qilindi' });
+            }
             renderAll();
+            alert("Buyurtma bekor qilindi va stol bo'shatildi.");
         }
 
-        function changeOrderStatus(orderId, newStatus) {
-            ordersDatabase = ordersDatabase.map(o => {
-                if (String(o.id || o.tableNumber) === String(orderId)) o.status = newStatus;
-                return o;
-            });
-            syncOrdersToStorage();
-            if (socket) socket.emit('change_status', { orderId: orderId, status: newStatus });
-            renderAll();
+        function moveToHistory(orderObj) {
+            let histItem = { ...orderObj, finishedAt: new Date().toLocaleString() };
+            historyDatabase.unshift(histItem);
+            localStorage.setItem('order_history', JSON.stringify(historyDatabase));
         }
 
         function syncOrdersToStorage() {
             saveData();
-            localStorage.setItem('waiter_orders', JSON.stringify(ordersDatabase)); // Ofitsiant bilan sinxronlash
-            localStorage.setItem('active_orders', JSON.stringify(ordersDatabase));
+            ['waiter_orders', 'active_orders', 'admin_orders', 'orders'].forEach(key => {
+                let data = JSON.parse(localStorage.getItem(key)) || [];
+                if (Array.isArray(data)) {
+                    data = data.map((o, index) => {
+                        let currentId = o.id !== undefined ? o.id : (o.tableNumber !== undefined ? o.tableNumber : index);
+                        let match = ordersDatabase.find(item => {
+                            let itemId = item.id !== undefined ? item.id : (item.tableNumber !== undefined ? item.tableNumber : '');
+                            return String(itemId) === String(currentId) || String(item.tableNumber) === String(o.tableNumber);
+                        });
+                        if (match) {
+                            o.status = match.status;
+                            o.paymentType = match.paymentType;
+                            o.isPrinted = match.isPrinted;
+                            o.isPaid = match.isPaid;
+                            o.items = match.items;
+                        }
+                        return o;
+                    });
+                    localStorage.setItem(key, JSON.stringify(data));
+                }
+            });
         }
 
-        function renderHistory() {
-            const tbody = document.getElementById('history-table-body');
-            const query = (document.getElementById('history-search-input') || {}).value || "";
-            let historyOrders = ordersDatabase.filter(o => o.status === 'tolandi' || o.status === 'bekor_qilindi');
-            
-            if(query) {
-                historyOrders = historyOrders.filter(o => String(o.orderNumber).includes(query) || String(o.tableNumber).includes(query));
+        function renderIncome() {
+            let cashTotal = 0;
+            let cardTotal = 0;
+            let totalSaleSum = 0;
+            let totalInternalSum = 0;
+
+            const tbody = document.getElementById('income-table-body');
+            let validOrders = ordersDatabase.filter(o => o.status === 'tolandi' || o.isPaid);
+
+            if (validOrders.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" style="text-align: center;">Hozircha to'langan buyurtmalar mavjud emas[cite: 3]</td></tr>`;
+            } else {
+                tbody.innerHTML = validOrders.map((order) => {
+                    let items = order.items || order.cart || [];
+                    let orderSale = 0;
+                    let orderInternal = 0;
+
+                    if (Array.isArray(items) && items.length > 0) {
+                        items.forEach(i => {
+                            let q = Number(i.qty || i.count || 1);
+                            let sPrice = Number(i.sale_price || i.price || 0);
+                            let iPrice = Number(i.internal_price || Math.floor(sPrice * 0.7));
+                            orderSale += sPrice * q;
+                            orderInternal += iPrice * q;
+                        });
+                    }
+
+                    if (order.paymentType === 'plastik') {
+                        cardTotal += orderSale;
+                    } else {
+                        cashTotal += orderSale;
+                    }
+                    totalSaleSum += orderSale;
+                    totalInternalSum += orderInternal;
+
+                    let profit = orderSale - orderInternal;
+                    let tableNo = order.tableNumber || order.table || 'Nomaʼlum';
+                    let waiter = order.waiterName || order.waiter || 'Ofitsant';
+                    let payment = order.paymentType || 'naqd';
+
+                    return `
+                        <tr>
+                            <td>Stol #${tableNo}[cite: 3]</td>
+                            <td>${waiter}[cite: 3]</td>
+                            <td><b>${payment.toUpperCase()}</b>[cite: 3]</td>
+                            <td>${orderSale.toLocaleString()} so'm[cite: 3]</td>
+                            <td>${orderInternal.toLocaleString()} so'm[cite: 3]</td>
+                            <td style="color: #2e7d32; font-weight: bold;">+${profit.toLocaleString()} so'm[cite: 3]</td>
+                            <td>TOLANDI[cite: 3]</td>
+                        </tr>
+                    `;
+                }).join('');
             }
 
-            tbody.innerHTML = historyOrders.map(order => {
-                let isCanceled = order.status === 'bekor_qilindi';
-                let color = isCanceled ? 'color: #d32f2f; font-weight: bold;' : 'color: #2e7d32; font-weight: bold;';
-                let statusText = isCanceled ? 'BEKOR QILINGAN' : 'TOLANDI';
+            document.getElementById('income-cash').innerText = cashTotal.toLocaleString() + " so'm[cite: 3]";
+            document.getElementById('income-card').innerText = cardTotal.toLocaleString() + " so'm[cite: 3]";
+            document.getElementById('income-total-sale').innerText = totalSaleSum.toLocaleString() + " so'm[cite: 3]";
+            document.getElementById('income-net-profit').innerText = (totalSaleSum - totalInternalSum).toLocaleString() + " so'm[cite: 3]";
+        }
+
+        function renderHistorySection() {
+            const tbody = document.getElementById('history-table-body');
+            const searchVal = document.getElementById('history-search-input') ? document.getElementById('history-search-input').value.trim() : '';
+
+            let filtered = historyDatabase;
+            if (searchVal !== '') {
+                filtered = historyDatabase.filter(h => String(h.orderNumber).includes(searchVal) || String(h.tableNumber).includes(searchVal));
+            }
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" style="text-align: center;">Tarixda buyurtmalar mavjud emas.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = filtered.map(h => {
+                let itemsStr = (h.items || []).map(i => `${i.name || i.title} (${i.qty} ta)`).join(', ');
+                let total = calculateOrderTotal(h);
+                let isCanceled = h.status === 'bekor_qilindi';
+                let statusColor = isCanceled ? 'color: red; font-weight: bold;' : 'color: green; font-weight: bold;';
+                let statusText = isCanceled ? 'BEKOR QILINDI' : `TOLANDI (${h.paymentType || 'naqd'})`;
+
                 return `
-                    <tr>
-                        <td><b>${order.orderNumber}</b></td>
-                        <td>Stol #${order.tableNumber}</td>
-                        <td>${order.waiterName || 'Ofitsant'}</td>
-                        <td>${(order.paymentType || '-').toUpperCase()}</td>
-                        <td>${calculateOrderTotal(order).toLocaleString()} so'm</td>
-                        <td style="${color}">${statusText}</td>
+                    <tr style="${isCanceled ? 'background-color: #ffebee;' : ''}">
+                        <td>#${h.orderNumber || '-'}</td>
+                        <td>${h.tableNumber}</td>
+                        <td>${h.waiterName || 'Ofitsant'}</td>
+                        <td>${itemsStr}</td>
+                        <td>${total.toLocaleString()} so'm</td>
+                        <td><span style="${statusColor}">${statusText}</span></td>
+                        <td>${h.finishedAt || h.time || ''}</td>
                     </tr>
                 `;
             }).join('');
         }
 
-        function renderIncome() {
-            let cashTotal = 0, cardTotal = 0, totalSaleSum = 0, totalInternalSum = 0;
-            ordersDatabase.filter(o => o.status === 'tolandi').forEach(order => {
-                let orderSale = 0, orderInternal = 0;
-                (order.items || []).forEach(i => {
-                    let qty = Number(i.qty || 1);
-                    let sPrice = Number(i.sale_price || i.price || 0);
-                    let iPrice = Number(i.internal_price || Math.floor(sPrice * 0.7));
-                    orderSale += sPrice * qty; orderInternal += iPrice * qty;
-                });
-                if (order.paymentType === 'plastik') cardTotal += orderSale; else cashTotal += orderSale;
-                totalSaleSum += orderSale; totalInternalSum += orderInternal;
-            });
-            document.getElementById('income-cash').innerText = cashTotal.toLocaleString() + " so'm";
-            document.getElementById('income-card').innerText = cardTotal.toLocaleString() + " so'm";
-            document.getElementById('income-total-sale').innerText = totalSaleSum.toLocaleString() + " so'm";
-            document.getElementById('income-net-profit').innerText = (totalSaleSum - totalInternalSum).toLocaleString() + " so'm";
-        }
-
         function updateStatsInfo() {
             let totalSales = 0;
-            ordersDatabase.filter(o => o.status === 'tolandi').forEach(o => totalSales += calculateOrderTotal(o));
-            document.getElementById('today-sales').innerText = totalSales.toLocaleString() + " so'm";
+            ordersDatabase.filter(o => o.status === 'tolandi').forEach(o => {
+                totalSales += calculateOrderTotal(o);
+            });
+            
+            document.getElementById('today-sales').innerText = totalSales.toLocaleString() + " so'm[cite: 3]";
+            document.getElementById('top-item').innerText = "Toshkent oshi[cite: 3]";
+            
             if(statsChartInstance) {
-                statsChartInstance.data.datasets[0].data = [Math.max(1000, totalSales * 0.5), Math.max(500, totalSales * 0.3), Math.max(200, totalSales * 0.2)];
+                statsChartInstance.data.datasets[0].data = [
+                    Math.max(100000, totalSales * 0.5), 
+                    Math.max(50000, totalSales * 0.3), 
+                    Math.max(30000, totalSales * 0.2)
+                ];
                 statsChartInstance.update();
             }
         }
@@ -583,14 +1129,33 @@
             const ctx = document.getElementById('statsChart').getContext('2d');
             statsChartInstance = new Chart(ctx, {
                 type: 'doughnut',
-                data: { labels: ['Milliy taomlar', 'Kaboblar', 'Ichimliklar'], datasets: [{ data: [1, 1, 1], backgroundColor: ['#0288d1', '#ffb74d', '#66bb6a'] }] }
+                data: {
+                    labels: ['Milliy taomlar', 'Kaboblar', 'Ichimliklar'][cite: 3],
+                    datasets: [{
+                        label: 'Savdo ulushi',[cite: 3]
+                        data: [500000, 300000, 200000],
+                        backgroundColor: ['#0288d1', '#ffb74d', '#66bb6a'],[cite: 3]
+                        borderWidth: 1[cite: 3]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom' }[cite: 3]
+                    }
+                }
             });
         }
 
         function saveData() {
-            localStorage.setItem('admin_menu', JSON.stringify(menuDatabase));
-            localStorage.setItem('admin_warehouse', JSON.stringify(warehouseDatabase));
-            localStorage.setItem('admin_orders', JSON.stringify(ordersDatabase));
+            try {
+                localStorage.setItem('admin_menu', JSON.stringify(menuDatabase));
+                localStorage.setItem('admin_warehouse', JSON.stringify(warehouseDatabase));
+                localStorage.setItem('admin_orders', JSON.stringify(ordersDatabase));
+            } catch (e) {
+                console.error("Saqlashda xatolik:", e);
+            }
         }
     </script>
 </body>

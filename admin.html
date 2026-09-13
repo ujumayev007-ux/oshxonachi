@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Restoran Boshqaruv Tizimi - Admin Paneli</title>
+    <title>Restoran Admin Paneli</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
     <style>
@@ -364,7 +364,6 @@
             if (item) {
                 item[field] = value;
                 saveData();
-                // Ofitsiant panellari bilan sinxronlash uchun localStorage'ni yangilaymiz
                 localStorage.setItem('admin_menu', JSON.stringify(menuDatabase));
             }
         }

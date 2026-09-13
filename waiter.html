@@ -269,42 +269,24 @@
 
         let tablesState = {};
 
-    // Menyuni localStorage'dan o'qiymiz, agar u bo'sh bo'lsa yuqoridagi taomlarni zaxira sifatida beramiz
-    let fullMenu = JSON.parse(localStorage.getItem('admin_menu')) || [
-        { id: 1, category: "Osh", name: "Toshkent oshi (Toʻy oshi)", price: 35000 },
-        { id: 2, category: "Osh", name: "Samarqand oshi", price: 38000 },
-        { id: 3, category: "Osh", name: "Buxoro oshi", price: 40000 },
-        { id: 10, category: "Suyuq ovqatlar", name: "Qaynatma shoʻrva", price: 25000 },
-        { id: 11, category: "Suyuq ovqatlar", name: "Mastava", price: 22000 },
-        { id: 20, category: "Quyuq taomlar", name: "Bifsteks", price: 38000 },
-        { id: 21, category: "Quyuq taomlar", name: "Lagʻman (Qovurma lagʻman)", price: 32000 },
-        { id: 30, category: "Hamirli taomlar", name: "Manti (Goʻshtli)", price: 6000 },
-        { id: 40, category: "Kaboblar", name: "Qiyma kabob", price: 16000 },
-        { id: 41, category: "Kaboblar", name: "Qoʻy goʻshti shashligi", price: 20000 },
-        { id: 80, category: "Somsalar", name: "Tandir somsa", price: 10000 },
-        { id: 110, category: "Fast Food", name: "Lavash", price: 32000 },
-        { id: 111, category: "Fast Food", name: "Gamburger", price: 30000 },
-        { id: 140, category: "Ichimliklar", name: "Coca-Cola - 0.5L", price: 10000 }
-    ];
+        const fullMenu = [
+            { id: 1, category: "Osh", name: "Toshkent oshi (Toʻy oshi)", price: 35000 },
+            { id: 2, category: "Osh", name: "Samarqand oshi", price: 38000 },
+            { id: 3, category: "Osh", name: "Buxoro oshi", price: 40000 },
+            { id: 10, category: "Suyuq ovqatlar", name: "Qaynatma shoʻrva", price: 25000 },
+            { id: 11, category: "Suyuq ovqatlar", name: "Mastava", price: 22000 },
+            { id: 20, category: "Quyuq taomlar", name: "Bifsteks", price: 38000 },
+            { id: 21, category: "Quyuq taomlar", name: "Lagʻman (Qovurma lagʻman)", price: 32000 },
+            { id: 30, category: "Hamirli taomlar", name: "Manti (Goʻshtli)", price: 6000 },
+            { id: 40, category: "Kaboblar", name: "Qiyma kabob", price: 16000 },
+            { id: 41, category: "Kaboblar", name: "Qoʻy goʻshti shashligi", price: 20000 },
+            { id: 80, category: "Somsalar", name: "Tandir somsa", price: 10000 },
+            { id: 110, category: "Fast Food", name: "Lavash", price: 32000 },
+            { id: 111, category: "Fast Food", name: "Gamburger", price: 30000 },
+            { id: 140, category: "Ichimliklar", name: "Coca-Cola - 0.5L", price: 10000 }
+        ];
 
-    // Menyuni localStorage'dan yangilab oluvchi funksiya
-    function loadMenuFromStorage() {
-        const savedMenu = localStorage.getItem('admin_menu');
-        if (savedMenu) {
-            fullMenu = JSON.parse(savedMenu);
-        }
-        // Agar ochiq turgan stol oynasi (modal) bo'lsa, menyuni ekranda yangilaymiz
-        if (typeof renderModalMenu === 'function') {
-            renderModalMenu();
-        }
-    }
-
-// Sahifa yuklanganda ishga tushishi
-document.addEventListener('DOMContentLoaded', () => {
-    loadMenuFromStorage();
-});
-
-window.onload = function() {
+       window.onload = function() {
     try {
         socket = io('https://oshxonachi-server.onrender.com', {
             reconnection: true,
@@ -330,7 +312,7 @@ window.onload = function() {
             addCallNotification(data.tableNumber);
         });
 
-        // Serverdan kelgan buyurtmalar ro'yxati bilan ofitsiant ekranini sinxronlash
+        // QO'SHILGAN QISM: Serverdan kelgan buyurtmalar ro'yxati bilan ofitsiant ekranini sinxronlash
         socket.on('update_orders', (serverOrders) => {
             if (Array.isArray(serverOrders)) {
                 localStorage.setItem('waiter_orders', JSON.stringify(serverOrders));
@@ -338,22 +320,9 @@ window.onload = function() {
                 renderTables();
             }
         });
-
-        // Admin menyuni o'zgartirganda ofitsiant ekranida avtomatik yangilanishi uchun:
-        socket.on('menu_updated', (updatedMenu) => {
-            if (Array.isArray(updatedMenu)) {
-                fullMenu = updatedMenu;
-                localStorage.setItem('admin_menu', JSON.stringify(updatedMenu));
-                if (typeof renderMenu === 'function') {
-                    renderMenu();
-                }
-            }
-        });
-
     } catch (error) {
         console.error("Socketni ishga tushirishda xatolik:", error);
     }
-}
 
     initClock();
     loadOrdersFromStorage();

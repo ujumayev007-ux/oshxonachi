@@ -286,48 +286,48 @@
             { id: 140, category: "Ichimliklar", name: "Coca-Cola - 0.5L", price: 10000 }
         ];
 
-        window.onload = function() {
-            try {
-                socket = io(SOCKET_URL, {
-                    reconnection: true,
-                    reconnectionAttempts: 20,
-                    reconnectionDelay: 1000,
-                    timeout: 30000
-                });
+       window.onload = function() {
+    try {
+        socket = io('https://oshxonachi-server.onrender.com', {
+            reconnection: true,
+            reconnectionAttempts: 20,
+            reconnectionDelay: 1000,
+            timeout: 30000
+        });
 
-                socket.on('connect', () => {
-                    console.log("Ofitsiant paneli Render serveriga muvaffaqiyatli ulandi!");
-                });
+        socket.on('connect', () => {
+            console.log("Ofitsiant paneli Render serveriga muvaffaqiyatli ulandi!");
+        });
 
-                socket.on('connect_error', (err) => {
-                    console.error("Serverga ulanishda xatolik yuz berdi:", err);
-                });
+        socket.on('connect_error', (err) => {
+            console.error("Serverga ulanishda xatolik yuz berdi:", err);
+        });
 
-                socket.on('status_updated', (data) => {
-                    updateLocalTableStatus(data.orderId, data.status, data.isPrinted, data.isPaid);
-                });
+        socket.on('status_updated', (data) => {
+            updateLocalTableStatus(data.orderId, data.status, data.isPrinted, data.isPaid);
+        });
 
-                socket.on('call_waiter', (data) => {
-                    playNotificationSound();
-                    addCallNotification(data.tableNumber);
-                });
+        socket.on('call_waiter', (data) => {
+            playNotificationSound();
+            addCallNotification(data.tableNumber);
+        });
 
-                // QO'SHILGAN QISM: Serverdan kelgan buyurtmalar ro'yxati bilan ofitsiant ekranini sinxronlash
-                socket.on('update_orders', (serverOrders) => {
-                    if (Array.isArray(serverOrders)) {
-                        localStorage.setItem('waiter_orders', JSON.stringify(serverOrders));
-                        loadOrdersFromStorage();
-                        renderTables();
-                    }
-                });
-            } catch (error) {
-                console.error("Socketni ishga tushirishda xatolik:", error);
+        // QO'SHILGAN QISM: Serverdan kelgan buyurtmalar ro'yxati bilan ofitsiant ekranini sinxronlash
+        socket.on('update_orders', (serverOrders) => {
+            if (Array.isArray(serverOrders)) {
+                localStorage.setItem('waiter_orders', JSON.stringify(serverOrders));
+                loadOrdersFromStorage();
+                renderTables();
             }
+        });
+    } catch (error) {
+        console.error("Socketni ishga tushirishda xatolik:", error);
+    }
 
-            initClock();
-            loadOrdersFromStorage();
-            renderTables();
-        };
+    initClock();
+    loadOrdersFromStorage();
+    renderTables();
+};
 
         function updateLocalTableStatus(tableOrOrderId, newStatus, isPrinted, isPaid) {
             try {

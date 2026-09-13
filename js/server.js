@@ -20,7 +20,7 @@ io.on('connection', (socket) => {
     socket.emit('init_orders', orders);
 
     // Yangi buyurtma kelganda (ofitsiant tomonidan yuborilganda)
-    socket.op('new_order', (orderData) => {
+    socket.on('new_order', (orderData) => {
         const newOrder = {
             id: Date.now(),
             items: orderData.items,
@@ -33,7 +33,13 @@ io.on('connection', (socket) => {
         // Barcha ulangan panelga (admin va ofitsiantlarga) yangi buyurtmani tarqatish
         io.emit('update_orders', orders);
     });
+socket.on('call_waiter', (data) => {
+        io.emit('call_waiter', data);
+    });
 
+    socket.on('waiter_on_the_way', (data) => {
+        io.emit('waiter_on_the_way', data);
+    });
     // Admin panelidan buyurtma holatini o'zgartirganda (Qabul / Jarayonda / Tayyor)
     socket.on('change_status', ({ orderId, status }) => {
         const order = orders.find(o => o.id === orderId);

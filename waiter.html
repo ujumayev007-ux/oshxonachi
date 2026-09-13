@@ -5,9 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ofitsiant Paneli</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Socket.io Kutubxonasi (Yangi qo'shildi) -->
+    <!-- Socket.io Kutubxonasi -->
     <script src="/socket.io/socket.io.js"></script>
-</head>
     <style>
         * {
             box-sizing: border-box;
@@ -243,6 +242,22 @@
     </div>
 
     <script>
+        // Socket.io ulanishini sozlash
+        const socket = io();
+
+        socket.on('connect', () => {
+            console.log('Socket.io serverga muvaffaqiyatli ulandi:', socket.id);
+        });
+
+        // Admin yoki boshqa qurilmalardan stol holati o'zgarganda avtomatik yangilash
+        socket.on('refreshTables', () => {
+            renderItems();
+        });
+
+        socket.on('tableUpdated', () => {
+            renderItems();
+        });
+
         const fullMenu = [
             { id: 1, category: "Osh", name: "Toshkent oshi (Toʻy oshi)", price: 35000, img: "https://images.unsplash.com/photo-1633964913295-ceb43826e7c9?w=100" },
             { id: 2, category: "Osh", name: "Samarqand oshi", price: 38000, img: "https://images.unsplash.com/photo-1633964913295-ceb43826e7c9?w=100" },
@@ -733,6 +748,9 @@
             let generalOrders = JSON.parse(localStorage.getItem('orders')) || [];
             generalOrders.push(orderObj);
             localStorage.setItem('orders', JSON.stringify(generalOrders));
+
+            // Socket.io orqali yangi buyurtmani serverga/admin paneliga yuborish
+            socket.emit('newOrder', orderObj);
 
             alert("Buyurtma admin paneliga muvaffaqiyatli yuborildi!");
             closeModal();

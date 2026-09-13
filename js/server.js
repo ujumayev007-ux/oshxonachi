@@ -29,18 +29,30 @@ io.on('connection', (socket) => {
     // Barcha buyurtmalarni yangi ulangan panelga yuborish
     socket.emit('init_orders', orders);
 
-    // Yangi buyurtma kelganda (ofitsiant tomonidan yuborilganda)
+    // Yangi buyurtma kelganda yoki mavjud buyurtma yangilanganda
     socket.on('new_order', (orderData) => {
-        const newOrder = {
-            id: Date.now(),
-            items: orderData.items,
-            table: orderData.table,
-            status: 'Qabul qilindi', // Boshlang'ich holati
-            createdAt: new Date().toLocaleTimeString()
-        };
-        orders.push(newOrder);
+        const existingIndex = orders.findIndex(o => 
+            String(o.table) === String(orderData.table) || 
+            String(o.id) === String(orderData.id)
+        );
 
-        // Barcha ulangan panellarga yangi buyurtmani tarqatish
+        if (existingIndex !== -1) {
+            orders[existingIndex] = {
+                ...orders[existingIndex],
+                ...orderData
+            };
+        } else {
+            const newOrder = {
+                id: orderData.id || Date.now(),
+                items: orderData.items,
+                table: orderData.table,
+                status: orderData.status || 'Qabul qilindi',
+                createdAt: orderData.createdAt || new Date().toLocaleTimeString()
+            };
+            orders.push(newOrder);
+        }
+
+        // Barcha ulangan panellarga yangilangan ro'yxatni tarqatish
         io.emit('update_orders', orders);
     });
 
@@ -53,7 +65,6 @@ io.on('connection', (socket) => {
     socket.on('waiter_on_the_way', (data) => {
         io.emit('waiter_on_the_way', data);
     });
-
     // Admin panelidan buyurtma holatini o'zgartirganda (Qabul / Jarayonda / Tayyor)
     socket.on('change_status', ({ orderId, status }) => {
         const order = orders.find(o => o.id === orderId);

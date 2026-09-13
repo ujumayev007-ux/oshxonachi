@@ -452,43 +452,9 @@
             if (typeof io !== 'undefined') {
                 socket = io();
 
-                // Yangi buyurtma kelganda qo'shish
-                socket.on('newOrder', (order) => {
-                    let key = order.orderId || order.id || order.tableNumber;
-                    let existingIndex = ordersDatabase.findIndex(o => {
-                        let oKey = o.orderId || o.id || o.tableNumber;
-                        return String(oKey) === String(key);
-                    });
-
-                    if (existingIndex !== -1) {
-                        ordersDatabase[existingIndex] = { ...ordersDatabase[existingIndex], ...order };
-                    } else {
-                        ordersDatabase.push(order);
-                    }
-                    syncOrdersToStorage();
-                    renderAll();
-                });
-
-                // Mavjud buyurtma yangilanganda (Dublikat yaratmasdan update qilish)
-                socket.on('orderUpdated', (order) => {
-                    let key = order.orderId || order.id || order.tableNumber;
-                    let index = ordersDatabase.findIndex(o => {
-                        let oKey = o.orderId || o.id || o.tableNumber;
-                        return String(oKey) === String(key);
-                    });
-
-                    if (index !== -1) {
-                        ordersDatabase[index] = { ...ordersDatabase[index], ...order };
-                    } else {
-                        ordersDatabase.push(order);
-                    }
-                    syncOrdersToStorage();
-                    renderAll();
-                });
-
                 socket.on('status_updated', (data) => {
                     ordersDatabase = ordersDatabase.map((o, index) => {
-                        let currentId = o.orderId !== undefined ? o.orderId : (o.id !== undefined ? o.id : (o.tableNumber !== undefined ? o.tableNumber : index));
+                        let currentId = o.id !== undefined ? o.id : (o.tableNumber !== undefined ? o.tableNumber : index);
                         if (String(currentId) === String(data.orderId)) {
                             o.status = data.status;
                             if (data.isPrinted !== undefined) o.isPrinted = data.isPrinted;
@@ -498,6 +464,17 @@
                         return o;
                     });
                     syncOrdersToStorage();
+                    renderAll();
+                });
+
+                // Real-time listener: Ofitsiant buyurtmaga o'zgartirish kiritsa yoki yangi buyurtma yuborsa admin panelda darhol yangilanishi uchun
+                socket.on('order_updated', (data) => {
+                    loadOrdersFromStorage();
+                    renderAll();
+                });
+
+                socket.on('new_order', (data) => {
+                    loadOrdersFromStorage();
                     renderAll();
                 });
             }
@@ -518,7 +495,8 @@
                 let savedWaiterOrders = JSON.parse(localStorage.getItem('waiter_orders')) || [];
                 let savedActiveOrders = JSON.parse(localStorage.getItem('active_orders')) || [];
                 let savedAdminOrders = JSON.parse(localStorage.getItem('admin_orders')) || [];
-                let combined = [...savedWaiterOrders, ...savedActiveOrders, ...savedAdminOrders];
+                let savedGeneralOrders = JSON.parse(localStorage.getItem('orders')) || [];
+                let combined = [...savedWaiterOrders, ...savedActiveOrders, ...savedAdminOrders, ...savedGeneralOrders];
                 
                 if (JSON.stringify(combined) !== JSON.stringify(ordersDatabase)) {
                     loadOrdersFromStorage();
@@ -692,7 +670,7 @@
                 let combined = [...waiterOrders, ...activeOrders, ...adminOrders, ...generalOrders];
                 let uniqueMap = new Map();
                 combined.forEach(o => {
-                    let key = o.orderId !== undefined ? o.orderId : (o.id !== undefined ? o.id : (o.tableNumber !== undefined ? o.tableNumber : (o.table !== undefined ? o.table : Math.random())));
+                    let key = o.id !== undefined ? o.id : (o.tableNumber !== undefined ? o.tableNumber : (o.table !== undefined ? o.table : Math.random()));
                     if (!o.paymentType) o.paymentType = 'naqd';
                     uniqueMap.set(key, o);
                 });
@@ -851,11 +829,10 @@
                     itemsList = "Buyurtma tafsilotlari";
                 }
 
-                const orderId = order.orderId !== undefined ? order.orderId : (order.id !== undefined ? order.id : (order.tableNumber !== undefined ? order.tableNumber : index));
+                const orderId = order.id !== undefined ? order.id : (order.tableNumber !== undefined ? order.tableNumber : index);
                 const status = order.status || 'yangi';
                 const tableNo = order.tableNumber || order.table || 'Nomaʼlum';
                 const waiter = order.waiterName || order.waiter || 'Ofitsant';
-                const guests = order.guests !== undefined ? order.guests : (order.guestsCount || '-');
                 const isPrinted = order.isPrinted || false;
 
                 let paymentButtonHTML = "";
@@ -874,7 +851,7 @@
                 return `
                     <div class="order-card" data-order-id="${orderId}">
                         <div>
-                            <p style="font-size: 16px; margin-bottom: 4px;">🪑 <b style="color: #0d47a1; font-size: 18px;">Stol #${tableNo}</b> | Mehmonlar: <b>${guests}</b> | Ofitsant: <b>${waiter}</b> | Holat: <b class="order-status-text">${status.toUpperCase()}</b></p>
+                            <p style="font-size: 16px; margin-bottom: 4px;">🪑 <b style="color: #0d47a1; font-size: 18px;">Stol #${tableNo}</b> | Ofitsant: <b>${waiter}</b> | Holat: <b class="order-status-text">${status.toUpperCase()}</b></p>
                             <p><b>Buyurtma:</b> ${itemsList}</p>
                             <div class="order-payment-section">
                                 ${paymentButtonHTML}
@@ -907,7 +884,7 @@
 
         function openCashModal(orderId) {
             let order = ordersDatabase.find((o, index) => {
-                let currentId = o.orderId !== undefined ? o.orderId : (o.id !== undefined ? o.id : (o.tableNumber !== undefined ? o.tableNumber : index));
+                let currentId = o.id !== undefined ? o.id : (o.tableNumber !== undefined ? o.tableNumber : index);
                 return String(currentId) === String(orderId);
             });
             if (!order) return;
@@ -946,7 +923,7 @@
 
         function acceptPayment(orderId, paymentType) {
             ordersDatabase = ordersDatabase.map((o, index) => {
-                let currentId = o.orderId !== undefined ? o.orderId : (o.id !== undefined ? o.id : (o.tableNumber !== undefined ? o.tableNumber : index));
+                let currentId = o.id !== undefined ? o.id : (o.tableNumber !== undefined ? o.tableNumber : index);
                 if (String(currentId) === String(orderId)) {
                     o.status = 'tolandi';
                     o.paymentType = paymentType;
@@ -967,7 +944,7 @@
 
         function changeOrderStatus(orderId, newStatus) {
             ordersDatabase = ordersDatabase.map((o, index) => {
-                let currentId = o.orderId !== undefined ? o.orderId : (o.id !== undefined ? o.id : (o.tableNumber !== undefined ? o.tableNumber : index));
+                let currentId = o.id !== undefined ? o.id : (o.tableNumber !== undefined ? o.tableNumber : index);
                 if (String(currentId) === String(orderId)) {
                     o.status = newStatus;
                 }
@@ -989,9 +966,9 @@
                 let data = JSON.parse(localStorage.getItem(key)) || [];
                 if (Array.isArray(data)) {
                     data = data.map((o, index) => {
-                        let currentId = o.orderId !== undefined ? o.orderId : (o.id !== undefined ? o.id : (o.tableNumber !== undefined ? o.tableNumber : index));
+                        let currentId = o.id !== undefined ? o.id : (o.tableNumber !== undefined ? o.tableNumber : index);
                         let match = ordersDatabase.find(item => {
-                            let itemId = item.orderId !== undefined ? item.orderId : (item.id !== undefined ? item.id : (item.tableNumber !== undefined ? item.tableNumber : ''));
+                            let itemId = item.id !== undefined ? item.id : (item.tableNumber !== undefined ? item.tableNumber : '');
                             return String(itemId) === String(currentId);
                         });
                         if (match) {
@@ -999,8 +976,6 @@
                             o.paymentType = match.paymentType;
                             o.isPrinted = match.isPrinted;
                             o.isPaid = match.isPaid;
-                            o.items = match.items;
-                            o.guests = match.guests;
                         }
                         return o;
                     });

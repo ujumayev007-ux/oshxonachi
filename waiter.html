@@ -293,9 +293,7 @@
                     console.log("Ofitsiant paneli serverga ulandi!");
                 });
 
-                // ADMIN statusni o'zgartirganda real vaqt rejimida avtomatik qabul qilish
                 socket.on('status_updated', (data) => {
-                    console.log("Status yangilanishi keldi:", data);
                     updateLocalTableStatus(data.orderId, data.status, data.isPrinted, data.isPaid);
                 });
 
@@ -539,7 +537,6 @@
 
             localStorage.setItem('waiter_orders', JSON.stringify(waiterOrders));
 
-            // Socket orqali Admin panelga real vaqt rejimida yuborish
             if (socket) {
                 socket.emit('new_order', orderData);
             }

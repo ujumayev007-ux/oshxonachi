@@ -5,8 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ofitsiant Paneli</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Socket.io client kutubxonasi (Render serveridan yuklanadi) -->
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <!-- QR Code Generator kutubxonasi -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
         * {
             box-sizing: border-box;
@@ -192,19 +193,19 @@
             <div id="realtime-clock" class="top-left-clock"></div>
 
             <div class="header-center">
-                <button id="folder-zal" class="folder-btn active" onclick="switchSection('zal')">Zal</button>
-                <button id="folder-xonalar" class="folder-btn" onclick="switchSection('xonalar')">Xonalar</button>
+                <button id="folder-zal" class="folder-btn active" onclick="switchSection('zal')">Zal[cite: 4]</button>
+                <button id="folder-xonalar" class="folder-btn" onclick="switchSection('xonalar')">Xonalar[cite: 4]</button>
             </div>
 
             <div class="header-right">
-                <span id="logged-waiter-name" style="font-weight: bold;cursor: pointer;" onclick="changeWaiterName()" title="Ofitsiantni o'zgartirish uchun bosing">Ofitsiant: Admin</span>
-                <button onclick="openHistory()" style="padding: 6px 12px; background: #ff9800; color: white; border: none; border-radius: 5px; cursor: pointer;">Tarix</button>
+                <span id="logged-waiter-name" style="font-weight: bold;cursor: pointer;" onclick="changeWaiterName()" title="Ofitsiantni o'zgartirish uchun bosing">Ofitsiant: Admin[cite: 4]</span>
+                <button onclick="openHistory()" style="padding: 6px 12px; background: #ff9800; color: white; border: none; border-radius: 5px; cursor: pointer;">Tarix[cite: 4]</button>
             </div>
         </div>
 
         <div id="call-notifications-container"></div>
 
-        <h2 id="section-heading-title" style="margin-top: 25px; font-weight: bold; font-size: 18px;">Zal Stollari (16 ta)</h2>
+        <h2 id="section-heading-title" style="margin-top: 25px; font-weight: bold; font-size: 18px;">Zal Stollari (16 ta)[cite: 4]</h2>
         <div id="tables-grid" class="grid-container"></div>
     </div>
 
@@ -212,27 +213,27 @@
     <div id="modal-overlay" class="modal-overlay">
         <div class="modal-content">
             <div style="display: flex; justify-content: space-between; align-items: center;">
-                <h3 id="modal-title" style="margin: 0; font-weight: bold; font-size: 18px;">Boshqaruv</h3>
+                <h3 id="modal-title" style="margin: 0; font-weight: bold; font-size: 18px;">Boshqaruv[cite: 4]</h3>
                 <button onclick="closeModal()" style="border: none; background: none; font-size: 20px; cursor: pointer;">&times;</button>
             </div>
 
             <div style="margin: 15px 0; display: flex; align-items: center; gap: 10px;">
-                <span>Mehmonlar soni:</span>
+                <span>Mehmonlar soni:[cite: 4]</span>
                 <button class="qty-btn" onclick="changeGuests(-1)">-</button>
                 <span id="modal-guests-val" style="font-weight: bold; font-size: 16px;">1</span>
                 <button class="qty-btn" onclick="changeGuests(1)">+</button>
             </div>
 
             <div style="margin-bottom: 10px;" id="menu-categories-tabs">
-                <button class="tab-btn active" onclick="filterModalMenu('all', event)">Barchasi</button>
-                <button class="tab-btn" onclick="filterModalMenu('Osh', event)">Osh</button>
-                <button class="tab-btn" onclick="filterModalMenu('Suyuq ovqatlar', event)">Suyuq ovqatlar</button>
-                <button class="tab-btn" onclick="filterModalMenu('Quyuq taomlar', event)">Quyuq taomlar</button>
-                <button class="tab-btn" onclick="filterModalMenu('Hamirli taomlar', event)">Hamirli taomlar</button>
-                <button class="tab-btn" onclick="filterModalMenu('Kaboblar', event)">Kaboblar</button>
-                <button class="tab-btn" onclick="filterModalMenu('Somsalar', event)">Somsalar</button>
-                <button class="tab-btn" onclick="filterModalMenu('Fast Food', event)">Fast Food</button>
-                <button class="tab-btn" onclick="filterModalMenu('Ichimliklar', event)">Ichimliklar</button>
+                <button class="tab-btn active" onclick="filterModalMenu('all', event)">Barchasi[cite: 4]</button>
+                <button class="tab-btn" onclick="filterModalMenu('Osh', event)">Osh[cite: 4]</button>
+                <button class="tab-btn" onclick="filterModalMenu('Suyuq ovqatlar', event)">Suyuq ovqatlar[cite: 4]</button>
+                <button class="tab-btn" onclick="filterModalMenu('Quyuq taomlar', event)">Quyuq taomlar[cite: 4]</button>
+                <button class="tab-btn" onclick="filterModalMenu('Hamirli taomlar', event)">Hamirli taomlar[cite: 4]</button>
+                <button class="tab-btn" onclick="filterModalMenu('Kaboblar', event)">Kaboblar[cite: 4]</button>
+                <button class="tab-btn" onclick="filterModalMenu('Somsalar', event)">Somsalar[cite: 4]</button>
+                <button class="tab-btn" onclick="filterModalMenu('Fast Food', event)">Fast Food[cite: 4]</button>
+                <button class="tab-btn" onclick="filterModalMenu('Ichimliklar', event)">Ichimliklar[cite: 4]</button>
             </div>
 
             <div id="menu-selection-list" style="max-height: 250px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; border-radius: 6px;">
@@ -241,19 +242,48 @@
             <div style="margin-top: 15px; background: #f9f9f9; padding: 10px; border-radius: 6px;" id="current-order-summary">
             </div>
 
-            <div style="margin-top: 20px; display: flex; justify-content: flex-end; gap: 10px;">
-                <button onclick="printCheck()" style="padding: 8px 15px; background: #ff9800; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">Chek chiqarish</button>
-                <button id="submit-order-btn" onclick="sendOrderToAdmin()" style="padding: 8px 15px; background: #27ae60; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">Buyurtmani yuborish</button>
+            <div style="margin-top: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                <button onclick="openReturnModal()" style="padding: 8px 15px; background: #e53935; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">Vozvrat (Qaytarish)</button>
+                <div style="display: flex; gap: 10px;">
+                    <button onclick="printCheck()" style="padding: 8px 15px; background: #ff9800; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">Chek chiqarish[cite: 4]</button>
+                    <button id="submit-order-btn" onclick="sendOrderToAdmin()" style="padding: 8px 15px; background: #27ae60; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">Buyurtmani yuborish[cite: 4]</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chek va QR Kod Modal -->
+    <div id="check-modal" class="modal-overlay">
+        <div class="modal-content" style="text-align: center;">
+            <h3 style="font-weight: bold; font-size: 18px; color: #2a5298;">Restoran Cheki va QR Kod</h3>
+            <div id="check-content-area" style="margin: 15px 0; text-align: left; font-size: 14px;"></div>
+            <div id="qrcode-container" style="display: flex; justify-content: center; margin: 15px 0;"></div>
+            <p style="font-size: 12px; color: #666;">To'lov qabul qilingach, stol avtomatik bo'shatiladi.</p>
+            <button onclick="closeCheckModal()" style="padding: 8px 15px; background: #2a5298; color: white; border: none; border-radius: 5px; cursor: pointer;">Yopish</button>
+        </div>
+    </div>
+
+    <!-- Vozvrat Modali -->
+    <div id="return-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h3 style="font-weight: bold; font-size: 18px; color: #e53935;">Ortib qolgan non va ovqatlarni qaytarish (Vozvrat)</h3>
+            <div id="return-items-list" style="max-height: 250px; overflow-y: auto; margin: 15px 0;"></div>
+            <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                <button onclick="confirmReturn()" style="padding: 8px 15px; background: #27ae60; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">Tasdiqlash va Yuborish</button>
+                <button onclick="closeReturnModal()" style="padding: 8px 15px; background: #ccc; border: none; border-radius: 5px; cursor: pointer;">Yopish</button>
             </div>
         </div>
     </div>
 
     <!-- Tarix Modali -->
     <div id="history-modal" class="modal-overlay">
-        <div class="modal-content">
-            <h3 style="font-weight: bold; font-size: 18px;">Xizmat tarixi</h3>
+        <div class="modal-content" style="width: 700px;">
+            <h3 style="font-weight: bold; font-size: 18px;">Xizmat tarixi va Qidiruv</h3>
+            <div style="margin: 10px 0;">
+                <input type="text" id="waiter-history-search" placeholder="Buyurtma raqami yoki stol bo'yicha qidirish..." oninput="renderWaiterHistory()" style="padding: 6px; width: 100%; border: 1px solid #ccc; border-radius: 4px;">
+            </div>
             <div id="history-list" style="max-height: 300px; overflow-y: auto; margin: 15px 0;"></div>
-            <button onclick="closeHistory()" style="padding: 8px 15px; background: #2a5298; color: white; border: none; border-radius: 5px; cursor: pointer;">Yopish</button>
+            <button onclick="closeHistory()" style="padding: 8px 15px; background: #2a5298; color: white; border: none; border-radius: 5px; cursor: pointer;">Yopish[cite: 4]</button>
         </div>
     </div>
 
@@ -268,90 +298,116 @@
         let activeFilter = 'all';
 
         let tablesState = {};
+        let fullMenu = [];
 
-        const fullMenu = [
-            { id: 1, category: "Osh", name: "Toshkent oshi (Toʻy oshi)", price: 35000 },
-            { id: 2, category: "Osh", name: "Samarqand oshi", price: 38000 },
-            { id: 3, category: "Osh", name: "Buxoro oshi", price: 40000 },
-            { id: 10, category: "Suyuq ovqatlar", name: "Qaynatma shoʻrva", price: 25000 },
-            { id: 11, category: "Suyuq ovqatlar", name: "Mastava", price: 22000 },
-            { id: 20, category: "Quyuq taomlar", name: "Bifsteks", price: 38000 },
-            { id: 21, category: "Quyuq taomlar", name: "Lagʻman (Qovurma lagʻman)", price: 32000 },
-            { id: 30, category: "Hamirli taomlar", name: "Manti (Goʻshtli)", price: 6000 },
-            { id: 40, category: "Kaboblar", name: "Qiyma kabob", price: 16000 },
-            { id: 41, category: "Kaboblar", name: "Qoʻy goʻshti shashligi", price: 20000 },
-            { id: 80, category: "Somsalar", name: "Tandir somsa", price: 10000 },
-            { id: 110, category: "Fast Food", name: "Lavash", price: 32000 },
-            { id: 111, category: "Fast Food", name: "Gamburger", price: 30000 },
-            { id: 140, category: "Ichimliklar", name: "Coca-Cola - 0.5L", price: 10000 }
-        ];
+        window.onload = function() {
+            loadMenuFromAdmin();
 
-       window.onload = function() {
-    try {
-        socket = io('https://oshxonachi-server.onrender.com', {
-            reconnection: true,
-            reconnectionAttempts: 20,
-            reconnectionDelay: 1000,
-            timeout: 30000
-        });
+            try {
+                socket = io('https://oshxonachi-server.onrender.com', {
+                    reconnection: true,
+                    reconnectionAttempts: 20,
+                    reconnectionDelay: 1000,
+                    timeout: 30000
+                });
 
-        socket.on('connect', () => {
-            console.log("Ofitsiant paneli Render serveriga muvaffaqiyatli ulandi!");
-        });
+                socket.on('connect', () => {
+                    console.log("Ofitsiant paneli Render serveriga muvaffaqiyatli ulandi![cite: 4]");
+                });
 
-        socket.on('connect_error', (err) => {
-            console.error("Serverga ulanishda xatolik yuz berdi:", err);
-        });
+                socket.on('status_updated', (data) => {
+                    updateLocalTableStatus(data.orderId, data.status, data.isPrinted, data.isPaid);
+                });
 
-        socket.on('status_updated', (data) => {
-            updateLocalTableStatus(data.orderId, data.status, data.isPrinted, data.isPaid);
-        });
+                socket.on('call_waiter', (data) => {
+                    playNotificationSound();
+                    addCallNotification(data.tableNumber);
+                });
 
-        socket.on('call_waiter', (data) => {
-            playNotificationSound();
-            addCallNotification(data.tableNumber);
-        });
-
-        // QO'SHILGAN QISM: Serverdan kelgan buyurtmalar ro'yxati bilan ofitsiant ekranini sinxronlash
-        socket.on('update_orders', (serverOrders) => {
-            if (Array.isArray(serverOrders)) {
-                localStorage.setItem('waiter_orders', JSON.stringify(serverOrders));
-                loadOrdersFromStorage();
-                renderTables();
+                socket.on('update_orders', (serverOrders) => {
+                    if (Array.isArray(serverOrders)) {
+                        localStorage.setItem('waiter_orders', JSON.stringify(serverOrders));
+                        loadOrdersFromStorage();
+                        renderTables();
+                    }
+                });
+            } catch (error) {
+                console.error("Socketni ishga tushirishda xatolik:", error);
             }
-        });
-    } catch (error) {
-        console.error("Socketni ishga tushirishda xatolik:", error);
-    }
 
-    initClock();
-    loadOrdersFromStorage();
-    renderTables();
-};
+            initClock();
+            loadOrdersFromStorage();
+            renderTables();
+
+            window.addEventListener('storage', function(e) {
+                if(['waiter_orders', 'active_orders', 'admin_orders', 'orders', 'admin_menu'].includes(e.key)) {
+                    loadMenuFromAdmin();
+                    loadOrdersFromStorage();
+                    renderTables();
+                }
+            });
+        };
+
+        function loadMenuFromAdmin() {
+            let adminMenu = localStorage.getItem('admin_menu');
+            if (adminMenu) {
+                try {
+                    let parsed = JSON.parse(adminMenu);
+                    fullMenu = parsed.map(m => ({
+                        id: m.id,
+                        category: m.category,
+                        name: m.name,
+                        price: m.sale_price,
+                        internal_price: m.internal_price,
+                        is_visible: m.is_visible !== false
+                    })).filter(m => m.is_visible);
+                } catch(e) {
+                    loadDefaultMenu();
+                }
+            } else {
+                loadDefaultMenu();
+            }
+        }
+
+        function loadDefaultMenu() {
+            fullMenu = [
+                { id: 1, category: "Osh", name: "Toshkent oshi (Toʻy oshi)", price: 38000, internal_price: 25000 },
+                { id: 2, category: "Osh", name: "Samarqand oshi", price: 40000, internal_price: 27000 },
+                { id: 10, category: "Suyuq ovqatlar", name: "Qaynatma shoʻrva", price: 30000, internal_price: 20000 },
+                { id: 20, category: "Quyuq taomlar", name: "Bifsteks", price: 45000, internal_price: 30000 },
+                { id: 30, category: "Hamirli taomlar", name: "Manti (Goʻshtli)", price: 33000, internal_price: 22000 },
+                { id: 40, category: "Kaboblar", name: "Qiyma kabob", price: 25000, internal_price: 15000 },
+                { id: 80, category: "Somsalar", name: "Tandir somsa", price: 14000, internal_price: 8000 },
+                { id: 110, category: "Fast Food", name: "Lavash", price: 28000, internal_price: 18000 },
+                { id: 140, category: "Ichimliklar", name: "Coca-Cola - 0.5L", price: 11000, internal_price: 6000 }
+            ];
+        }
 
         function updateLocalTableStatus(tableOrOrderId, newStatus, isPrinted, isPaid) {
             try {
                 let waiterOrders = JSON.parse(localStorage.getItem('waiter_orders')) || [];
                 let activeOrders = JSON.parse(localStorage.getItem('active_orders')) || [];
-                waiterOrders = waiterOrders.map(o => {
+                
+                let updater = (arr) => arr.map(o => {
                     let id = o.id !== undefined ? o.id : o.tableNumber;
                     if (String(id) === String(tableOrOrderId) || String(o.tableNumber) === String(tableOrOrderId)) {
                         o.status = newStatus;
                         if (isPrinted !== undefined) o.isPrinted = isPrinted;
                         if (isPaid !== undefined) o.isPaid = isPaid;
+                        if (newStatus === 'tolandi' || newStatus === 'bekor_qilindi') {
+                            moveToWaiterHistory(o);
+                        }
                     }
                     return o;
                 });
 
-                activeOrders = activeOrders.map(o => {
-                    let id = o.id !== undefined ? o.id : o.tableNumber;
-                    if (String(id) === String(tableOrOrderId) || String(o.tableNumber) === String(tableOrOrderId)) {
-                        o.status = newStatus;
-                        if (isPrinted !== undefined) o.isPrinted = isPrinted;
-                        if (isPaid !== undefined) o.isPaid = isPaid;
-                    }
-                    return o;
-                });
+                waiterOrders = updater(waiterOrders);
+                activeOrders = updater(activeOrders);
+
+                if (newStatus === 'tolandi' || newStatus === 'bekor_qilindi') {
+                    waiterOrders = waiterOrders.filter(o => String(o.tableNumber) !== String(tableOrOrderId) && String(o.id) !== String(tableOrOrderId));
+                    activeOrders = activeOrders.filter(o => String(o.tableNumber) !== String(tableOrOrderId) && String(o.id) !== String(tableOrOrderId));
+                }
 
                 localStorage.setItem('waiter_orders', JSON.stringify(waiterOrders));
                 localStorage.setItem('active_orders', JSON.stringify(activeOrders));
@@ -371,7 +427,7 @@
                 let combined = [...waiterOrders, ...activeOrders];
 
                 combined.forEach(o => {
-                    if (o.tableNumber && o.status !== 'tolandi') {
+                    if (o.tableNumber && o.status !== 'tolandi' && o.status !== 'bekor_qilindi') {
                         tablesState[o.tableNumber] = o;
                     }
                 });
@@ -429,7 +485,7 @@
 
         function openTableModal(tableKey) {
             selectedTableNumber = tableKey;
-            document.getElementById('modal-title').innerText = `${tableKey} Boshqaruvi`;
+            document.getElementById('modal-title').innerText = `${tableKey} Boshqaruvi[cite: 4]`;
             
             let submitBtn = document.getElementById('submit-order-btn');
             let existingOrder = tablesState[tableKey];
@@ -442,11 +498,11 @@
                         currentCart[item.id] = { ...item };
                     });
                 }
-                if (submitBtn) submitBtn.innerText = "Buyurtmani yangilash";
+                if (submitBtn) submitBtn.innerText = "Buyurtmani yangilash[cite: 4]";
             } else {
                 currentGuestsCount = 1;
                 currentCart = {};
-                if (submitBtn) submitBtn.innerText = "Buyurtmani yuborish";
+                if (submitBtn) submitBtn.innerText = "Buyurtmani yuborish[cite: 4]";
             }
 
             document.getElementById('modal-guests-val').innerText = currentGuestsCount;
@@ -518,7 +574,7 @@
             const container = document.getElementById('current-order-summary');
             let items = Object.values(currentCart);
             if (items.length === 0) {
-                container.innerHTML = "<p style='font-size: 13px; color: #777;'>Hozircha hech narsa tanlanmadi.</p>";
+                container.innerHTML = "<p style='font-size: 13px; color: #777;'>Hozircha hech narsa tanlanmadi.[cite: 4]</p>";
                 return;
             }
 
@@ -536,7 +592,7 @@
                 ${listHTML}
                 <hr style="margin: 8px 0;">
                 <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 15px; color: #2a5298;">
-                    <span>Jami:</span>
+                    <span>Jami:[cite: 4]</span>
                     <span>${total.toLocaleString()} so'm</span>
                 </div>
             `;
@@ -546,21 +602,24 @@
             try {
                 let items = Object.values(currentCart);
                 if (items.length === 0) {
-                    alert("Iltimos, kamida bitta taom tanlang!");
+                    alert("Iltimos, kamida bitta taom tanlang![cite: 4]");
                     return;
                 }
 
                 let existingOrder = tablesState[selectedTableNumber];
                 let isUpdate = !!existingOrder;
+                let orderNumber = existingOrder ? existingOrder.orderNumber : Math.floor(1000 + Math.random() * 9000);
 
                 let orderData = {
                     id: selectedTableNumber,
                     tableNumber: selectedTableNumber,
+                    orderNumber: orderNumber,
                     waiterName: activeWaiter,
                     guestsCount: currentGuestsCount,
                     items: items,
                     status: existingOrder ? (existingOrder.status || 'yangi') : 'yangi',
-                    time: existingOrder ? existingOrder.time : new Date().toLocaleTimeString()
+                    time: existingOrder ? existingOrder.time : new Date().toLocaleTimeString(),
+                    isPrinted: existingOrder ? existingOrder.isPrinted : false
                 };
 
                 let waiterOrders = JSON.parse(localStorage.getItem('waiter_orders')) || [];
@@ -581,13 +640,13 @@
                 loadOrdersFromStorage();
                 renderTables();
                 if (isUpdate) {
-                    alert("Buyurtma muvaffaqiyatli yangilandi va admin panelga yuborildi!");
+                    alert("Buyurtma muvaffaqiyatli yangilandi va admin panelga yuborildi![cite: 4]");
                 } else {
-                    alert("Buyurtma admin panelga real vaqt rejimida yuborildi!");
+                    alert(`Buyurtma #${orderNumber} bilan admin panelga real vaqt rejimida yuborildi!`);
                 }
             } catch (error) {
                 console.error("Buyurtma yuborishda xatolik:", error);
-                alert("Buyurtmani yuborishda xatolik yuz berdi.");
+                alert("Buyurtmani yuborishda xatolik yuz berdi.[cite: 4]");
             }
         }
 
@@ -595,7 +654,7 @@
             try {
                 let existingOrder = tablesState[selectedTableNumber];
                 if (!existingOrder) {
-                    alert("Chek chiqarish uchun avval buyurtma yuborilishi kerak!");
+                    alert("Chek chiqarish uchun avval buyurtma yuborilishi kerak![cite: 4]");
                     return;
                 }
 
@@ -611,7 +670,7 @@
                     socket.emit('change_status', { orderId: selectedTableNumber, status: existingOrder.status, isPrinted: true });
                 }
 
-                alert(`${selectedTableNumber} uchun chek kassa printeriga yuborildi!`);
+                showCheckModal(existingOrder);
                 closeModal();
                 renderTables();
             } catch (error) {
@@ -619,11 +678,98 @@
             }
         }
 
+        function showCheckModal(order) {
+            let total = 0;
+            let itemsHtml = (order.items || []).map(i => {
+                let s = i.price * i.qty;
+                total += s;
+                return `<div>${i.name} — ${i.qty} x ${i.price.toLocaleString()} = ${s.toLocaleString()} so'm</div>`;
+            }).join('');
+
+            document.getElementById('check-content-area').innerHTML = `
+                <p><b>Stol / Xona:</b> ${order.tableNumber}</p>
+                <p><b>Zakaz raqami:</b> #${order.orderNumber}</p>
+                <p><b>Ofitsiant:</b> ${order.waiterName}</p>
+                <hr style="margin: 8px 0;">
+                <div>${itemsHtml}</div>
+                <hr style="margin: 8px 0;">
+                <p><b>Jami To'lov:</b> ${total.toLocaleString()} so'm</p>
+            `;
+
+            document.getElementById('qrcode-container').innerHTML = '';
+            new QRCode(document.getElementById('qrcode-container'), {
+                text: `RESTO_PAY_ORDER_${order.orderNumber}_TABLE_${order.tableNumber}_SUM_${total}`,
+                width: 128,
+                height: 128
+            });
+
+            document.getElementById('check-modal').style.display = 'flex';
+        }
+
+        function closeCheckModal() {
+            document.getElementById('check-modal').style.display = 'none';
+        }
+
+        function openReturnModal() {
+            let existingOrder = tablesState[selectedTableNumber];
+            if (!existingOrder || !existingOrder.items || existingOrder.items.length === 0) {
+                alert("Qaytarish uchun faol mahsulotlar mavjud emas.");
+                return;
+            }
+
+            let container = document.getElementById('return-items-list');
+            container.innerHTML = existingOrder.items.map((i, idx) => `
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; border-bottom: 1px solid #eee; padding-bottom: 6px;">
+                    <span>${i.name} (${i.qty} ta)</span>
+                    <input type="number" id="return-qty-${idx}" min="0" max="${i.qty}" value="0" style="width: 70px; padding: 4px; border: 1px solid #ccc; border-radius: 4px;">
+                </div>
+            `).join('');
+
+            document.getElementById('return-modal').style.display = 'flex';
+        }
+
+        function closeReturnModal() {
+            document.getElementById('return-modal').style.display = 'none';
+        }
+
+        function confirmReturn() {
+            let existingOrder = tablesState[selectedTableNumber];
+            if (!existingOrder) return;
+
+            existingOrder.items.forEach((i, idx) => {
+                let retQtyInput = document.getElementById(`return-qty-${idx}`);
+                if (retQtyInput) {
+                    let rQty = Number(retQtyInput.value) || 0;
+                    if (rQty > 0) {
+                        i.qty = Math.max(0, i.qty - rQty);
+                    }
+                }
+            });
+
+            existingOrder.items = existingOrder.items.filter(i => i.qty > 0);
+
+            let waiterOrders = JSON.parse(localStorage.getItem('waiter_orders')) || [];
+            waiterOrders = waiterOrders.map(o => {
+                if (o.tableNumber === selectedTableNumber) o.items = existingOrder.items;
+                return o;
+            });
+            localStorage.setItem('waiter_orders', JSON.stringify(waiterOrders));
+
+            if (socket) {
+                socket.emit('new_order', existingOrder);
+            }
+
+            closeReturnModal();
+            closeModal();
+            renderTables();
+            alert("Vozvrat muvaffaqiyatli qabul qilindi va admin panelga yuborildi!");
+        }
+
         function switchSection(sec) {
             activeSection = sec;
             document.getElementById('folder-zal').classList.toggle('active', sec === 'zal');
             document.getElementById('folder-xonalar').classList.toggle('active', sec === 'xonalar');
-            document.getElementById('section-heading-title').innerText = sec === 'zal' ? 'Zal Stollari (16 ta)' : 'Alohida Xonalar (8 ta)';
+            document.getElementById('section-heading-title').innerText = sec === 'zal' ? 'Zal Stollari (16 ta)[cite: 4]' : 'Alohida Xonalar (8 ta)[cite: 4]';
             renderTables();
         }
 
@@ -666,9 +812,9 @@
             card.id = callId;
             card.innerHTML = `
                 <div>
-                    <strong>🔔 Diqqat!</strong> <span>${tableNumber}</span> dan mijoz chaqirmoqda!
+                    <strong>🔔 Diqqat![cite: 4]</strong> <span>${tableNumber}</span> dan mijoz chaqirmoqda![cite: 4]
                 </div>
-                <button onclick="acceptCall('${tableNumber}', '${callId}')" style="padding: 6px 14px; background: #27ae60; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">Hozir boryapman</button>
+                <button onclick="acceptCall('${tableNumber}', '${callId}')" style="padding: 6px 14px; background: #27ae60; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">Hozir boryapman[cite: 4]</button>
             `;
             container.appendChild(card);
         }
@@ -685,21 +831,43 @@
             }
         }
 
+        function moveToWaiterHistory(orderObj) {
+            let hist = JSON.parse(localStorage.getItem('waiter_history')) || [];
+            hist.unshift({ ...orderObj, finishedAt: new Date().toLocaleString() });
+            localStorage.setItem('waiter_history', JSON.stringify(hist));
+        }
+
         function openHistory() {
             document.getElementById('history-modal').style.display = 'flex';
-            let waiterOrders = JSON.parse(localStorage.getItem('waiter_orders')) || [];
+            renderWaiterHistory();
+        }
+
+        function renderWaiterHistory() {
+            let hist = JSON.parse(localStorage.getItem('waiter_history')) || [];
+            let searchVal = document.getElementById('waiter-history-search') ? document.getElementById('waiter-history-search').value.trim() : '';
             let container = document.getElementById('history-list');
+
+            let filtered = hist;
+            if (searchVal !== '') {
+                filtered = hist.filter(h => String(h.orderNumber).includes(searchVal) || String(h.tableNumber).includes(searchVal));
+            }
             
-            if (waiterOrders.length === 0) {
-                container.innerHTML = "<p>Hali xizmat ko'rsatilgan buyurtmalar yo'q.</p>";
+            if (filtered.length === 0) {
+                container.innerHTML = "<p>Hali xizmat ko'rsatilgan buyurtmalar yo'q.[cite: 4]</p>";
                 return;
             }
 
-            container.innerHTML = waiterOrders.map(o => `
-                <div style="border-bottom: 1px solid #eee; padding: 8px 0;">
-                    <b>${o.tableNumber}</b> - Status: <span style="color: #27ae60; font-weight: bold;">${(o.status || 'yangi').toUpperCase()}</span>
-                </div>
-            `).join('');
+            container.innerHTML = filtered.map(o => {
+                let isCanceled = o.status === 'bekor_qilindi';
+                let statusColor = isCanceled ? 'color: red; font-weight: bold;' : 'color: #27ae60; font-weight: bold;';
+                let statusText = isCanceled ? 'BEKOR QILINDI' : 'TOLANDI';
+
+                return `
+                    <div style="border-bottom: 1px solid #eee; padding: 8px 0; ${isCanceled ? 'background: #ffebee;' : ''}">
+                        <b>Stol: ${o.tableNumber}</b> | Zakaz #${o.orderNumber || '-'} - Status: <span style="${statusColor}">${statusText}</span> (${o.finishedAt || ''})
+                    </div>
+                `;
+            }).join('');
         }
 
         function closeHistory() {

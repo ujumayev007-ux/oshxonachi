@@ -102,10 +102,23 @@
             object-fit: contain;
             margin-bottom: 5px;
         }
+        /* Stol kartochkasidagi buyurtma holati uchun badge */
+        .order-status-badge {
+            font-size: 11px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-top: 5px;
+            display: inline-block;
+            font-weight: bold;
+        }
+        .status-yangi { background: #3498db; color: white; }
+        .status-tayyorlanmoqda { background: #f39c12; color: white; }
+        .status-tayyor { background: #2ecc71; color: white; }
+        .status-tolandi { background: #95a5a6; color: white; }
 
-        /* Chaqiruvlar va xabarlar paneli */
-        #call-notifications-container, #admin-messages-container {
-            margin: 15px 0;
+        /* Chaqiruvlar va Admin Bildirishnomalari paneli */
+        #call-notifications-container {
+            margin: 20px 0;
             display: flex;
             flex-direction: column;
             gap: 10px;
@@ -120,7 +133,7 @@
             align-items: center;
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
-        .admin-msg-card {
+        .admin-status-alert-card {
             background: #e8f4fd;
             border: 1px solid #bbe1fa;
             padding: 12px 20px;
@@ -129,7 +142,6 @@
             justify-content: space-between;
             align-items: center;
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            font-size: 14px;
         }
 
         /* Modal oyna */
@@ -210,10 +222,8 @@
             </div>
         </div>
 
-        <!-- Mijozlardan kelgan chaqiruvlar -->
+        <!-- Mijozlardan kelgan chaqiruvlar va admin xabarlari chiqadigan joy -->
         <div id="call-notifications-container"></div>
-        <!-- Admin tomonidan kelgan xabarlar va buyurtma holatlari -->
-        <div id="admin-messages-container"></div>
 
         <h2 id="section-heading-title" style="margin-top: 25px;">Zal Stollari (16 ta)</h2>
         <div id="tables-grid" class="grid-container"></div>
@@ -227,15 +237,14 @@
                 <button onclick="closeModal()" style="border: none; background: none; font-size: 20px; cursor: pointer;">&times;</button>
             </div>
 
-            <div style="margin: 15px 0; display: flex; align-items: center; justify-content: space-between;">
-                <div style="display: flex; align-items: center; gap: 10px;">
-                    <span>Mehmonlar soni:</span>
-                    <button class="qty-btn" onclick="changeGuests(-1)">-</button>
-                    <span id="modal-guests-val" style="font-weight: bold; font-size: 16px;">1</span>
-                    <button class="qty-btn" onclick="changeGuests(1)">+</button>
-                </div>
-                <!-- Stol bo'yicha yuborilgan buyurtma holati ko'rsatkichi -->
-                <div id="modal-order-status-badge" style="font-weight: bold; font-size: 14px; padding: 5px 10px; border-radius: 5px; background: #eee;">Holat: Yo'q</div>
+            <!-- Modal ichida buyurtmaning joriy holatini ko'rsatish uchun joy -->
+            <div id="modal-order-status-container" style="margin: 10px 0; padding: 8px 12px; background: #f1f8ff; border-radius: 6px; font-size: 14px; display: none;"></div>
+
+            <div style="margin: 15px 0; display: flex; align-items: center; gap: 10px;">
+                <span>Mehmonlar soni:</span>
+                <button class="qty-btn" onclick="changeGuests(-1)">-</button>
+                <span id="modal-guests-val" style="font-weight: bold; font-size: 16px;">1</span>
+                <button class="qty-btn" onclick="changeGuests(1)">+</button>
             </div>
 
             <div style="margin-bottom: 10px;" id="menu-categories-tabs">
@@ -291,24 +300,109 @@
         });
 
         socket.on('connect', () => {
-            console.log("Ofitsiant paneli serverga ulandi![cite: 7]");
+            console.log("Ofitsiant paneli serverga ulandi!"[cite: 8]);
         });
 
-        // Mijoz chaqirig'ini qabul qilish
+        // 1 va 2-bandlar: Mijoz chaqirig'ini qabul qilish va ovozli xabar berish
         socket.on('call_waiter', (data) => {
             playNotificationSound();
             addCallNotification(data.tableNumber);
         });
 
-        // Admin tomonidan buyurtma holati o'zgarganda yoki xabar kelganda
+        // Admin tomonidan buyurtma statusi o'zgarishlarini tinglash (Socket.io)
         socket.on('order_status_updated', (data) => {
-            handleAdminMessage(`Stol/Xona: <b>${data.tableNumber || data.table}</b> buyurtma holati: <span style="color: #2a5298; font-weight:bold;">${data.status.toUpperCase()}</span>`);
-            updateLocalOrderStatus(data);
+            handleOrderStatusChange(data);
         });
 
-        socket.on('admin_message', (msg) => {
-            handleAdminMessage(`Admin xabari: <b>${msg.text}</b>`);
+        socket.on('orders_updated', (data) => {
+            if (Array.isArray(data)) {
+                data.forEach(order => handleOrderStatusChange(order));
+            }
         });
+
+        function handleOrderStatusChange(order) {
+            if (!order) return;
+            let tableNum = order.tableNumber || order.table;
+            let newStatus = order.status;
+            if (!tableNum || !newStatus) return;
+
+            // LocalStorage'dagi buyurtmalar holatini yangilash
+            ['waiter_orders', 'orders', 'active_orders'].forEach(k => {
+                let orders = JSON.parse(localStorage.getItem(k)) || [];
+                let updated = false;
+                orders = orders.map(o => {
+                    if (String(o.tableNumber || o.table) === String(tableNum)) {
+                        o.status = newStatus;
+                        if (newStatus === 'tolandi') {
+                            o.isPaid = true;
+                        }
+                        updated = true;
+                    }
+                    return o;
+                });
+                if (updated) {
+                    localStorage.setItem(k, JSON.stringify(orders));
+                }
+            });
+
+            // Agar to'langan bo'lsa stolni bo'shatish
+            if (newStatus === 'tolandi') {
+                // Stol kalitini aniqlash (zal_item_X yoki xonalar_item_X)
+                ['zal', 'xonalar'].forEach(sec => {
+                    for (let i = 1; i <= 20; i++) {
+                        let key = `${sec}_item_${i}`;
+                        let itemData = JSON.parse(localStorage.getItem(key));
+                        let prefix = (sec === 'zal') ? 'Stol #' : 'Xona #';
+                        if (itemData && String(prefix + i) === String(tableNum)) {
+                            itemData.busy = false;
+                            itemData.items = [];
+                            localStorage.setItem(key, JSON.stringify(itemData));
+                        }
+                    }
+                });
+            }
+
+            // Xabarlar paneliga bildirishnoma qo'shish
+            addAdminStatusNotification(tableNum, newStatus);
+            renderItems();
+
+            // Agar hozir o'sha stolning modali ochiq bo'lsa, modal ichidagi holatni ham yangilash
+            if (currentActiveTableId) {
+                let currentPrefix = (currentActiveTableId.section === 'zal') ? 'Stol #' : 'Xona #';
+                let currentTableStr = currentPrefix + currentActiveTableId.id;
+                if (String(currentTableStr) === String(tableNum)) {
+                    updateModalOrderStatusDisplay(newStatus);
+                }
+            }
+        }
+
+        function addAdminStatusNotification(tableNumber, status) {
+            const container = document.getElementById('call-notifications-container');
+            const notifId = 'admin_notif_' + Date.now();
+            
+            let statusText = status;
+            if(status === 'yangi') statusText = 'Yangi';
+            else if(status === 'tayyorlanmoqda') statusText = 'Tayyorlanmoqda';
+            else if(status === 'tayyor') statusText = 'Tayyor ✅';
+            else if(status === 'tolandi') statusText = 'Tolandi 💰';
+
+            const card = document.createElement('div');
+            card.className = 'admin-status-alert-card';
+            card.id = notifId;
+            card.innerHTML = `
+                <div>
+                    <strong>📢 Buyurtma holati:</strong> <span>${tableNumber}</span> buyurtmasi <b>${statusText}</b> holatiga o'tdi.
+                </div>
+                <button onclick="document.getElementById('${notifId}').remove()" style="padding: 4px 10px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">Yopish</button>
+            `;
+            container.appendChild(card);
+
+            // 10 sekunddan keyin avtomatik o'chirish
+            setTimeout(() => {
+                let el = document.getElementById(notifId);
+                if(el) el.remove();
+            }, 10000);
+        }
 
         function playNotificationSound() {
             try {
@@ -316,7 +410,7 @@
                 const osc = ctx.createOscillator();
                 const gain = ctx.createGain();
                 osc.type = 'sine';
-                osc.frequency.setValueAtTime(587.33, ctx.currentTime);
+                osc.frequency.setValueAtTime(587.33, ctx.currentTime); // D5 nota
                 gain.gain.setValueAtTime(0.1, ctx.currentTime);
                 osc.connect(gain);
                 gain.connect(ctx.destination);
@@ -336,59 +430,21 @@
             card.id = callId;
             card.innerHTML = `
                 <div>
-                    <strong>🔔 Diqqat!</strong> <span>${tableNumber}</span> dan mijoz chaqirmoqda![cite: 7]
+                    <strong>🔔 Diqqat!</strong> <span>${tableNumber}</span> dan mijoz chaqirmoqda!
                 </div>
                 <button onclick="acceptCall('${tableNumber}', '${callId}')" style="padding: 6px 14px; background: #27ae60; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">Hozir boryapman</button>
             `;
             container.appendChild(card);
         }
 
-        function handleAdminMessage(htmlContent) {
-            const container = document.getElementById('admin-messages-container');
-            const msgId = 'msg_' + Date.now();
-            const card = document.createElement('div');
-            card.className = 'admin-msg-card';
-            card.id = msgId;
-            card.innerHTML = `
-                <div>📢 ${htmlContent}</div>
-                <button onclick="document.getElementById('${msgId}').remove()" style="border:none; background:none; cursor:pointer; font-weight:bold; font-size:16px;">&times;</button>
-            `;
-            container.appendChild(card);
-            
-            // Avtomatik 10 sekunddan keyin xabarni yopish
-            setTimeout(() => {
-                let el = document.getElementById(msgId);
-                if(el) el.remove();
-            }, 10000);
-        }
-
-        function updateLocalOrderStatus(data) {
-            let targetTableStr = String(data.tableNumber || data.table);
-            let orders = JSON.parse(localStorage.getItem('waiter_orders')) || [];
-            orders = orders.map(o => {
-                if(String(o.tableNumber || o.table) === targetTableStr) {
-                    o.status = data.status;
-                }
-                return o;
-            });
-            localStorage.setItem('waiter_orders', JSON.stringify(orders));
-            
-            let genOrders = JSON.parse(localStorage.getItem('orders')) || [];
-            genOrders = genOrders.map(o => {
-                if(String(o.tableNumber || o.table) === targetTableStr) {
-                    o.status = data.status;
-                }
-                return o;
-            });
-            localStorage.setItem('orders', JSON.stringify(genOrders));
-            renderItems();
-        }
-
         function acceptCall(tableNumber, callId) {
-            socket.emit('waiter_on_the_way', { tableNumber: tableNumber, waiter: activeWaiter });[cite: 7]
+            socket.emit('waiter_on_the_way', { tableNumber: tableNumber, waiter: activeWaiter });
+            
             const card = document.getElementById(callId);
-            if (card) card.remove();
-            alert(`${tableNumber} ga "Hozir boryapman" xabari yuborildi!`);[cite: 7]
+            if (card) {
+                card.remove();
+            }
+            alert(`${tableNumber} ga "Hozir boryapman" xabari yuborildi!`);
         }
 
         const fullMenu = [
@@ -701,29 +757,33 @@
                 let itemData = JSON.parse(localStorage.getItem(key)) || { busy: false, guests: 0, items: [] };
                 
                 let titlePrefix = (currentActiveSection === 'zal') ? 'Stol #' : 'Xona #';
-                let tableFullName = `${titlePrefix}${i}`;
+                let tableNumStr = titlePrefix + i;
 
-                // Shu stolning eng oxirgi buyurtma holatini topish
-                let currentOrder = orders.slice().reverse().find(o => String(o.tableNumber || o.table) === String(tableFullName) && o.status !== 'tolandi');
-                let orderStatusText = currentOrder ? currentOrder.status : (itemData.busy ? 'yangi' : 'bo\'sh');
-
-                let badgeColor = '#95a5a6';
-                if(orderStatusText === 'yangi') badgeColor = '#f39c12';
-                else if(orderStatusText === 'tayyorlanmoqda') badgeColor = '#3498db';
-                else if(orderStatusText === 'tayyor') badgeColor = '#27ae60';
+                // Ushbu stolning joriy buyurtma holatini topish
+                let currentOrder = orders.find(o => String(o.tableNumber || o.table) === String(tableNumStr) && o.status !== 'tolandi');
+                let orderStatus = currentOrder ? currentOrder.status : null;
 
                 let iconSrc = (currentActiveSection === 'zal') 
                     ? 'https://cdn-icons-png.flaticon.com/512/7067/7067120.png' 
                     : 'https://cdn-icons-png.flaticon.com/512/7845/7845744.png';
 
+                let statusBadgeHtml = '';
+                if (itemData.busy && orderStatus) {
+                    let badgeClass = 'status-yangi';
+                    let badgeText = 'Yangi';
+                    if (orderStatus === 'tayyorlanmoqda') { badgeClass = 'status-tayyorlanmoqda'; badgeText = 'Tayyorlanmoqda'; }
+                    else if (orderStatus === 'tayyor') { badgeClass = 'status-tayyor'; badgeText = 'Tayyor ✅'; }
+                    else if (orderStatus === 'tolandi') { badgeClass = 'status-tolandi'; badgeText = 'Tolandi'; }
+                    
+                    statusBadgeHtml = `<div class="order-status-badge ${badgeClass}">${badgeText}</div>`;
+                }
+
                 grid.innerHTML += `
                     <div class="table-card ${itemData.busy ? 'busy' : ''}" onclick="openItemModal('${currentActiveSection}', ${i})">
                         <img src="${iconSrc}" class="table-icon" alt="Ikonka">
-                        <h4 style="margin:5px 0;">${tableFullName}</h4>
-                        <p style="font-size: 12px; margin: 2px 0; font-weight: bold;">${itemData.busy ? `🔴 Band (${itemData.guests} kishi)` : '🟢 Bo\'sh'}</p>
-                        <div style="font-size: 11px; margin-top: 4px; background: ${badgeColor}; color: white; padding: 2px 4px; border-radius: 4px;">
-                            Holat: ${orderStatusText.toUpperCase()}
-                        </div>
+                        <h4 style="margin:5px 0;">${tableNumStr}</h4>
+                        <p style="font-size: 13px; margin: 0; font-weight: bold;">${itemData.busy ? `🔴 Band (${itemData.guests} kishi)` : '🟢 Bo\'sh'}</p>
+                        ${statusBadgeHtml}
                     </div>
                 `;
             }
@@ -738,27 +798,39 @@
             let itemData = JSON.parse(localStorage.getItem(key)) || { busy: false, guests: 1, items: [] };
             
             document.getElementById('modal-guests-val').innerText = itemData.guests || 1;
-            
-            // Modal oynada buyurtma holatini ko'rsatish
-            let orders = JSON.parse(localStorage.getItem('waiter_orders')) || [];
-            let currentOrder = orders.slice().reverse().find(o => String(o.tableNumber || o.table) === String(titlePrefix) && o.status !== 'tolandi');
-            let statusBadge = document.getElementById('modal-order-status-badge');
-            if (currentOrder) {
-                statusBadge.innerHTML = `Holat: <span style="color: #2a5298;">${currentOrder.status.toUpperCase()}</span>`;
-            } else {
-                statusBadge.innerHTML = `Holat: ${itemData.busy ? 'Yuborilgan' : 'Mavjud emas'}`;
-            }
-
             currentCategoryFilter = 'all';
+            
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
             document.querySelector('.tab-btn').classList.add('active');
+
+            // Modalda buyurtma holatini ko'rsatish
+            let orders = JSON.parse(localStorage.getItem('waiter_orders')) || [];
+            let currentOrder = orders.find(o => String(o.tableNumber || o.table) === String(titlePrefix) && o.status !== 'tolandi');
+            if (currentOrder && currentOrder.status) {
+                updateModalOrderStatusDisplay(currentOrder.status);
+            } else {
+                document.getElementById('modal-order-status-container').style.display = 'none';
+            }
 
             renderMenuSelection(itemData.items);
             document.getElementById('modal-overlay').style.display = 'flex';
         }
 
+        function updateModalOrderStatusDisplay(status) {
+            let container = document.getElementById('modal-order-status-container');
+            let statusText = status;
+            if(status === 'yangi') statusText = 'Yangi (Admin qabul qildi)';
+            else if(status === 'tayyorlanmoqda') statusText = 'Oshxonada tayyorlanmoqda 🍳';
+            else if(status === 'tayyor') statusText = 'Tayyor, olib ketish mumkin ✅';
+            else if(status === 'tolandi') statusText = 'Toʻlandi 💰';
+
+            container.innerHTML = `Buyurtma holati: <b>${statusText}</b>`;
+            container.style.display = 'block';
+        }
+
         function closeModal() {
             document.getElementById('modal-overlay').style.display = 'none';
+            currentActiveTableId = null;
         }
 
         function changeGuests(delta) {
@@ -904,10 +976,10 @@
             generalOrders.push(orderObj);
             localStorage.setItem('orders', JSON.stringify(generalOrders));
 
-            // Serverga ham yuborish
+            // Socket orqali serverga buyurtma yuborish
             socket.emit('new_order', orderObj);
 
-            alert("Buyurtma admin paneliga muvaffaqiyatli yuborildi![cite: 7]");
+            alert("Buyurtma admin paneliga muvaffaqiyatli yuborildi!");
             closeModal();
             renderItems();
         }

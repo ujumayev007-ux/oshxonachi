@@ -444,7 +444,7 @@
 
         window.onload = function() {
             if (typeof io !== 'undefined') {
-                socket = io();
+                socket = io('https://oshxonachi-server.onrender.com');
 
                 // Yangi buyurtma kelganda yoki band stolga taom qo'shilganda
                 socket.on('new_order', (data) => {

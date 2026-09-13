@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <title>Restoran Menyusi — Oshxonachi</title>
     <link rel="stylesheet" href="css/style.css">
+    <!-- 1-O'ZGARISH: Socket.io kutubxonasi internetdan ulandi -->
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
     <style>
         body {
             background-color: #e3f2fd;
@@ -118,6 +120,7 @@
             <button class="tab-btn" onclick="filterMenu('supli', event)">Sho'rvalar</button>
             <button class="tab-btn" onclick="filterMenu('asosiy', event)">Asosiy taomlar</button>
             <button class="tab-btn" onclick="filterMenu('hamirli', event)">Hamirli taomlar</button>
+            <!-- 2-O'ZGARISH: filterNemu xatosi filterMenu ga to'g'irlandi -->
             <button class="tab-btn" onclick="filterMenu('kabob', event)">Kaboblar</button>
             <button class="tab-btn" onclick="filterMenu('somsa', event)">Somsalar</button>
             <button class="tab-btn" onclick="filterMenu('fastfood', event)">Fast-food</button>
@@ -134,7 +137,7 @@
                 <option value="named">Ism-sharifimni yozaman</option>
             </select>
             <input type="text" id="reviewer-name" placeholder="Ismingiz" style="padding: 8px; margin: 5px 0; width: 100%; display:none; box-sizing: border-box;">
-            <textarea id="review-text" placeholder="Fikr va taklifingizni yozing..." style="width:100%; padding: 8px; margin: 5px 0; box-sizing: border-box;"></textarea>
+            <textarea id="review-text" placeholder="Fikr va taklifingiz nega yozing..." style="width:100%; padding: 8px; margin: 5px 0; box-sizing: border-box;"></textarea>
             <button onclick="submitReview()" style="background: #1976d2; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;">Yuborish</button>
         </div>
     </div>
@@ -167,6 +170,25 @@
             <button onclick="closeWaiterModal()" style="margin-top:15px; background:#f44336; color: white; border: none; padding: 10px; width: 100%; border-radius: 5px; cursor: pointer;">Yopish</button>
         </div>
     </div>
+
+    <!-- 3-O'ZGARISH: Render serveriga ulanish qismi qo'shildi -->
+    <script>
+        const SOCKET_URL = 'https://oshxonachi-server.onrender.com';
+        const socket = io(SOCKET_URL, {
+            reconnection: true,
+            reconnectionAttempts: 20,
+            reconnectionDelay: 1000,
+            timeout: 30000
+        });
+
+        socket.on('connect', () => {
+            console.log("Render serveriga muvaffaqiyatli ulandi!");
+        });
+
+        socket.on('connect_error', (err) => {
+            console.log("Server uyg'onishida kutish...", err);
+        });
+    </script>
 
     <script src="js/config.js"></script>
     <script src="js/customer.js"></script>

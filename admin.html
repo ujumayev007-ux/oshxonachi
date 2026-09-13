@@ -433,7 +433,7 @@
         </div>
     </div>
 
-    <script>
+  <script>
         let statsChartInstance = null;
         let menuDatabase = [];
         let warehouseDatabase = [];
@@ -446,27 +446,19 @@
             if (typeof io !== 'undefined') {
                 socket = io();
 
-                // Yangi buyurtma kelganda yoki band stolga qo'shimcha taom qo'shilganda F5 siz yangilash
-                socket.on('new_order_received', (data) => {
+                // Yangi buyurtma kelganda yoki band stolga taom qo'shilganda
+                socket.on('new_order', (data) => {
                     if (!data) return;
-
                     let targetId = data.id !== undefined ? data.id : data.tableNumber;
-                    
                     let existingIndex = ordersDatabase.findIndex(o => {
                         let currentId = o.id !== undefined ? o.id : o.tableNumber;
                         return String(currentId) === String(targetId) || String(o.tableNumber) === String(data.tableNumber);
                     });
-
                     if (existingIndex !== -1) {
-                        ordersDatabase[existingIndex] = {
-                            ...ordersDatabase[existingIndex],
-                            ...data,
-                            items: data.items
-                        };
+                        ordersDatabase[existingIndex] = { ...ordersDatabase[existingIndex], ...data, items: data.items };
                     } else {
                         ordersDatabase.push(data);
                     }
-
                     syncOrdersToStorage();
                     renderAll();
                 });
@@ -488,6 +480,7 @@
                 });
             }
 
+            // Qolgan dastlabki yuklanish funksiyalari va tinglovchilar endi to'g'ri joyida
             loadInitialData();
             renderAll();
             initChart();
@@ -506,7 +499,6 @@
                 }
             });
         };
-
         function loadInitialData() {
             try {
                 let defaultMenu = [

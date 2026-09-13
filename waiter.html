@@ -311,6 +311,15 @@
                     playNotificationSound();
                     addCallNotification(data.tableNumber);
                 });
+
+                // QO'SHILGAN QISM: Serverdan kelgan buyurtmalar ro'yxati bilan ofitsiant ekranini sinxronlash
+                socket.on('update_orders', (serverOrders) => {
+                    if (Array.isArray(serverOrders)) {
+                        localStorage.setItem('waiter_orders', JSON.stringify(serverOrders));
+                        loadOrdersFromStorage();
+                        renderTables();
+                    }
+                });
             } catch (error) {
                 console.error("Socketni ishga tushirishda xatolik:", error);
             }
@@ -324,7 +333,6 @@
             try {
                 let waiterOrders = JSON.parse(localStorage.getItem('waiter_orders')) || [];
                 let activeOrders = JSON.parse(localStorage.getItem('active_orders')) || [];
-
                 waiterOrders = waiterOrders.map(o => {
                     let id = o.id !== undefined ? o.id : o.tableNumber;
                     if (String(id) === String(tableOrOrderId) || String(o.tableNumber) === String(tableOrOrderId)) {

@@ -5,8 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ofitsiant Paneli</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Socket.io Kutubxonasi -->
-    <script src="/socket.io/socket.io.js"></script>
+    <!-- Socket.io Kutubxonasi (Yangi qo'shildi) -->
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+</head>
     <style>
         * {
             box-sizing: border-box;
@@ -101,6 +102,24 @@
             margin-bottom: 5px;
         }
 
+        /* Chaqiruvlar paneli */
+        #call-notifications-container {
+            margin: 20px 0;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .call-alert-card {
+            background: #fff3cd;
+            border: 1px solid #ffeeba;
+            padding: 12px 20px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
         /* Modal oyna */
         .modal-overlay {
             display: none;
@@ -179,6 +198,9 @@
             </div>
         </div>
 
+        <!-- Mijozlardan kelgan chaqiruvlar chiqadigan joy -->
+        <div id="call-notifications-container"></div>
+
         <h2 id="section-heading-title" style="margin-top: 25px;">Zal Stollari (16 ta)</h2>
         <div id="tables-grid" class="grid-container"></div>
     </div>
@@ -242,21 +264,68 @@
     </div>
 
     <script>
-        // Socket.io ulanishini sozlash
-        const socket = io();
+        const SOCKET_URL = 'https://oshxonachi-server.onrender.com';
+        const socket = io(SOCKET_URL, {
+            reconnection: true,
+            reconnectionAttempts: 20,
+            reconnectionDelay: 1000,
+            timeout: 30000
+        });
 
         socket.on('connect', () => {
-            console.log('Socket.io serverga muvaffaqiyatli ulandi:', socket.id);
+            console.log("Ofitsiant paneli serverga ulandi!");
         });
 
-        // Admin yoki boshqa qurilmalardan stol holati o'zgarganda avtomatik yangilash
-        socket.on('refreshTables', () => {
-            renderItems();
+        // 1 va 2-bandlar: Mijoz chaqirig'ini qabul qilish va ovozli xabar berish
+        socket.on('call_waiter', (data) => {
+            playNotificationSound();
+            addCallNotification(data.tableNumber);
         });
 
-        socket.on('tableUpdated', () => {
-            renderItems();
-        });
+        function playNotificationSound() {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(587.33, ctx.currentTime); // D5 nota
+                gain.gain.setValueAtTime(0.1, ctx.currentTime);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start();
+                osc.stop(ctx.currentTime + 0.5);
+            } catch (e) {
+                console.log("Ovoz chiqarishda xatolik:", e);
+            }
+        }
+
+        function addCallNotification(tableNumber) {
+            const container = document.getElementById('call-notifications-container');
+            const callId = 'call_' + Date.now();
+            
+            const card = document.createElement('div');
+            card.className = 'call-alert-card';
+            card.id = callId;
+            card.innerHTML = `
+                <div>
+                    <strong>🔔 Diqqat!</strong> <span>${tableNumber}</span> dan mijoz chaqirmoqda!
+                </div>
+                <button onclick="acceptCall('${tableNumber}', '${callId}')" style="padding: 6px 14px; background: #27ae60; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">Hozir boryapman</button>
+            `;
+            container.appendChild(card);
+        }
+
+        // 3 va 4-bandlar: "Hozir boryapman" tugmasini bosish va mijozga xabar berish
+        function acceptCall(tableNumber, callId) {
+            socket.acceptCallNotification({ tableNumber: tableNumber }); // Server orqali yoki to'g'ridan-to'g'ri yuborish
+            socket.emit('waiter_on_the_way', { tableNumber: tableNumber, waiter: activeWaiter });
+            
+            const card = document.getElementById(callId);
+            if (card) {
+                card.remove();
+            }
+            alert(`${tableNumber} ga "Hozir boryapman" xabari yuborildi!`);
+        }
 
         const fullMenu = [
             { id: 1, category: "Osh", name: "Toshkent oshi (Toʻy oshi)", price: 35000, img: "https://images.unsplash.com/photo-1633964913295-ceb43826e7c9?w=100" },
@@ -496,7 +565,6 @@
         let currentCategoryFilter = 'all';
         let currentEditingItemIndex = null;
 
-        // Sahifa yuklanganda ofitsiant nomini ekranga chiqarish
         window.addEventListener('DOMContentLoaded', () => {
             let waiterSpan = document.getElementById('logged-waiter-name');
             if(waiterSpan) {
@@ -748,9 +816,6 @@
             let generalOrders = JSON.parse(localStorage.getItem('orders')) || [];
             generalOrders.push(orderObj);
             localStorage.setItem('orders', JSON.stringify(generalOrders));
-
-            // Socket.io orqali yangi buyurtmani serverga/admin paneliga yuborish
-            socket.emit('newOrder', orderObj);
 
             alert("Buyurtma admin paneliga muvaffaqiyatli yuborildi!");
             closeModal();

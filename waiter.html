@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ofitsiant Paneli</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Socket.io Kutubxonasi -->
+    <!-- Socket.io Kutubxonasi (Yangi qo'shildi) -->
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 </head>
     <style>
@@ -86,7 +86,6 @@
             cursor: pointer;
             transition: 0.2s;
             box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-            position: relative;
         }
         .table-card:hover {
             transform: translateY(-3px);
@@ -102,21 +101,8 @@
             object-fit: contain;
             margin-bottom: 5px;
         }
-        /* Stol kartochkasidagi buyurtma holati uchun badge */
-        .order-status-badge {
-            font-size: 11px;
-            padding: 2px 6px;
-            border-radius: 4px;
-            margin-top: 5px;
-            display: inline-block;
-            font-weight: bold;
-        }
-        .status-yangi { background: #3498db; color: white; }
-        .status-tayyorlanmoqda { background: #f39c12; color: white; }
-        .status-tayyor { background: #2ecc71; color: white; }
-        .status-tolandi { background: #95a5a6; color: white; }
 
-        /* Chaqiruvlar va Admin Bildirishnomalari paneli */
+        /* Chaqiruvlar paneli */
         #call-notifications-container {
             margin: 20px 0;
             display: flex;
@@ -126,16 +112,6 @@
         .call-alert-card {
             background: #fff3cd;
             border: 1px solid #ffeeba;
-            padding: 12px 20px;
-            border-radius: 8px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        }
-        .admin-status-alert-card {
-            background: #e8f4fd;
-            border: 1px solid #bbe1fa;
             padding: 12px 20px;
             border-radius: 8px;
             display: flex;
@@ -222,7 +198,7 @@
             </div>
         </div>
 
-        <!-- Mijozlardan kelgan chaqiruvlar va admin xabarlari chiqadigan joy -->
+        <!-- Mijozlardan kelgan chaqiruvlar chiqadigan joy -->
         <div id="call-notifications-container"></div>
 
         <h2 id="section-heading-title" style="margin-top: 25px;">Zal Stollari (16 ta)</h2>
@@ -236,9 +212,6 @@
                 <h3 id="modal-title" style="margin: 0;">Boshqaruv</h3>
                 <button onclick="closeModal()" style="border: none; background: none; font-size: 20px; cursor: pointer;">&times;</button>
             </div>
-
-            <!-- Modal ichida buyurtmaning joriy holatini ko'rsatish uchun joy -->
-            <div id="modal-order-status-container" style="margin: 10px 0; padding: 8px 12px; background: #f1f8ff; border-radius: 6px; font-size: 14px; display: none;"></div>
 
             <div style="margin: 15px 0; display: flex; align-items: center; gap: 10px;">
                 <span>Mehmonlar soni:</span>
@@ -300,7 +273,7 @@
         });
 
         socket.on('connect', () => {
-            console.log("Ofitsiant paneli serverga ulandi!"[cite: 8]);
+            console.log("Ofitsiant paneli serverga ulandi!");
         });
 
         // 1 va 2-bandlar: Mijoz chaqirig'ini qabul qilish va ovozli xabar berish
@@ -308,101 +281,6 @@
             playNotificationSound();
             addCallNotification(data.tableNumber);
         });
-
-        // Admin tomonidan buyurtma statusi o'zgarishlarini tinglash (Socket.io)
-        socket.on('order_status_updated', (data) => {
-            handleOrderStatusChange(data);
-        });
-
-        socket.on('orders_updated', (data) => {
-            if (Array.isArray(data)) {
-                data.forEach(order => handleOrderStatusChange(order));
-            }
-        });
-
-        function handleOrderStatusChange(order) {
-            if (!order) return;
-            let tableNum = order.tableNumber || order.table;
-            let newStatus = order.status;
-            if (!tableNum || !newStatus) return;
-
-            // LocalStorage'dagi buyurtmalar holatini yangilash
-            ['waiter_orders', 'orders', 'active_orders'].forEach(k => {
-                let orders = JSON.parse(localStorage.getItem(k)) || [];
-                let updated = false;
-                orders = orders.map(o => {
-                    if (String(o.tableNumber || o.table) === String(tableNum)) {
-                        o.status = newStatus;
-                        if (newStatus === 'tolandi') {
-                            o.isPaid = true;
-                        }
-                        updated = true;
-                    }
-                    return o;
-                });
-                if (updated) {
-                    localStorage.setItem(k, JSON.stringify(orders));
-                }
-            });
-
-            // Agar to'langan bo'lsa stolni bo'shatish
-            if (newStatus === 'tolandi') {
-                // Stol kalitini aniqlash (zal_item_X yoki xonalar_item_X)
-                ['zal', 'xonalar'].forEach(sec => {
-                    for (let i = 1; i <= 20; i++) {
-                        let key = `${sec}_item_${i}`;
-                        let itemData = JSON.parse(localStorage.getItem(key));
-                        let prefix = (sec === 'zal') ? 'Stol #' : 'Xona #';
-                        if (itemData && String(prefix + i) === String(tableNum)) {
-                            itemData.busy = false;
-                            itemData.items = [];
-                            localStorage.setItem(key, JSON.stringify(itemData));
-                        }
-                    }
-                });
-            }
-
-            // Xabarlar paneliga bildirishnoma qo'shish
-            addAdminStatusNotification(tableNum, newStatus);
-            renderItems();
-
-            // Agar hozir o'sha stolning modali ochiq bo'lsa, modal ichidagi holatni ham yangilash
-            if (currentActiveTableId) {
-                let currentPrefix = (currentActiveTableId.section === 'zal') ? 'Stol #' : 'Xona #';
-                let currentTableStr = currentPrefix + currentActiveTableId.id;
-                if (String(currentTableStr) === String(tableNum)) {
-                    updateModalOrderStatusDisplay(newStatus);
-                }
-            }
-        }
-
-        function addAdminStatusNotification(tableNumber, status) {
-            const container = document.getElementById('call-notifications-container');
-            const notifId = 'admin_notif_' + Date.now();
-            
-            let statusText = status;
-            if(status === 'yangi') statusText = 'Yangi';
-            else if(status === 'tayyorlanmoqda') statusText = 'Tayyorlanmoqda';
-            else if(status === 'tayyor') statusText = 'Tayyor ✅';
-            else if(status === 'tolandi') statusText = 'Tolandi 💰';
-
-            const card = document.createElement('div');
-            card.className = 'admin-status-alert-card';
-            card.id = notifId;
-            card.innerHTML = `
-                <div>
-                    <strong>📢 Buyurtma holati:</strong> <span>${tableNumber}</span> buyurtmasi <b>${statusText}</b> holatiga o'tdi.
-                </div>
-                <button onclick="document.getElementById('${notifId}').remove()" style="padding: 4px 10px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">Yopish</button>
-            `;
-            container.appendChild(card);
-
-            // 10 sekunddan keyin avtomatik o'chirish
-            setTimeout(() => {
-                let el = document.getElementById(notifId);
-                if(el) el.remove();
-            }, 10000);
-        }
 
         function playNotificationSound() {
             try {
@@ -437,7 +315,9 @@
             container.appendChild(card);
         }
 
+        // 3 va 4-bandlar: "Hozir boryapman" tugmasini bosish va mijozga xabar berish
         function acceptCall(tableNumber, callId) {
+            socket.acceptCallNotification({ tableNumber: tableNumber }); // Server orqali yoki to'g'ridan-to'g'ri yuborish
             socket.emit('waiter_on_the_way', { tableNumber: tableNumber, waiter: activeWaiter });
             
             const card = document.getElementById(callId);
@@ -683,6 +563,7 @@
         let currentActiveTableId = null;
         let activeWaiter = localStorage.getItem('activeWaiter') || "Ofitsiant";
         let currentCategoryFilter = 'all';
+        let currentEditingItemIndex = null;
 
         window.addEventListener('DOMContentLoaded', () => {
             let waiterSpan = document.getElementById('logged-waiter-name');
@@ -750,40 +631,22 @@
             grid.innerHTML = '';
             
             let count = (currentActiveSection === 'zal') ? 16 : 12;
-            let orders = JSON.parse(localStorage.getItem('waiter_orders')) || [];
 
             for (let i = 1; i <= count; i++) {
                 let key = `${currentActiveSection}_item_${i}`;
                 let itemData = JSON.parse(localStorage.getItem(key)) || { busy: false, guests: 0, items: [] };
                 
                 let titlePrefix = (currentActiveSection === 'zal') ? 'Stol #' : 'Xona #';
-                let tableNumStr = titlePrefix + i;
-
-                // Ushbu stolning joriy buyurtma holatini topish
-                let currentOrder = orders.find(o => String(o.tableNumber || o.table) === String(tableNumStr) && o.status !== 'tolandi');
-                let orderStatus = currentOrder ? currentOrder.status : null;
 
                 let iconSrc = (currentActiveSection === 'zal') 
                     ? 'https://cdn-icons-png.flaticon.com/512/7067/7067120.png' 
                     : 'https://cdn-icons-png.flaticon.com/512/7845/7845744.png';
 
-                let statusBadgeHtml = '';
-                if (itemData.busy && orderStatus) {
-                    let badgeClass = 'status-yangi';
-                    let badgeText = 'Yangi';
-                    if (orderStatus === 'tayyorlanmoqda') { badgeClass = 'status-tayyorlanmoqda'; badgeText = 'Tayyorlanmoqda'; }
-                    else if (orderStatus === 'tayyor') { badgeClass = 'status-tayyor'; badgeText = 'Tayyor ✅'; }
-                    else if (orderStatus === 'tolandi') { badgeClass = 'status-tolandi'; badgeText = 'Tolandi'; }
-                    
-                    statusBadgeHtml = `<div class="order-status-badge ${badgeClass}">${badgeText}</div>`;
-                }
-
                 grid.innerHTML += `
                     <div class="table-card ${itemData.busy ? 'busy' : ''}" onclick="openItemModal('${currentActiveSection}', ${i})">
                         <img src="${iconSrc}" class="table-icon" alt="Ikonka">
-                        <h4 style="margin:5px 0;">${tableNumStr}</h4>
+                        <h4 style="margin:5px 0;">${titlePrefix}${i}</h4>
                         <p style="font-size: 13px; margin: 0; font-weight: bold;">${itemData.busy ? `🔴 Band (${itemData.guests} kishi)` : '🟢 Bo\'sh'}</p>
-                        ${statusBadgeHtml}
                     </div>
                 `;
             }
@@ -803,34 +666,12 @@
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
             document.querySelector('.tab-btn').classList.add('active');
 
-            // Modalda buyurtma holatini ko'rsatish
-            let orders = JSON.parse(localStorage.getItem('waiter_orders')) || [];
-            let currentOrder = orders.find(o => String(o.tableNumber || o.table) === String(titlePrefix) && o.status !== 'tolandi');
-            if (currentOrder && currentOrder.status) {
-                updateModalOrderStatusDisplay(currentOrder.status);
-            } else {
-                document.getElementById('modal-order-status-container').style.display = 'none';
-            }
-
             renderMenuSelection(itemData.items);
             document.getElementById('modal-overlay').style.display = 'flex';
         }
 
-        function updateModalOrderStatusDisplay(status) {
-            let container = document.getElementById('modal-order-status-container');
-            let statusText = status;
-            if(status === 'yangi') statusText = 'Yangi (Admin qabul qildi)';
-            else if(status === 'tayyorlanmoqda') statusText = 'Oshxonada tayyorlanmoqda 🍳';
-            else if(status === 'tayyor') statusText = 'Tayyor, olib ketish mumkin ✅';
-            else if(status === 'tolandi') statusText = 'Toʻlandi 💰';
-
-            container.innerHTML = `Buyurtma holati: <b>${statusText}</b>`;
-            container.style.display = 'block';
-        }
-
         function closeModal() {
             document.getElementById('modal-overlay').style.display = 'none';
-            currentActiveTableId = null;
         }
 
         function changeGuests(delta) {
@@ -975,9 +816,6 @@
             let generalOrders = JSON.parse(localStorage.getItem('orders')) || [];
             generalOrders.push(orderObj);
             localStorage.setItem('orders', JSON.stringify(generalOrders));
-
-            // Socket orqali serverga buyurtma yuborish
-            socket.emit('new_order', orderObj);
 
             alert("Buyurtma admin paneliga muvaffaqiyatli yuborildi!");
             closeModal();

@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ofitsiant Paneli</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Socket.io Kutubxonasi -->
+    <!-- Socket.io Kutubxonasi (Yangi qo'shildi) -->
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 </head>
     <style>
@@ -273,10 +273,10 @@
         });
 
         socket.on('connect', () => {
-            console.log("Ofitsiant paneli serverga ulandi!");[cite: 5]
+            console.log("Ofitsiant paneli serverga ulandi!");
         });
 
-        // 1 va 2-bandlar: Mijoz chaqirig'ini qabul qilish va ovozli xabar berish[cite: 5]
+        // 1 va 2-bandlar: Mijoz chaqirig'ini qabul qilish va ovozli xabar berish
         socket.on('call_waiter', (data) => {
             playNotificationSound();
             addCallNotification(data.tableNumber);
@@ -288,14 +288,14 @@
                 const osc = ctx.createOscillator();
                 const gain = ctx.createGain();
                 osc.type = 'sine';
-                osc.frequency.setValueAtTime(587.33, ctx.currentTime); // D5 nota[cite: 5]
+                osc.frequency.setValueAtTime(587.33, ctx.currentTime); // D5 nota
                 gain.gain.setValueAtTime(0.1, ctx.currentTime);
                 osc.connect(gain);
                 gain.connect(ctx.destination);
                 osc.start();
                 osc.stop(ctx.currentTime + 0.5);
             } catch (e) {
-                console.log("Ovoz chiqarishda xatolik:", e);[cite: 5]
+                console.log("Ovoz chiqarishda xatolik:", e);
             }
         }
 
@@ -308,22 +308,23 @@
             card.id = callId;
             card.innerHTML = `
                 <div>
-                    <strong>🔔 Diqqat!</strong> <span>${tableNumber}</span> dan mijoz chaqirmoqda![cite: 5]
+                    <strong>🔔 Diqqat!</strong> <span>${tableNumber}</span> dan mijoz chaqirmoqda!
                 </div>
                 <button onclick="acceptCall('${tableNumber}', '${callId}')" style="padding: 6px 14px; background: #27ae60; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">Hozir boryapman</button>
             `;
             container.appendChild(card);
         }
 
-        // 3 va 4-bandlar: "Hozir boryapman" tugmasini bosish va mijozga xabar berish[cite: 5]
+        // 3 va 4-bandlar: "Hozir boryapman" tugmasini bosish va mijozga xabar berish
         function acceptCall(tableNumber, callId) {
-            socket.emit('waiter_on_the_way', { tableNumber: tableNumber, waiter: activeWaiter });[cite: 5]
+            socket.acceptCallNotification({ tableNumber: tableNumber }); // Server orqali yoki to'g'ridan-to'g'ri yuborish
+            socket.emit('waiter_on_the_way', { tableNumber: tableNumber, waiter: activeWaiter });
             
             const card = document.getElementById(callId);
             if (card) {
                 card.remove();
             }
-            alert(`${tableNumber} ga "Hozir boryapman" xabari yuborildi!`);[cite: 5]
+            alert(`${tableNumber} ga "Hozir boryapman" xabari yuborildi!`);
         }
 
         const fullMenu = [

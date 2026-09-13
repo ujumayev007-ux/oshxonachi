@@ -287,17 +287,17 @@
         { id: 140, category: "Ichimliklar", name: "Coca-Cola - 0.5L", price: 10000 }
     ];
 
-   // Menyuni localStorage'dan yangilab oluvchi funksiya
-function loadMenuFromStorage() {
-    const savedMenu = localStorage.getItem('admin_menu');
-    if (savedMenu) {
-        fullMenu = JSON.parse(savedMenu);
+    // Menyuni localStorage'dan yangilab oluvchi funksiya
+    function loadMenuFromStorage() {
+        const savedMenu = localStorage.getItem('admin_menu');
+        if (savedMenu) {
+            fullMenu = JSON.parse(savedMenu);
+        }
+        // Agar ochiq turgan stol oynasi (modal) bo'lsa, menyuni ekranda yangilaymiz
+        if (typeof renderModalMenu === 'function') {
+            renderModalMenu();
+        }
     }
-    // Agar ofitsiant panelida menyuni ekranga chizuvchi funksiya bo'lsa, uni chaqiramiz
-    if (typeof renderMenu === 'function') {
-        renderMenu();
-    }
-}
 
 // Sahifa yuklanganda ishga tushishi
 document.addEventListener('DOMContentLoaded', () => {

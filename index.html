@@ -122,7 +122,7 @@
 </head>
 <body>
     <!-- Xabarnoma banneri -->
-    <div id="waiter-status-banner">Ofitsiant sizning xabaringizni oldi![cite: 6]</div>
+    <div id="waiter-status-banner">Ofitsiant sizning xabaringizni oldi!</div>
     
     <header>
         <h2>Restoran Menyusi</h2>
@@ -200,14 +200,14 @@
         });
 
         socket.on('connect', () => {
-            console.log("Render serveriga muvaffaqiyatli ulandi!");[cite: 6]
+            console.log("Render serveriga muvaffaqiyatli ulandi!");
         });
 
         socket.on('connect_error', (err) => {
-            console.log("Server uyg'onishida kutish...", err);[cite: 6]
+            console.log("Server uyg'onishida kutish...", err);
         });
 
-        // Ofitsiant "hozir boryapman" deganda ishlaydigan qism[cite: 6]
+        // Ofitsiant "hozir boryapman" deganda ishlaydigan qism[cite: 10]
         socket.on('waiter_on_the_way', (data) => {
             const banner = document.getElementById('waiter-status-banner');
             banner.style.display = 'block';
@@ -219,70 +219,74 @@
         let currentWaiterModalSection = 'zal';
 
         function openWaiterModal() {
-            document.getElementById('waiter-modal').style.display = 'flex';
-            renderWaiterModalTables();
+            const modal = document.getElementById('waiter-modal');
+            currentWaiterModalSection = 'zal';
+            updateWaiterModalTabs();
+            renderWaiterModalItems();
+            modal.style.display = 'flex';
+        }
+
+        function switchWaiterModalSection(section) {
+            currentWaiterModalSection = section;
+            updateWaiterModalTabs();
+            renderWaiterModalItems();
+        }
+
+        function updateWaiterModalTabs() {
+            const zalBtn = document.getElementById('modal-tab-zal');
+            const xonalarBtn = document.getElementById('modal-tab-xonalar');
+            if(zalBtn && xonalarBtn) {
+                if(currentWaiterModalSection === 'zal') {
+                    zalBtn.classList.add('active');
+                    zalBtn.style.background = '#1976d2';
+                    zalBtn.style.color = 'white';
+                    xonalarBtn.classList.remove('active');
+                    xonalarBtn.style.background = '#fff';
+                    xonalarBtn.style.color = '#333';
+                } else {
+                    xonalarBtn.classList.add('active');
+                    xonalarBtn.style.background = '#1976d2';
+                    xonalarBtn.style.color = 'white';
+                    zalBtn.classList.remove('active');
+                    zalBtn.style.background = '#fff';
+                    zalBtn.style.color = '#333';
+                }
+            }
+        }
+
+        function renderWaiterModalItems() {
+            const tablesList = document.getElementById('tables-list');
+            tablesList.innerHTML = '';
+            
+            let count = (currentWaiterModalSection === 'zal') ? 16 : 12;
+            let titlePrefix = (currentWaiterModalSection === 'zal') ? 'Stol #' : 'Xona #';
+            let iconSrc = (currentWaiterModalSection === 'zal') 
+                ? 'https://cdn-icons-png.flaticon.com/512/7067/7067120.png' 
+                : 'https://cdn-icons-png.flaticon.com/512/7845/7845744.png';
+
+            for(let i = 1; i <= count; i++) {
+                tablesList.innerHTML += `
+                    <button class="table-btn" onclick="callWaiter('${titlePrefix}${i}')">
+                        <img src="${iconSrc}" style="width: 24px; height: 24px; object-fit: contain;" alt="Ikonka">
+                        <span>${titlePrefix}${i}</span>
+                    </button>
+                `;
+            }
         }
 
         function closeWaiterModal() {
             document.getElementById('waiter-modal').style.display = 'none';
         }
 
-        function switchWaiterModalSection(section) {
-            currentWaiterModalSection = section;
-            document.getElementById('modal-tab-zal').classList.remove('active');
-            document.getElementById('modal-tab-xonalar').classList.remove('active');
-            if (section === 'zal') {
-                document.getElementById('modal-tab-zal').classList.add('active');
-            } else {
-                document.getElementById('modal-tab-xonalar').classList.add('active');
-            }
-            renderWaiterModalTables();
-        }
-
-        function renderWaiterModalTables() {
-            const list = document.getElementById('tables-list');
-            list.innerHTML = '';
-            let count = (currentWaiterModalSection === 'zal') ? 16 : 12;
-            let prefix = (currentWaiterModalSection === 'zal') ? 'Stol #' : 'Xona #';
-            for (let i = 1; i <= count; i++) {
-                let tableName = `${prefix}${i}`;
-                list.innerHTML += `
-                    <button class="table-btn" onclick="callWaiter('${tableName}')">
-                        <span>🪑</span>
-                        <span>${tableName}</span>
-                    </button>
-                `;
-            }
-        }
-
-        function callWaiter(tableName) {
-            socket.emit('call_waiter', { tableNumber: tableName });
-            alert(`${tableName}dan ofitsiant chaqirildi!`);
+        // Ofitsiantni chaqirish funksiyasi
+        function callWaiter(tableNum) {
+            socket.emit('call_waiter', { tableNumber: tableNum });
+            alert(`${tableNum} uchun ofitsiant chaqirildi!`);
             closeWaiterModal();
         }
-
-        function toggleNameInput() {
-            const type = document.getElementById('review-type').value;
-            const nameInput = document.getElementById('reviewer-name');
-            nameInput.style.display = (type === 'named') ? 'block' : 'none';
-        }
-
-        function submitReview() {
-            alert("Fikr-mulohazangiz uchun rahmat!");
-        }
-
-        function openCartModal() {
-            document.getElementById('cart-modal').style.display = 'flex';
-        }
-
-        function closeCartModal() {
-            document.getElementById('cart-modal').style.display = 'none';
-        }
-
-        function filterMenu(category, event) {
-            document.querySelectorAll('.category-tabs .tab-btn').forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
-        }
     </script>
+
+    <script src="js/config.js"></script>
+    <script src="js/customer.js"></script>
 </body>
 </html>

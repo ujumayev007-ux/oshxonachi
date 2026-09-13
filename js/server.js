@@ -2,15 +2,25 @@ const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 const path = require('path');
+const cors = require('cors');
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server);
 
+// Express uchun CORS ni yoqish
+app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Xotiradagi vaqtinchalik buyurtmalar ro'yxati (real loyihada ma'lumotlar bazasi ulanadi)
+// Render va turli domenlardan ulana olish uchun Socket.io CORS sozlamasi
+const io = new Server(server, {
+    cors: {
+        origin: "*",
+        methods: ["GET", "POST"]
+    }
+});
+
+// Xotiradagi vaqtinchalik buyurtmalar ro'yxati
 let orders = [];
 
 io.on('connection', (socket) => {
@@ -29,24 +39,36 @@ io.on('connection', (socket) => {
             createdAt: new Date().toLocaleTimeString()
         };
         orders.push(newOrder);
-        
-        // Barcha ulangan panelga (admin va ofitsiantlarga) yangi buyurtmani tarqatish
+
+        // Barcha ulangan panellarga yangi buyurtmani tarqatish
         io.emit('update_orders', orders);
     });
-socket.on('call_waiter', (data) => {
+
+    // Ofitsiantni chaqirish hodisasi
+    socket.on('call_waiter', (data) => {
         io.emit('call_waiter', data);
     });
 
+    // Ofitsiant yo'lda ekanligi haqidagi hodisa
     socket.on('waiter_on_the_way', (data) => {
         io.emit('waiter_on_the_way', data);
     });
+
     // Admin panelidan buyurtma holatini o'zgartirganda (Qabul / Jarayonda / Tayyor)
     socket.on('change_status', ({ orderId, status }) => {
         const order = orders.find(o => o.id === orderId);
         if (order) {
             order.status = status;
-            // Barcha panellarga yangilangan holatni yuborish
+
+            // 1. Barcha panellarga yangilangan umumiy buyurtmalar ro'yxatini yuborish
             io.emit('update_orders', orders);
+
+            // 2. Ofitsiant paneli va maxsus bildirishnomalar uchun alohida hodisa yuborish
+            io.emit('status_updated', {
+                orderId: order.id,
+                status: order.status,
+                table: order.table
+            });
         }
     });
 

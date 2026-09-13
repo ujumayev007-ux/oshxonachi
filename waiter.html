@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ofitsiant Paneli</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Socket.io client kutubxonasi -->
-    <script src="/socket.io/socket.io.js"></script>
+    <!-- Socket.io client kutubxonasi (Render serveridan yuklanadi) -->
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
     <style>
         * {
             box-sizing: border-box;
@@ -258,6 +258,7 @@
     </div>
 
     <script>
+        const SOCKET_URL = 'https://oshxonachi-server.onrender.com';
         let socket = null;
         let activeSection = 'zal';
         let activeWaiter = "Admin";
@@ -286,11 +287,20 @@
         ];
 
         window.onload = function() {
-            if (typeof io !== 'undefined') {
-                socket = io();
+            try {
+                socket = io(SOCKET_URL, {
+                    reconnection: true,
+                    reconnectionAttempts: 20,
+                    reconnectionDelay: 1000,
+                    timeout: 30000
+                });
 
                 socket.on('connect', () => {
-                    console.log("Ofitsiant paneli serverga ulandi!");
+                    console.log("Ofitsiant paneli Render serveriga muvaffaqiyatli ulandi!");
+                });
+
+                socket.on('connect_error', (err) => {
+                    console.error("Serverga ulanishda xatolik yuz berdi:", err);
                 });
 
                 socket.on('status_updated', (data) => {
@@ -301,6 +311,8 @@
                     playNotificationSound();
                     addCallNotification(data.tableNumber);
                 });
+            } catch (error) {
+                console.error("Socketni ishga tushirishda xatolik:", error);
             }
 
             initClock();
@@ -309,47 +321,55 @@
         };
 
         function updateLocalTableStatus(tableOrOrderId, newStatus, isPrinted, isPaid) {
-            let waiterOrders = JSON.parse(localStorage.getItem('waiter_orders')) || [];
-            let activeOrders = JSON.parse(localStorage.getItem('active_orders')) || [];
+            try {
+                let waiterOrders = JSON.parse(localStorage.getItem('waiter_orders')) || [];
+                let activeOrders = JSON.parse(localStorage.getItem('active_orders')) || [];
 
-            waiterOrders = waiterOrders.map(o => {
-                let id = o.id !== undefined ? o.id : o.tableNumber;
-                if (String(id) === String(tableOrOrderId) || String(o.tableNumber) === String(tableOrOrderId)) {
-                    o.status = newStatus;
-                    if (isPrinted !== undefined) o.isPrinted = isPrinted;
-                    if (isPaid !== undefined) o.isPaid = isPaid;
-                }
-                return o;
-            });
+                waiterOrders = waiterOrders.map(o => {
+                    let id = o.id !== undefined ? o.id : o.tableNumber;
+                    if (String(id) === String(tableOrOrderId) || String(o.tableNumber) === String(tableOrOrderId)) {
+                        o.status = newStatus;
+                        if (isPrinted !== undefined) o.isPrinted = isPrinted;
+                        if (isPaid !== undefined) o.isPaid = isPaid;
+                    }
+                    return o;
+                });
 
-            activeOrders = activeOrders.map(o => {
-                let id = o.id !== undefined ? o.id : o.tableNumber;
-                if (String(id) === String(tableOrOrderId) || String(o.tableNumber) === String(tableOrOrderId)) {
-                    o.status = newStatus;
-                    if (isPrinted !== undefined) o.isPrinted = isPrinted;
-                    if (isPaid !== undefined) o.isPaid = isPaid;
-                }
-                return o;
-            });
+                activeOrders = activeOrders.map(o => {
+                    let id = o.id !== undefined ? o.id : o.tableNumber;
+                    if (String(id) === String(tableOrOrderId) || String(o.tableNumber) === String(tableOrOrderId)) {
+                        o.status = newStatus;
+                        if (isPrinted !== undefined) o.isPrinted = isPrinted;
+                        if (isPaid !== undefined) o.isPaid = isPaid;
+                    }
+                    return o;
+                });
 
-            localStorage.setItem('waiter_orders', JSON.stringify(waiterOrders));
-            localStorage.setItem('active_orders', JSON.stringify(activeOrders));
+                localStorage.setItem('waiter_orders', JSON.stringify(waiterOrders));
+                localStorage.setItem('active_orders', JSON.stringify(activeOrders));
 
-            loadOrdersFromStorage();
-            renderTables();
+                loadOrdersFromStorage();
+                renderTables();
+            } catch (error) {
+                console.error("Statusni yangilashda xatolik:", error);
+            }
         }
 
         function loadOrdersFromStorage() {
-            tablesState = {};
-            let waiterOrders = JSON.parse(localStorage.getItem('waiter_orders')) || [];
-            let activeOrders = JSON.parse(localStorage.getItem('active_orders')) || [];
-            let combined = [...waiterOrders, ...activeOrders];
+            try {
+                tablesState = {};
+                let waiterOrders = JSON.parse(localStorage.getItem('waiter_orders')) || [];
+                let activeOrders = JSON.parse(localStorage.getItem('active_orders')) || [];
+                let combined = [...waiterOrders, ...activeOrders];
 
-            combined.forEach(o => {
-                if (o.tableNumber && o.status !== 'tolandi') {
-                    tablesState[o.tableNumber] = o;
-                }
-            });
+                combined.forEach(o => {
+                    if (o.tableNumber && o.status !== 'tolandi') {
+                        tablesState[o.tableNumber] = o;
+                    }
+                });
+            } catch (error) {
+                console.error("Buyurtmalarni yuklashda xatolik:", error);
+            }
         }
 
         function renderTables() {
@@ -515,71 +535,80 @@
         }
 
         function sendOrderToAdmin() {
-            let items = Object.values(currentCart);
-            if (items.length === 0) {
-                alert("Iltimos, kamida bitta taom tanlang!");
-                return;
-            }
+            try {
+                let items = Object.values(currentCart);
+                if (items.length === 0) {
+                    alert("Iltimos, kamida bitta taom tanlang!");
+                    return;
+                }
 
-            let existingOrder = tablesState[selectedTableNumber];
-            let isUpdate = !!existingOrder;
+                let existingOrder = tablesState[selectedTableNumber];
+                let isUpdate = !!existingOrder;
 
-            let orderData = {
-                id: selectedTableNumber,
-                tableNumber: selectedTableNumber,
-                waiterName: activeWaiter,
-                guestsCount: currentGuestsCount,
-                items: items,
-                status: existingOrder ? (existingOrder.status || 'yangi') : 'yangi',
-                time: existingOrder ? existingOrder.time : new Date().toLocaleTimeString()
-            };
+                let orderData = {
+                    id: selectedTableNumber,
+                    tableNumber: selectedTableNumber,
+                    waiterName: activeWaiter,
+                    guestsCount: currentGuestsCount,
+                    items: items,
+                    status: existingOrder ? (existingOrder.status || 'yangi') : 'yangi',
+                    time: existingOrder ? existingOrder.time : new Date().toLocaleTimeString()
+                };
 
-            let waiterOrders = JSON.parse(localStorage.getItem('waiter_orders')) || [];
-            let index = waiterOrders.findIndex(o => o.tableNumber === selectedTableNumber);
-            if (index >= 0) {
-                waiterOrders[index] = orderData;
-            } else {
-                waiterOrders.push(orderData);
-            }
+                let waiterOrders = JSON.parse(localStorage.getItem('waiter_orders')) || [];
+                let index = waiterOrders.findIndex(o => o.tableNumber === selectedTableNumber);
+                if (index >= 0) {
+                    waiterOrders[index] = orderData;
+                } else {
+                    waiterOrders.push(orderData);
+                }
 
-            localStorage.setItem('waiter_orders', JSON.stringify(waiterOrders));
+                localStorage.setItem('waiter_orders', JSON.stringify(waiterOrders));
 
-            if (socket) {
-                socket.emit('new_order', orderData);
-            }
+                if (socket) {
+                    socket.emit('new_order', orderData);
+                }
 
-            closeModal();
-            loadOrdersFromStorage();
-            renderTables();
-            if (isUpdate) {
-                alert("Buyurtma muvaffaqiyatli yangilandi va admin panelga yuborildi!");
-            } else {
-                alert("Buyurtma admin panelga real vaqt rejimida yuborildi!");
+                closeModal();
+                loadOrdersFromStorage();
+                renderTables();
+                if (isUpdate) {
+                    alert("Buyurtma muvaffaqiyatli yangilandi va admin panelga yuborildi!");
+                } else {
+                    alert("Buyurtma admin panelga real vaqt rejimida yuborildi!");
+                }
+            } catch (error) {
+                console.error("Buyurtma yuborishda xatolik:", error);
+                alert("Buyurtmani yuborishda xatolik yuz berdi.");
             }
         }
 
         function printCheck() {
-            let existingOrder = tablesState[selectedTableNumber];
-            if (!existingOrder) {
-                alert("Chek chiqarish uchun avval buyurtma yuborilishi kerak!");
-                return;
+            try {
+                let existingOrder = tablesState[selectedTableNumber];
+                if (!existingOrder) {
+                    alert("Chek chiqarish uchun avval buyurtma yuborilishi kerak!");
+                    return;
+                }
+
+                existingOrder.isPrinted = true;
+                let waiterOrders = JSON.parse(localStorage.getItem('waiter_orders')) || [];
+                waiterOrders = waiterOrders.map(o => {
+                    if (o.tableNumber === selectedTableNumber) o.isPrinted = true;
+                    return o;
+                });
+                localStorage.setItem('waiter_orders', JSON.stringify(waiterOrders));
+
+                if (socket) {
+                    socket.emit('change_status', { orderId: selectedTableNumber, status: existingOrder.status, isPrinted: true });
+                }
+
+                alert(`${selectedTableNumber} uchun chek kassa printeriga yuborildi!`);
+                closeModal();
+                renderTables();
+            } catch (error) {
+                console.error("Chek chiqarishda xatolik:", error);
             }
-
-            existingOrder.isPrinted = true;
-            let waiterOrders = JSON.parse(localStorage.getItem('waiter_orders')) || [];
-            waiterOrders = waiterOrders.map(o => {
-                if (o.tableNumber === selectedTableNumber) o.isPrinted = true;
-                return o;
-            });
-            localStorage.setItem('waiter_orders', JSON.stringify(waiterOrders));
-
-            if (socket) {
-                socket.emit('change_status', { orderId: selectedTableNumber, status: existingOrder.status, isPrinted: true });
-            }
-
-            alert(`${selectedTableNumber} uchun chek kassa printeriga yuborildi!`);
-            closeModal();
-            renderTables();
         }
 
         function switchSection(sec) {
@@ -637,11 +666,15 @@
         }
 
         function acceptCall(tableNumber, callId) {
-            if (socket) {
-                socket.emit('waiter_on_the_way', { tableNumber: tableNumber, waiter: activeWaiter });
+            try {
+                if (socket) {
+                    socket.emit('waiter_on_the_way', { tableNumber: tableNumber, waiter: activeWaiter });
+                }
+                const card = document.getElementById(callId);
+                if (card) card.remove();
+            } catch (error) {
+                console.error("Chaqiruvni qabul qilishda xatolik:", error);
             }
-            const card = document.getElementById(callId);
-            if (card) card.remove();
         }
 
         function openHistory() {

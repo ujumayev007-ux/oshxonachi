@@ -132,13 +132,13 @@
             background: #f1f8e9;
             border: 1px solid #c8e6c9;
             padding: 15px;
-            margin-bottom: 10px;
+            margin-bottom: 12px;
             border-radius: 8px;
             display: flex;
             justify-content: space-between;
-            align-items: center;
+            align-items: flex-start;
             flex-wrap: wrap;
-            gap: 10px;
+            gap: 15px;
         }
         .metric-card {
             background: #f8f9fa;
@@ -446,9 +446,28 @@
             if (typeof io !== 'undefined') {
                 socket = io();
 
-                // Yangi buyurtma kelganda
+                // Yangi buyurtma kelganda yoki band stolga qo'shimcha taom qo'shilganda F5 siz yangilash
                 socket.on('new_order_received', (data) => {
-                    loadOrdersFromStorage();
+                    if (!data) return;
+
+                    let targetId = data.id !== undefined ? data.id : data.tableNumber;
+                    
+                    let existingIndex = ordersDatabase.findIndex(o => {
+                        let currentId = o.id !== undefined ? o.id : o.tableNumber;
+                        return String(currentId) === String(targetId) || String(o.tableNumber) === String(data.tableNumber);
+                    });
+
+                    if (existingIndex !== -1) {
+                        ordersDatabase[existingIndex] = {
+                            ...ordersDatabase[existingIndex],
+                            ...data,
+                            items: data.items
+                        };
+                    } else {
+                        ordersDatabase.push(data);
+                    }
+
+                    syncOrdersToStorage();
                     renderAll();
                 });
 
@@ -798,12 +817,27 @@
             }
 
             container.innerHTML = ordersDatabase.map((order, index) => {
-                let itemsList = "";
+                let itemsListHTML = "";
+                let orderTotalSum = 0;
                 let items = order.items || order.cart || [];
-                if (Array.isArray(items)) {
-                    itemsList = items.map(i => `${i.name || i.title} (${i.qty || i.count || 1} ta)`).join(', ');
+
+                if (Array.isArray(items) && items.length > 0) {
+                    itemsListHTML = `<ul style="list-style: none; padding: 0; margin: 8px 0; background: #ffffff; border: 1px solid #b3d7ff; border-radius: 6px; padding: 8px;">` + 
+                        items.map(i => {
+                            let name = i.name || i.title || "Taom";
+                            let qty = Number(i.qty || i.count || 1);
+                            let price = Number(i.price || i.sale_price || 0);
+                            let itemTotal = price * qty;
+                            orderTotalSum += itemTotal;
+
+                            return `<li style="padding: 6px 0; border-bottom: 1px dashed #e1f5fe; display: flex; justify-content: space-between; font-size: 14px; align-items: center;">
+                                <span><b>${name}</b> — ${qty} ta × ${price.toLocaleString()} so'm</span>
+                                <b style="color: #2e7d32;">${itemTotal.toLocaleString()} so'm</b>
+                            </li>`;
+                        }).join('') + 
+                    `</ul>`;
                 } else {
-                    itemsList = "Buyurtma tafsilotlari";
+                    itemsListHTML = "<p style='color: #777;'>Buyurtma tafsilotlari mavjud emas</p>";
                 }
 
                 const orderId = order.id !== undefined ? order.id : (order.tableNumber !== undefined ? order.tableNumber : index);
@@ -827,14 +861,18 @@
 
                 return `
                     <div class="order-card" data-order-id="${orderId}">
-                        <div>
-                            <p style="font-size: 16px; margin-bottom: 4px;">🪑 <b style="color: #0d47a1; font-size: 18px;">Stol #${tableNo}</b> | Ofitsant: <b>${waiter}</b> | Holat: <b class="order-status-text">${status.toUpperCase()}</b></p>
-                            <p><b>Buyurtma:</b> ${itemsList}</p>
+                        <div style="flex: 1; min-width: 280px;">
+                            <p style="font-size: 16px; margin-bottom: 6px;">🪑 <b style="color: #0d47a1; font-size: 18px;">Stol #${tableNo}</b> | Ofitsant: <b>${waiter}</b> | Holat: <b class="order-status-text" style="color: #d32f2f;">${status.toUpperCase()}</b></p>
+                            <div style="font-size: 13px; font-weight: bold; color: #555; margin-bottom: 4px;">Buyurtma qilingan taomlar:</div>
+                            ${itemsListHTML}
+                            <div style="margin-top: 6px; font-size: 15px; font-weight: bold; color: #0d47a1; background: #e1f5fe; padding: 6px 10px; border-radius: 5px; display: inline-block;">
+                                Jami summa: ${orderTotalSum.toLocaleString()} so'm
+                            </div>
                             <div class="order-payment-section">
                                 ${paymentButtonHTML}
                             </div>
                         </div>
-                        <div>
+                        <div style="display: flex; gap: 5px; flex-wrap: wrap; align-items: flex-start;">
                             <button class="btn" style="background: #ffb74d;" onclick="changeOrderStatus('${orderId}', 'qabul_qilindi')">Qabul</button>
                             <button class="btn" style="background: #4fc3f7;" onclick="changeOrderStatus('${orderId}', 'tayyorlanyapti')">Jarayonda</button>
                             <button class="btn btn-blue" onclick="changeOrderStatus('${orderId}', 'tayyor')">Tayyor</button>
@@ -849,12 +887,10 @@
             let total = 0;
             if (Array.isArray(items) && items.length > 0) {
                 items.forEach(i => {
-                    let q = i.qty || i.count || 1;
-                    let sPrice = i.sale_price || i.price || 35000;
+                    let q = Number(i.qty || i.count || 1);
+                    let sPrice = Number(i.sale_price || i.price || 0);
                     total += sPrice * q;
                 });
-            } else {
-                total = 50000;
             }
             return total;
         }
@@ -911,7 +947,6 @@
 
             syncOrdersToStorage();
             
-            // Socket orqali real vaqtda ofitsant ekranida ham to'landi statusini yangilash
             if (socket) {
                 socket.emit('change_status', { orderId: orderId, status: 'tolandi', paymentType: paymentType, isPaid: true });
             }
@@ -931,7 +966,6 @@
             
             syncOrdersToStorage();
 
-            // Socket orqali status o'zgarganini server va ofitsantga bildirish
             if (socket) {
                 socket.emit('change_status', { orderId: orderId, status: newStatus });
             }
@@ -982,15 +1016,12 @@
 
                     if (Array.isArray(items) && items.length > 0) {
                         items.forEach(i => {
-                            let q = i.qty || i.count || 1;
-                            let sPrice = i.sale_price || i.price || 35000;
-                            let iPrice = i.internal_price || Math.floor(sPrice * 0.7);
+                            let q = Number(i.qty || i.count || 1);
+                            let sPrice = Number(i.sale_price || i.price || 0);
+                            let iPrice = Number(i.internal_price || Math.floor(sPrice * 0.7));
                             orderSale += sPrice * q;
                             orderInternal += iPrice * q;
                         });
-                    } else {
-                        orderSale = 50000;
-                        orderInternal = 35000;
                     }
 
                     if (order.paymentType === 'plastik') {
@@ -1027,7 +1058,11 @@
         }
 
         function updateStatsInfo() {
-            let totalSales = ordersDatabase.filter(o => o.status === 'tolandi').length * 45000;
+            let totalSales = 0;
+            ordersDatabase.filter(o => o.status === 'tolandi').forEach(o => {
+                totalSales += calculateOrderTotal(o);
+            });
+            
             document.getElementById('today-sales').innerText = totalSales.toLocaleString() + " so'm";
             document.getElementById('top-item').innerText = "Toshkent oshi";
             

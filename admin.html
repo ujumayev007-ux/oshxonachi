@@ -1091,11 +1091,16 @@
             });
         }
 
-        function saveData() {
+       function saveData() {
             try {
                 localStorage.setItem('admin_menu', JSON.stringify(menuDatabase));
                 localStorage.setItem('admin_warehouse', JSON.stringify(warehouseDatabase));
                 localStorage.setItem('admin_orders', JSON.stringify(ordersDatabase));
+                
+                // Ofitsiantlarga real vaqt rejimida menyu yangilanganini xabar qilish:
+                if (typeof socket !== 'undefined' && socket) {
+                    socket.emit('menu_updated', menuDatabase);
+                }
             } catch (e) {
                 console.error("Saqlashda xatolik:", e);
             }

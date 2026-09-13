@@ -6,6 +6,8 @@
     <title>Restoran Boshqaruv Tizimi - Admin Paneli</title>
     <!-- Chart.js kutubxonasi statistika uchun -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Socket.io client kutubxonasi -->
+    <script src="/socket.io/socket.io.js"></script>
     <style>
         * {
             box-sizing: border-box;
@@ -39,7 +41,6 @@
             color: #0d47a1;
             font-size: 24px;
         }
-        /* Real vaqt soat va sana uslubi */
         .live-clock-container {
             font-size: 13px;
             color: #555;
@@ -156,7 +157,6 @@
             font-weight: bold;
             color: #2e7d32;
         }
-        /* Avtotugallash uslublari */
         .autocomplete-container {
             position: relative;
             flex: 1;
@@ -186,7 +186,6 @@
             background-color: #e3f2fd;
             color: #0d47a1;
         }
-        /* To'lov tugmalari uslubi */
         .payment-options-container {
             display: flex;
             gap: 8px;
@@ -225,11 +224,47 @@
             object-fit: contain;
             border-radius: 3px;
         }
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background: #ffffff;
+            padding: 25px;
+            border-radius: 10px;
+            width: 350px;
+            max-width: 90%;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        .modal-content h3 {
+            color: #0d47a1;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+        .modal-content p {
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+        .modal-content input {
+            margin-bottom: 12px;
+        }
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
     </style>
 </head>
 <body>
 
-    <!-- ASOSIY PANEL -->
     <div id="admin-main-content">
         <header>
             <div class="header-left">
@@ -240,19 +275,19 @@
                 </div>
             </div>
             <div class="nav-tabs">
-                <button class="tab-btn active" onclick="switchTab('orders')">
+                <button class="tab-btn active" onclick="switchTab('orders', event)">
                     <img src="https://cdn-icons-png.magnific.com/256/16334/16334064.png?semt=ais_white_label" alt="Buyurtmalar" class="tab-icon"> Buyurtmalar
                 </button>
-                <button class="tab-btn" onclick="switchTab('menu')">
+                <button class="tab-btn" onclick="switchTab('menu', event)">
                     <img src="https://cdn-icons-png.flaticon.com/512/4813/4813064.png" alt="Menyu" class="tab-icon"> Menyu Boshqaruvi
                 </button>
-                <button class="tab-btn" onclick="switchTab('warehouse')">
+                <button class="tab-btn" onclick="switchTab('warehouse', event)">
                     <img src="https://cdn-icons-png.flaticon.com/256/12964/12964168.png" alt="Ombor" class="tab-icon"> Ombor
                 </button>
-                <button class="tab-btn" onclick="switchTab('income')">
+                <button class="tab-btn" onclick="switchTab('income', event)">
                     <img src="https://cdn-icons-png.flaticon.com/512/3135/3135706.png" alt="Daromad" class="tab-icon"> Daromad
                 </button>
-                <button class="tab-btn" onclick="switchTab('stats')">
+                <button class="tab-btn" onclick="switchTab('stats', event)">
                     <img src="https://e7.pngegg.com/pngimages/897/627/png-clipart-statistics-icon-ppt-element-text-logo.png" alt="Statistika" class="tab-icon"> Statistika
                 </button>
             </div>
@@ -261,16 +296,12 @@
         <!-- BUYURTMALAR -->
         <div id="orders" class="section-content active">
             <h2>Kelib tushgan buyurtmalar</h2>
-            <div id="orders-container" style="margin-top: 15px;">
-                <!-- Dinamik buyurtmalar -->
-            </div>
+            <div id="orders-container" style="margin-top: 15px;"></div>
         </div>
 
         <!-- MENYU BOSHQARUVI -->
         <div id="menu" class="section-content">
             <h2>Menyu va narxlar</h2>
-            
-            <!-- Yangi taom yoki ichimlik qo'shish qismi -->
             <div style="margin-bottom: 20px; background: #f5f5f5; padding: 15px; border-radius: 8px;">
                 <h3 style="font-size: 16px; color: #0d47a1; margin-bottom: 10px;">Yangi taom yoki ichimlik qo'shish</h3>
                 <div style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr auto; gap: 10px; align-items: center;">
@@ -290,12 +321,9 @@
                     <button class="btn btn-blue" onclick="addNewMenuItem()" style="white-space: nowrap;">Qo'shish</button>
                 </div>
             </div>
-
-            <!-- Menuni qidirish paneli -->
             <div style="margin-bottom: 15px;">
                 <input type="text" id="menu-search-input" placeholder="Taom yoki ichimlik nomi bo'yicha qidirish..." oninput="renderMenu()">
             </div>
-
             <table>
                 <thead>
                     <tr>
@@ -308,9 +336,7 @@
                         <th>Amal</th>
                     </tr>
                 </thead>
-                <tbody id="menu-table-body">
-                    <!-- Dinamik menyu jadvali -->
-                </tbody>
+                <tbody id="menu-table-body"></tbody>
             </table>
         </div>
 
@@ -321,11 +347,11 @@
                 <h3 style="font-size: 16px; color: #0d47a1; margin-bottom: 10px;">Yangi mahsulot qo'shish yoki mavjudini to'ldirish</h3>
                 <div style="display: flex; gap: 10px; position: relative;">
                     <div class="autocomplete-container">
-                        <input type="text" id="new-item-name" placeholder="Mahsulot nomi (masalan: Go'sht, Tuz, Suv)" autocomplete="off" oninput="handleAutocomplete(this.value)">
+                        <input type="text" id="new-item-name" placeholder="Mahsulot nomi" autocomplete="off" oninput="handleAutocomplete(this.value)">
                         <div id="autocomplete-list" class="autocomplete-items"></div>
                     </div>
                     <input type="number" id="new-item-qty" placeholder="Miqdori" style="width: 120px;">
-                    <input type="text" id="new-item-unit" placeholder="Birligi (g, ml, dona, l)" style="width: 140px;">
+                    <input type="text" id="new-item-unit" placeholder="Birligi" style="width: 140px;">
                     <button class="btn btn-blue" onclick="addWarehouseItem()" style="white-space: nowrap;">Qo'shish / Yangilash</button>
                 </div>
             </div>
@@ -338,9 +364,7 @@
                         <th>Tahrirlash / Miqdor qo'shish</th>
                     </tr>
                 </thead>
-                <tbody id="warehouse-table-body">
-                    <!-- Dinamik ombor jadvali -->
-                </tbody>
+                <tbody id="warehouse-table-body"></tbody>
             </table>
         </div>
 
@@ -361,11 +385,10 @@
                     <p id="income-total-sale">0 so'm</p>
                 </div>
                 <div class="metric-card">
-                    <h3>Sof Foyda (Ichki narxga nisbatan)</h3>
+                    <h3>Sof Foyda</h3>
                     <p id="income-net-profit" style="color: #1565c0;">0 so'm</p>
                 </div>
             </div>
-            
             <div style="margin-top: 25px;">
                 <h3 style="font-size: 16px; color: #0d47a1; margin-bottom: 10px;">Sotilgan buyurtmalar tahlili</h3>
                 <table>
@@ -380,9 +403,7 @@
                             <th>Status</th>
                         </tr>
                     </thead>
-                    <tbody id="income-table-body">
-                        <!-- Dinamik daromad jadvali -->
-                    </tbody>
+                    <tbody id="income-table-body"></tbody>
                 </table>
             </div>
         </div>
@@ -396,7 +417,6 @@
                     <p style="margin-bottom: 10px;">Eng ko'p sotilgan taom: <b id="top-item">-</b></p>
                     <p>Ofitsantlar faolligi va band stollar holati doimiy nazoratda.</p>
                 </div>
-                <!-- Rangli Chart uchun konteyner -->
                 <div style="background: #ffffff; padding: 15px; border-radius: 8px; border: 1px solid #e0e0e0; height: 300px;">
                     <canvas id="statsChart"></canvas>
                 </div>
@@ -404,18 +424,194 @@
         </div>
     </div>
 
+    <!-- Naqd to'lov uchun modal oynasi -->
+    <div id="cash-payment-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <h3>Naqd pul bilan to'lov</h3>
+            <p>Chek umumiy summasi: <b id="modal-total-sum">0</b> so'm</p>
+            <label for="modal-cash-input" style="font-size: 13px; font-weight: bold; display: block; margin-bottom: 4px;">Mijoz bergan summa:</label>
+            <input type="number" id="modal-cash-input" placeholder="Summani kiriting..." oninput="calculateChange()">
+            <p style="margin-top: 8px; font-weight: bold; color: #2e7d32;">Qaytim: <span id="modal-change-amount">0</span> so'm</p>
+            <div class="modal-buttons">
+                <button class="btn btn-blue" style="flex: 1;" onclick="confirmCashPayment()">Tasdiqlash</button>
+                <button class="btn" style="flex: 1; background: #e0e0e0;" onclick="closeCashModal()">Bekor qilish</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         let statsChartInstance = null;
+        let menuDatabase = [];
+        let warehouseDatabase = [];
+        let ordersDatabase = [];
+        let currentPayingOrderId = null;
+        let currentOrderTotalSum = 0;
+        let socket = null;
 
         window.onload = function() {
+            if (typeof io !== 'undefined') {
+                socket = io();
+
+                socket.on('status_updated', (data) => {
+                    ordersDatabase = ordersDatabase.map((o, index) => {
+                        let currentId = o.id !== undefined ? o.id : (o.tableNumber !== undefined ? o.tableNumber : index);
+                        if (String(currentId) === String(data.orderId)) {
+                            o.status = data.status;
+                            if (data.isPrinted !== undefined) o.isPrinted = data.isPrinted;
+                            if (data.paymentType !== undefined) o.paymentType = data.paymentType;
+                            if (data.isPaid !== undefined) o.isPaid = data.isPaid;
+                        }
+                        return o;
+                    });
+                    syncOrdersToStorage();
+                    renderAll();
+                });
+            }
+
+            loadInitialData();
             renderAll();
             initChart();
             initLiveClock();
+
+            window.addEventListener('storage', function(e) {
+                if(['waiter_orders', 'active_orders', 'admin_orders', 'orders'].includes(e.key)) {
+                    loadOrdersFromStorage();
+                    renderAll();
+                }
+            });
+
+            setInterval(() => {
+                let savedWaiterOrders = JSON.parse(localStorage.getItem('waiter_orders')) || [];
+                let savedActiveOrders = JSON.parse(localStorage.getItem('active_orders')) || [];
+                let savedAdminOrders = JSON.parse(localStorage.getItem('admin_orders')) || [];
+                let combined = [...savedWaiterOrders, ...savedActiveOrders, ...savedAdminOrders];
+                
+                if (JSON.stringify(combined) !== JSON.stringify(ordersDatabase)) {
+                    loadOrdersFromStorage();
+                    renderAll();
+                }
+            }, 1500);
+
             document.addEventListener("click", function (e) {
                 if (!e.target.closest('.autocomplete-container')) {
                     closeAllAutocomplete();
                 }
             });
+        };
+
+        function loadInitialData() {
+            try {
+                let defaultMenu = [
+                    { id: 1, name: "Toshkent oshi (Toʻy oshi)", category: "Osh", internal_price: 25000, sale_price: 38000, is_visible: true },
+                    { id: 2, name: "Samarqand oshi", category: "Osh", internal_price: 27000, sale_price: 40000, is_visible: true },
+                    { id: 3, name: "Buxoro oshi (\"Sochqi oshi\")", category: "Osh", internal_price: 28000, sale_price: 42000, is_visible: true },
+                    { id: 4, name: "Fargʻona oshi", category: "Osh", internal_price: 26000, sale_price: 39000, is_visible: true },
+                    { id: 5, name: "Devzira oshi", category: "Osh", internal_price: 30000, sale_price: 45000, is_visible: true },
+                    { id: 6, name: "Qaynatma shoʻrva", category: "Suyuq ovqatlar", internal_price: 20000, sale_price: 30000, is_visible: true },
+                    { id: 7, name: "Mastava", category: "Suyuq ovqatlar", internal_price: 18000, sale_price: 27000, is_visible: true },
+                    { id: 8, name: "Noʻxat shoʻrva (Moʻxaldak)", category: "Suyuq ovqatlar", internal_price: 19000, sale_price: 28000, is_visible: true },
+                    { id: 9, name: "Moshxorda", category: "Suyuq ovqatlar", internal_price: 18000, sale_price: 26000, is_visible: true },
+                    { id: 10, name: "Kalla-pacha", category: "Suyuq ovqatlar", internal_price: 35000, sale_price: 50000, is_visible: true },
+                    { id: 11, name: "Chuchvara shoʻrva", category: "Suyuq ovqatlar", internal_price: 20000, sale_price: 30000, is_visible: true },
+                    { id: 12, name: "Koʻza shoʻrva", category: "Suyuq ovqatlar", internal_price: 25000, sale_price: 38000, is_visible: true },
+                    { id: 13, name: "Shirguruch", category: "Suyuq ovqatlar", internal_price: 15000, sale_price: 22000, is_visible: true },
+                    { id: 14, name: "Bifsteks", category: "Quyuq taomlar", internal_price: 30000, sale_price: 45000, is_visible: true },
+                    { id: 15, name: "Bistrogonav (Bef-stroganov)", category: "Quyuq taomlar", internal_price: 32000, sale_price: 48000, is_visible: true },
+                    { id: 16, name: "Jarkor (Jarkoye)", category: "Quyuq taomlar", internal_price: 25000, sale_price: 38000, is_visible: true },
+                    { id: 17, name: "Lagʻman (Qovurma lagʻman)", category: "Quyuq taomlar", internal_price: 24000, sale_price: 36000, is_visible: true },
+                    { id: 18, name: "Dimlama", category: "Quyuq taomlar", internal_price: 22000, sale_price: 34000, is_visible: true },
+                    { id: 19, name: "Tabaka joʻjasi (S-tabaka)", category: "Quyuq taomlar", internal_price: 28000, sale_price: 42000, is_visible: true },
+                    { id: 20, name: "Norin (Qozon norin)", category: "Quyuq taomlar", internal_price: 30000, sale_price: 45000, is_visible: true },
+                    { id: 21, name: "Manti (Goʻshtli va piyozli)", category: "Hamirli taomlar", internal_price: 22000, sale_price: 33000, is_visible: true },
+                    { id: 22, name: "Chuchvara (Qaynatilgan yoki qovurilgan)", category: "Hamirli taomlar", internal_price: 20000, sale_price: 30000, is_visible: true },
+                    { id: 23, name: "Choʻzma lagʻmon", category: "Hamirli taomlar", internal_price: 25000, sale_price: 37000, is_visible: true },
+                    { id: 24, name: "Qovurma lagʻmon (Qovurma soʻy)", category: "Hamirli taomlar", internal_price: 26000, sale_price: 38000, is_visible: true },
+                    { id: 25, name: "Uygʻur lagʻmoni", category: "Hamirli taomlar", internal_price: 27000, sale_price: 40000, is_visible: true },
+                    { id: 26, name: "Beshbarmoq", category: "Hamirli taomlar", internal_price: 35000, sale_price: 50000, is_visible: true },
+                    { id: 27, name: "Uygʻur shivit oshi", category: "Hamirli taomlar", internal_price: 28000, sale_price: 42000, is_visible: true },
+                    { id: 28, name: "Qiyma kabob", category: "Kaboblar", internal_price: 15000, sale_price: 25000, is_visible: true },
+                    { id: 29, name: "Qoʻy goʻshti shashligi (Klassik shashlik)", category: "Kaboblar", internal_price: 18000, sale_price: 28000, is_visible: true },
+                    { id: 30, name: "Jigar shashligi", category: "Kaboblar", internal_price: 16000, sale_price: 26000, is_visible: true },
+                    { id: 31, name: "Qozon kabob", category: "Kaboblar", internal_price: 30000, sale_price: 45000, is_visible: true },
+                    { id: 32, name: "Tandir kabob", category: "Kaboblar", internal_price: 35000, sale_price: 50000, is_visible: true },
+                    { id: 33, name: "Jiz kabob", category: "Kaboblar", internal_price: 32000, sale_price: 48000, is_visible: true },
+                    { id: 60, name: "Tandir somsa", category: "Somsalar", internal_price: 8000, sale_price: 14000, is_visible: true },
+                    { id: 61, name: "Qatlama (varaqi) somsa", category: "Somsalar", internal_price: 9000, sale_price: 15000, is_visible: true },
+                    { id: 62, name: "Koʻk somsa", category: "Somsalar", internal_price: 6000, sale_price: 10000, is_visible: true },
+                    { id: 80, name: "Lavash", category: "Fast Food", internal_price: 18000, sale_price: 28000, is_visible: true },
+                    { id: 81, name: "Gamburger", category: "Fast Food", internal_price: 15000, sale_price: 24000, is_visible: true },
+                    { id: 100, name: "Coca-Cola: 0.5L", category: "Ichimliklar", internal_price: 6000, sale_price: 11000, is_visible: true },
+                    { id: 109, name: "Limonad klassik", category: "Ichimliklar", internal_price: 10000, sale_price: 18000, is_visible: true }
+                ];
+                menuDatabase = JSON.parse(localStorage.getItem('admin_menu')) || defaultMenu;
+
+                let defaultWarehouse = [
+                    { name: "Mol goʻshti", quantity: 10, unit: "g" },
+                    { name: "Qoʻy goʻshti", quantity: 0, unit: "g" },
+                    { name: "Qayla goʻshti", quantity: 0, unit: "g" },
+                    { name: "Jigar", quantity: 0, unit: "g" },
+                    { name: "Qanotcha", quantity: 0, unit: "g" },
+                    { name: "Qazi", quantity: 0, unit: "g" },
+                    { name: "Jo'ja", quantity: 0, unit: "dona" },
+                    { name: "Chuchvara", quantity: 0, unit: "g" },
+                    { name: "Manti", quantity: 0, unit: "g" },
+                    { name: "Xamir", quantity: 0, unit: "g" },
+                    { name: "Guruch (Alanga)", quantity: 0, unit: "g" },
+                    { name: "Guruch (Lazer)", quantity: 15, unit: "g" },
+                    { name: "Guruch (Devzira)", quantity: 0, unit: "g" },
+                    { name: "Guruch (Suyuq)", quantity: 0, unit: "g" },
+                    { name: "Noʻxat", quantity: 0, unit: "g" },
+                    { name: "Mosh", quantity: 0, unit: "g" },
+                    { name: "Un", quantity: 0, unit: "g" },
+                    { name: "Mayiz", quantity: 0, unit: "g" },
+                    { name: "Qizil Sabzi", quantity: 0, unit: "g" },
+                    { name: "Sariq sabzi", quantity: 0, unit: "g" },
+                    { name: "Piyoz", quantity: 0, unit: "g" },
+                    { name: "Kartoshka", quantity: 0, unit: "g" },
+                    { name: "Pomidor", quantity: 0, unit: "g" },
+                    { name: "Bodring", quantity: 0, unit: "g" },
+                    { name: "Sarimsoqpiyoz", quantity: 0, unit: "g" },
+                    { name: "Bulg'or qalampiri", quantity: 0, unit: "g" },
+                    { name: "Qizil qalampir", quantity: 0, unit: "g" },
+                    { name: "Ko'k qalampir", quantity: 0, unit: "g" },
+                    { name: "Selderey poyasi", quantity: 0, unit: "g" },
+                    { name: "Karam", quantity: 0, unit: "g" },
+                    { name: "Gulkaram", quantity: 0, unit: "g" },
+                    { name: "Rediska", quantity: 0, unit: "g" },
+                    { name: "Kashnush", quantity: 0, unit: "g" },
+                    { name: "Ukrob", quantity: 0, unit: "g" },
+                    { name: "Yangi shivit", quantity: 0, unit: "g" },
+                    { name: "Paxta Yogʻi", quantity: 5, unit: "l" },
+                    { name: "Salat Yog'i", quantity: 0, unit: "l" },
+                    { name: "Dumba yog'i", quantity: 0, unit: "g" },
+                    { name: "Sariyog'", quantity: 0, unit: "g" },
+                    { name: "Tuz", quantity: 0, unit: "g" },
+                    { name: "Zira", quantity: 0, unit: "g" },
+                    { name: "Tuz qalampir (aralashma)", quantity: 0, unit: "g" },
+                    { name: "Laza", quantity: 0, unit: "g" },
+                    { name: "Tomat", quantity: 0, unit: "g" },
+                    { name: "Uksus", quantity: 0, unit: "l" },
+                    { name: "Sut", quantity: 0, unit: "L" },
+                    { name: "Qatiq", quantity: 0, unit: "L" },
+                    { name: "Suzma", quantity: 0, unit: "g" },
+                    { name: "Qaymoq", quantity: 0, unit: "g" },
+                    { name: "Smetana", quantity: 0, unit: "g" },
+                    { name: "Garnir", quantity: 0, unit: "g" },
+                    { name: "Shakar", quantity: 0, unit: "g" },
+                    { name: "Tuxum", quantity: 0, unit: "dona" },
+                    { name: "Coca-Cola (klassik) — 0.5L", quantity: 0, unit: "dona" },
+                    { name: "Fanta (apelsin) — 0.5L", quantity: 0, unit: "dona" },
+                    { name: "Sprite — 0.5L", quantity: 0, unit: "dona" },
+                    { name: "Pepsi — 0.5L", quantity: 0, unit: "dona" },
+                    { name: "Limonad klassik", quantity: 0, unit: "grafinda" },
+                    { name: "Kofe (Americano)", quantity: 0, unit: "porsiya" }
+                ];
+                warehouseDatabase = JSON.parse(localStorage.getItem('admin_warehouse')) || defaultWarehouse;
+
+                loadOrdersFromStorage();
+            } catch (err) {
+                console.error("Ma'lumotlarni yuklashda xatolik:", err);
+            }
         }
 
         function initLiveClock() {
@@ -425,88 +621,25 @@
 
         function updateClock() {
             const now = new Date();
-            const day = String(now.getDate()).padStart(2, '0');
-            const month = String(now.getMonth() + 1).padStart(2, '0');
-            const year = now.getFullYear();
-            document.getElementById('live-date').innerText = `${day}.${month}.${year}`;
-
-            const hours = String(now.getHours()).padStart(2, '0');
-            const minutes = String(now.getMinutes()).padStart(2, '0');
-            const seconds = String(now.getSeconds()).padStart(2, '0');
-            document.getElementById('live-time').innerText = `${hours}:${minutes}:${seconds}`;
+            document.getElementById('live-date').innerText = String(now.getDate()).padStart(2, '0') + '.' + 
+                String(now.getMonth() + 1).padStart(2, '0') + '.' + now.getFullYear();
+            document.getElementById('live-time').innerText = String(now.getHours()).padStart(2, '0') + ':' + 
+                String(now.getMinutes()).padStart(2, '0') + ':' + String(now.getSeconds()).padStart(2, '0');
         }
 
-        let defaultMenu = [
-            { id: 1, name: "Toshkent oshi (Toʻy oshi)", category: "Osh", internal_price: 25000, sale_price: 38000, is_visible: true },
-            { id: 2, name: "Samarqand oshi", category: "Osh", internal_price: 27000, sale_price: 40000, is_visible: true },
-            { id: 3, name: "Buxoro oshi (\"Sochqi oshi\")", category: "Osh", internal_price: 28000, sale_price: 42000, is_visible: true },
-            { id: 4, name: "Fargʻona oshi", category: "Osh", internal_price: 26000, sale_price: 39000, is_visible: true },
-            { id: 5, name: "Devzira oshi", category: "Osh", internal_price: 30000, sale_price: 45000, is_visible: true },
-            { id: 6, name: "Qaynatma shoʻrva", category: "Suyuq ovqatlar", internal_price: 20000, sale_price: 30000, is_visible: true },
-            { id: 7, name: "Mastava", category: "Suyuq ovqatlar", internal_price: 18000, sale_price: 27000, is_visible: true },
-            { id: 8, name: "Noʻxat shoʻrva (Moʻxaldak)", category: "Suyuq ovqatlar", internal_price: 19000, sale_price: 28000, is_visible: true },
-            { id: 9, name: "Moshxorda", category: "Suyuq ovqatlar", internal_price: 18000, sale_price: 26000, is_visible: true },
-            { id: 10, name: "Kalla-pacha", category: "Suyuq ovqatlar", internal_price: 35000, sale_price: 50000, is_visible: true },
-            { id: 11, name: "Chuchvara shoʻrva", category: "Suyuq ovqatlar", internal_price: 20000, sale_price: 30000, is_visible: true },
-            { id: 12, name: "Koʻza shoʻrva", category: "Suyuq ovqatlar", internal_price: 25000, sale_price: 38000, is_visible: true },
-            { id: 13, name: "Shirguruch", category: "Suyuq ovqatlar", internal_price: 15000, sale_price: 22000, is_visible: true },
-            { id: 14, name: "Bifsteks", category: "Quyuq taomlar", internal_price: 30000, sale_price: 45000, is_visible: true },
-            { id: 15, name: "Bistrogonav (Bef-stroganov)", category: "Quyuq taomlar", internal_price: 32000, sale_price: 48000, is_visible: true },
-            { id: 16, name: "Jarkor (Jarkoye)", category: "Quyuq taomlar", internal_price: 25000, sale_price: 38000, is_visible: true },
-            { id: 17, name: "Lagʻman (Qovurma lagʻman)", category: "Quyuq taomlar", internal_price: 24000, sale_price: 36000, is_visible: true },
-            { id: 18, name: "Dimlama", category: "Quyuq taomlar", internal_price: 22000, sale_price: 34000, is_visible: true },
-            { id: 19, name: "Tabaka joʻjasi (S-tabaka)", category: "Quyuq taomlar", internal_price: 28000, sale_price: 42000, is_visible: true },
-            { id: 20, name: "Norin (Qozon norin)", category: "Quyuq taomlar", internal_price: 30000, sale_price: 45000, is_visible: true },
-            { id: 21, name: "Manti (Goʻshtli va piyozli)", category: "Hamirli taomlar", internal_price: 22000, sale_price: 33000, is_visible: true },
-            { id: 22, name: "Chuchvara (Qaynatilgan yoki qovurilgan)", category: "Hamirli taomlar", internal_price: 20000, sale_price: 30000, is_visible: true },
-            { id: 23, name: "Choʻzma lagʻmon", category: "Hamirli taomlar", internal_price: 25000, sale_price: 37000, is_visible: true },
-            { id: 24, name: "Qovurma lagʻmon (Qovurma soʻy)", category: "Hamirli taomlar", internal_price: 26000, sale_price: 38000, is_visible: true },
-            { id: 25, name: "Uygʻur lagʻmoni", category: "Hamirli taomlar", internal_price: 27000, sale_price: 40000, is_visible: true },
-            { id: 26, name: "Beshbarmoq", category: "Hamirli taomlar", internal_price: 35000, sale_price: 50000, is_visible: true },
-            { id: 27, name: "Uygʻur shivit oshi", category: "Hamirli taomlar", internal_price: 28000, sale_price: 42000, is_visible: true },
-            { id: 28, name: "Qiyma kabob", category: "Kaboblar", internal_price: 15000, sale_price: 25000, is_visible: true },
-            { id: 29, name: "Qoʻy goʻshti shashligi (Klassik shashlik)", category: "Kaboblar", internal_price: 18000, sale_price: 28000, is_visible: true },
-            { id: 30, name: "Jigar shashligi", category: "Kaboblar", internal_price: 16000, sale_price: 26000, is_visible: true },
-            { id: 31, name: "Qozon kabob", category: "Kaboblar", internal_price: 30000, sale_price: 45000, is_visible: true },
-            { id: 32, name: "Tandir kabob", category: "Kaboblar", internal_price: 35000, sale_price: 50000, is_visible: true },
-            { id: 33, name: "Jiz kabob", category: "Kaboblar", internal_price: 32000, sale_price: 48000, is_visible: true },
-            { id: 60, name: "Tandir somsa", category: "Somsalar", internal_price: 8000, sale_price: 14000, is_visible: true },
-            { id: 61, name: "Qatlama (varaqi) somsa", category: "Somsalar", internal_price: 9000, sale_price: 15000, is_visible: true },
-            { id: 62, name: "Koʻk somsa", category: "Somsalar", internal_price: 6000, sale_price: 10000, is_visible: true },
-            { id: 80, name: "Lavash", category: "Fast Food", internal_price: 18000, sale_price: 28000, is_visible: true },
-            { id: 81, name: "Gamburger", category: "Fast Food", internal_price: 15000, sale_price: 24000, is_visible: true },
-            { id: 100, name: "Coca-Cola (klassik): 0.5L", category: "Ichimliklar", internal_price: 6000, sale_price: 11000, is_visible: true },
-            { id: 109, name: "Limonad klassik", category: "Ichimliklar", internal_price: 10000, sale_price: 18000, is_visible: true }
-        ];
-
-        let menuDatabase = JSON.parse(localStorage.getItem('admin_menu')) || defaultMenu;
-
-        let warehouseDatabase = JSON.parse(localStorage.getItem('admin_warehouse')) || [
-            { name: "Guruch (Alanga)", quantity: 0, unit: "kg" },
-            { name: "Guruch (Lazer)", quantity: 0, unit: "kg" },
-            { name: "Mol goʻshti", quantity: 0, unit: "kg" },
-            { name: "Qizil Sabzi", quantity: 0, unit: "kg" },
-            { name: "Paxta Yogʻi", quantity: 0, unit: "l" },
-            { name: "Tuz", quantity: 0, unit: "kg" },
-            { name: "Piyoz", quantity: 0, unit: "kg" },
-            { name: "Kartoshka", quantity: 0, unit: "kg" }
-        ];
-
-        let ordersDatabase = [];
-
-        function switchTab(tabId) {
+        function switchTab(tabId, event) {
             document.querySelectorAll('.section-content').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
             document.getElementById(tabId).classList.add('active');
-            event.currentTarget.classList.add('active');
-            
+            if(event && event.currentTarget) {
+                event.currentTarget.classList.add('active');
+            }
             if(tabId === 'stats' && statsChartInstance) {
                 statsChartInstance.update();
             }
         }
 
         function renderAll() {
-            loadOrdersFromStorage();
             renderMenu();
             renderWarehouse();
             renderOrders();
@@ -516,21 +649,24 @@
         }
 
         function loadOrdersFromStorage() {
-            let waiterOrders = JSON.parse(localStorage.getItem('waiter_orders')) || [];
-            let activeOrders = JSON.parse(localStorage.getItem('active_orders')) || [];
-            let adminOrders = JSON.parse(localStorage.getItem('admin_orders')) || [];
-            let generalOrders = JSON.parse(localStorage.getItem('orders')) || [];
-            
-            let combined = [...waiterOrders, ...activeOrders, ...adminOrders, ...generalOrders];
-            let uniqueMap = new Map();
-            combined.forEach(o => {
-                let key = o.id !== undefined ? o.id : (o.tableNumber !== undefined ? o.tableNumber : (o.table !== undefined ? o.table : (o.time + (o.tableNumber || ''))));
-                if (!o.paymentType) {
-                    o.paymentType = 'naqd';
-                }
-                uniqueMap.set(key, o);
-            });
-            ordersDatabase = Array.from(uniqueMap.values());
+            try {
+                let waiterOrders = JSON.parse(localStorage.getItem('waiter_orders')) || [];
+                let activeOrders = JSON.parse(localStorage.getItem('active_orders')) || [];
+                let adminOrders = JSON.parse(localStorage.getItem('admin_orders')) || [];
+                let generalOrders = JSON.parse(localStorage.getItem('orders')) || [];
+                
+                let combined = [...waiterOrders, ...activeOrders, ...adminOrders, ...generalOrders];
+                let uniqueMap = new Map();
+                combined.forEach(o => {
+                    let key = o.id !== undefined ? o.id : (o.tableNumber !== undefined ? o.tableNumber : (o.table !== undefined ? o.table : Math.random()));
+                    if (!o.paymentType) o.paymentType = 'naqd';
+                    uniqueMap.set(key, o);
+                });
+                ordersDatabase = Array.from(uniqueMap.values());
+            } catch (e) {
+                console.error("Buyurtmalarni o'qishda xatolik:", e);
+                ordersDatabase = [];
+            }
         }
 
         function renderMenu() {
@@ -569,25 +705,22 @@
         }
 
         function addNewMenuItem() {
-            const name = document.getElementById('new-menu-name').value.trim();
+            const nameInput = document.getElementById('new-menu-name');
+            const internalInput = document.getElementById('new-menu-internal');
+            const saleInput = document.getElementById('new-menu-sale');
+            
+            const name = nameInput.value.trim();
             const category = document.getElementById('new-menu-category').value;
-            const internal_price = Number(document.getElementById('new-menu-internal').value);
-            const sale_price = Number(document.getElementById('new-menu-sale').value);
+            const internal_price = Number(internalInput.value);
+            const sale_price = Number(saleInput.value);
 
             if (name && internal_price && sale_price) {
                 const newId = menuDatabase.length > 0 ? Math.max(...menuDatabase.map(m => m.id)) + 1 : 1;
-                menuDatabase.push({
-                    id: newId,
-                    name: name,
-                    category: category,
-                    internal_price: internal_price,
-                    sale_price: sale_price,
-                    is_visible: true
-                });
+                menuDatabase.push({ id: newId, name, category, internal_price, sale_price, is_visible: true });
                 renderAll();
-                document.getElementById('new-menu-name').value = '';
-                document.getElementById('new-menu-internal').value = '';
-                document.getElementById('new-menu-sale').value = '';
+                nameInput.value = '';
+                internalInput.value = '';
+                saleInput.value = '';
                 alert("Yangi mahsulot menyuga qo'shildi!");
             } else {
                 alert("Iltimos, barcha maydonlarni to'g'ri to'ldiring!");
@@ -601,9 +734,7 @@
                     <td>${w.name}</td>
                     <td><input type="number" value="${w.quantity}" id="wh-qty-${index}" style="width: 120px;"></td>
                     <td>${w.unit}</td>
-                    <td>
-                        <button class="btn btn-blue" onclick="updateWarehouseQty(${index})">Yangilash</button>
-                    </td>
+                    <td><button class="btn btn-blue" onclick="updateWarehouseQty(${index})">Yangilash</button></td>
                 </tr>
             `).join('');
         }
@@ -627,7 +758,7 @@
 
             filtered.forEach(item => {
                 const div = document.createElement('div');
-                div.innerHTML = `<strong>${item.name.substr(0, matchVal.length)}</strong>${item.name.substr(matchVal.length)} <span style="color:#666; font-size:12px;">(${item.unit})</span>`;
+                div.innerHTML = `<strong>${item.name.substr(0, matchVal.length)}</strong>${item.name.substr(matchVal.length)} (${item.unit})`;
                 div.addEventListener('click', function() {
                     document.getElementById('new-item-name').value = item.name;
                     document.getElementById('new-item-unit').value = item.unit;
@@ -643,9 +774,13 @@
         }
 
         function addWarehouseItem() {
-            const name = document.getElementById('new-item-name').value.trim();
-            const qty = Number(document.getElementById('new-item-qty').value);
-            const unit = document.getElementById('new-item-unit').value.trim();
+            const nameInput = document.getElementById('new-item-name');
+            const qtyInput = document.getElementById('new-item-qty');
+            const unitInput = document.getElementById('new-item-unit');
+            
+            const name = nameInput.value.trim();
+            const qty = Number(qtyInput.value);
+            const unit = unitInput.value.trim();
             
             if (name && qty) {
                 let existing = warehouseDatabase.find(w => w.name.toLowerCase() === name.toLowerCase());
@@ -656,40 +791,36 @@
                     warehouseDatabase.push({ name, quantity: qty, unit: unit || 'g' });
                 }
                 renderAll();
-                document.getElementById('new-item-name').value = '';
-                document.getElementById('new-item-qty').value = '';
-                document.getElementById('new-item-unit').value = '';
+                nameInput.value = '';
+                qtyInput.value = '';
+                unitInput.value = '';
                 closeAllAutocomplete();
                 alert("Mahsulot omborga qo'shildi!");
             } else {
-                alert("Iltimos, mahsulot nomi va miqdorini to'g'ri kiriting!");
+                alert("Iltimos, mahsulot nomi va miqdorini kiriting!");
             }
         }
 
         function renderOrders() {
             const container = document.getElementById('orders-container');
             if (ordersDatabase.length === 0) {
-                container.innerHTML = "<p>Hozircha ofitsantdan buyurtmalar kelib tushmadi.</p>";
+                container.innerHTML = "<p>Hozircha buyurtmalar mavjud emas.</p>";
                 return;
             }
+
             container.innerHTML = ordersDatabase.map((order, index) => {
                 let itemsList = "";
-                if (Array.isArray(order.items)) {
-                    itemsList = order.items.map(i => `${i.name || i.title} (${i.qty || i.count || 1} ta)`).join(', ');
-                } else if (Array.isArray(order.cart)) {
-                    itemsList = order.cart.map(i => `${i.name || i.title} (${i.qty || i.count || 1} ta)`).join(', ');
-                } else if (typeof order.items === 'string') {
-                    itemsList = order.items;
+                let items = order.items || order.cart || [];
+                if (Array.isArray(items)) {
+                    itemsList = items.map(i => `${i.name || i.title} (${i.qty || i.count || 1} ta)`).join(', ');
                 } else {
                     itemsList = "Buyurtma tafsilotlari";
                 }
 
-                const orderId = order.id !== undefined ? order.id : (order.tableNumber !== undefined ? order.tableNumber : (order.table !== undefined ? order.table : index));
+                const orderId = order.id !== undefined ? order.id : (order.tableNumber !== undefined ? order.tableNumber : index);
                 const status = order.status || 'yangi';
                 const tableNo = order.tableNumber || order.table || 'Nomaʼlum';
                 const waiter = order.waiterName || order.waiter || 'Ofitsant';
-                
-                // Ofitsant chek chiqarish tugmasini bosganda isPrinted = true bo'ladi
                 const isPrinted = order.isPrinted || false;
 
                 let paymentButtonHTML = "";
@@ -698,23 +829,21 @@
                         <div style="margin-top: 8px; background: #fffde7; padding: 10px; border: 1px solid #ffd54f; border-radius: 6px;">
                             <span style="font-size: 13px; color: #f57f17; font-weight: bold; display: block; margin-bottom: 6px;">Chek chiqarildi! To'lov turini tanlang:</span>
                             <div class="payment-options-container">
-                                <button class="pay-option-btn pay-cash-btn" onclick="acceptPayment('${orderId}', 'naqd')">
-                                    <img src="https://t4.ftcdn.net/jpg/07/05/40/83/360_F_705408370_YbHxYDxlXYXb3omrTkb07khf8z4x1Djq.jpg" alt="Naqd" class="pay-icon"> Naqd
-                                </button>
-                                <button class="pay-option-btn pay-card-btn" onclick="acceptPayment('${orderId}', 'plastik')">
-                                    <img src="https://png.pngtree.com/recommend-works/png-clipart/20250512/ourlarge/pngtree-3d-hand-holding-contactless-credit-card-icon-png-image_16214913.png" alt="Plastik" class="pay-icon"> Plastik
-                                </button>
+                                <button class="pay-option-btn pay-cash-btn" onclick="openCashModal('${orderId}')">Naqd</button>
+                                <button class="pay-option-btn pay-card-btn" onclick="acceptPayment('${orderId}', 'plastik')">Plastik</button>
                             </div>
                         </div>
                     `;
                 }
 
                 return `
-                    <div class="order-card">
+                    <div class="order-card" data-order-id="${orderId}">
                         <div>
-                            <p style="font-size: 16px; margin-bottom: 4px;">🪑 <b style="color: #0d47a1; font-size: 18px;">Stol #${tableNo}</b> | Ofitsant: <b>${waiter}</b> | Holat: <b>${status.toUpperCase()}</b></p>
+                            <p style="font-size: 16px; margin-bottom: 4px;">🪑 <b style="color: #0d47a1; font-size: 18px;">Stol #${tableNo}</b> | Ofitsant: <b>${waiter}</b> | Holat: <b class="order-status-text">${status.toUpperCase()}</b></p>
                             <p><b>Buyurtma:</b> ${itemsList}</p>
-                            ${paymentButtonHTML}
+                            <div class="order-payment-section">
+                                ${paymentButtonHTML}
+                            </div>
                         </div>
                         <div>
                             <button class="btn" style="background: #ffb74d;" onclick="changeOrderStatus('${orderId}', 'qabul_qilindi')">Qabul</button>
@@ -726,30 +855,108 @@
             }).join('');
         }
 
+        function calculateOrderTotal(order) {
+            let items = order.items || order.cart || [];
+            let total = 0;
+            if (Array.isArray(items) && items.length > 0) {
+                items.forEach(i => {
+                    let q = i.qty || i.count || 1;
+                    let sPrice = i.sale_price || i.price || 35000;
+                    total += sPrice * q;
+                });
+            } else {
+                total = 50000;
+            }
+            return total;
+        }
+
+        function openCashModal(orderId) {
+            let order = ordersDatabase.find((o, index) => {
+                let currentId = o.id !== undefined ? o.id : (o.tableNumber !== undefined ? o.tableNumber : index);
+                return String(currentId) === String(orderId);
+            });
+            if (!order) return;
+
+            currentPayingOrderId = orderId;
+            currentOrderTotalSum = calculateOrderTotal(order);
+
+            document.getElementById('modal-total-sum').innerText = currentOrderTotalSum.toLocaleString();
+            document.getElementById('modal-cash-input').value = '';
+            document.getElementById('modal-change-amount').innerText = '0';
+            document.getElementById('cash-payment-modal').style.display = 'flex';
+        }
+
+        function closeCashModal() {
+            document.getElementById('cash-payment-modal').style.display = 'none';
+            currentPayingOrderId = null;
+            currentOrderTotalSum = 0;
+        }
+
+        function calculateChange() {
+            let cashGiven = Number(document.getElementById('modal-cash-input').value) || 0;
+            let change = cashGiven - currentOrderTotalSum;
+            document.getElementById('modal-change-amount').innerText = change > 0 ? change.toLocaleString() : '0';
+        }
+
+        function confirmCashPayment() {
+            let cashGiven = Number(document.getElementById('modal-cash-input').value) || 0;
+            if (cashGiven < currentOrderTotalSum) {
+                alert("Kiritilgan summa chek summasidan kam! To'lovni qabul qilib bo'lmaydi.");
+                return;
+            }
+
+            acceptPayment(currentPayingOrderId, 'naqd');
+            closeCashModal();
+        }
+
         function acceptPayment(orderId, paymentType) {
             ordersDatabase = ordersDatabase.map((o, index) => {
-                let currentId = o.id !== undefined ? o.id : (o.tableNumber !== undefined ? o.tableNumber : (o.table !== undefined ? o.table : index));
+                let currentId = o.id !== undefined ? o.id : (o.tableNumber !== undefined ? o.tableNumber : index);
                 if (String(currentId) === String(orderId)) {
                     o.status = 'tolandi';
                     o.paymentType = paymentType;
-                    o.isPaid = true; 
+                    o.isPaid = true;
                 }
                 return o;
             });
 
             syncOrdersToStorage();
+            
+            if (socket) {
+                socket.emit('change_status', { orderId: orderId, status: 'tolandi', paymentType: paymentType, isPaid: true });
+            }
+
             renderAll();
             alert("To'lov muvaffaqiyatli qabul qilindi va stol bo'shatildi!");
         }
 
+        function changeOrderStatus(orderId, newStatus) {
+            ordersDatabase = ordersDatabase.map((o, index) => {
+                let currentId = o.id !== undefined ? o.id : (o.tableNumber !== undefined ? o.tableNumber : index);
+                if (String(currentId) === String(orderId)) {
+                    o.status = newStatus;
+                }
+                return o;
+            });
+            
+            syncOrdersToStorage();
+
+            if (socket) {
+                socket.emit('change_status', { orderId: orderId, status: newStatus });
+            }
+
+            renderAll();
+        }
+
         function syncOrdersToStorage() {
+            saveData();
             ['waiter_orders', 'active_orders', 'admin_orders', 'orders'].forEach(key => {
                 let data = JSON.parse(localStorage.getItem(key)) || [];
                 if (Array.isArray(data)) {
                     data = data.map((o, index) => {
-                        let currentId = o.id !== undefined ? o.id : (o.tableNumber !== undefined ? o.tableNumber : (o.table !== undefined ? o.table : index));
+                        let currentId = o.id !== undefined ? o.id : (o.tableNumber !== undefined ? o.tableNumber : index);
                         let match = ordersDatabase.find(item => {
-                            let itemId = item.id !== undefined ? item.id : (item.tableNumber !== undefined ? item.tableNumber : (item.table !== undefined ? item.table : ''));
+                            let itemId = item.id !== undefined ? item.id : (item.tableNumber !== undefined ? item.tableNumber : '');
                             return String(itemId) === String(currentId);
                         });
                         if (match) {
@@ -763,7 +970,6 @@
                     localStorage.setItem(key, JSON.stringify(data));
                 }
             });
-            saveData();
         }
 
         function renderIncome() {
@@ -773,7 +979,7 @@
             let totalInternalSum = 0;
 
             const tbody = document.getElementById('income-table-body');
-            let validOrders = ordersDatabase.filter(o => o.status === 'tolandi' || o.status === 'tayyor');
+            let validOrders = ordersDatabase.filter(o => o.status === 'tolandi' || o.isPaid);
 
             if (validOrders.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="7" style="text-align: center;">Hozircha to'langan buyurtmalar mavjud emas</td></tr>`;
@@ -783,7 +989,7 @@
                     let orderSale = 0;
                     let orderInternal = 0;
 
-                    if (Array.isArray(items)) {
+                    if (Array.isArray(items) && items.length > 0) {
                         items.forEach(i => {
                             let q = i.qty || i.count || 1;
                             let sPrice = i.sale_price || i.price || 35000;
@@ -792,8 +998,8 @@
                             orderInternal += iPrice * q;
                         });
                     } else {
-                        orderSale = 120000;
-                        orderInternal = 84000;
+                        orderSale = 50000;
+                        orderInternal = 35000;
                     }
 
                     if (order.paymentType === 'plastik') {
@@ -817,7 +1023,7 @@
                             <td>${orderSale.toLocaleString()} so'm</td>
                             <td>${orderInternal.toLocaleString()} so'm</td>
                             <td style="color: #2e7d32; font-weight: bold;">+${profit.toLocaleString()} so'm</td>
-                            <td>${(order.status || 'yangi').toUpperCase()}</td>
+                            <td>TOLANDI</td>
                         </tr>
                     `;
                 }).join('');
@@ -829,31 +1035,16 @@
             document.getElementById('income-net-profit').innerText = (totalSaleSum - totalInternalSum).toLocaleString() + " so'm";
         }
 
-        function changeOrderStatus(orderId, newStatus) {
-            ordersDatabase = ordersDatabase.map((o, index) => {
-                let currentId = o.id !== undefined ? o.id : (o.tableNumber !== undefined ? o.tableNumber : (o.table !== undefined ? o.table : index));
-                if (String(currentId) === String(orderId)) {
-                    o.status = newStatus;
-                }
-                return o;
-            });
-            
-            syncOrdersToStorage();
-            renderOrders();
-            renderIncome();
-            updateStatsInfo();
-        }
-
         function updateStatsInfo() {
-            let totalSales = ordersDatabase.filter(o => o.status === 'tolandi' || o.status === 'tayyor').length * 120000 + 450000;
+            let totalSales = ordersDatabase.filter(o => o.status === 'tolandi').length * 45000;
             document.getElementById('today-sales').innerText = totalSales.toLocaleString() + " so'm";
             document.getElementById('top-item').innerText = "Toshkent oshi";
             
             if(statsChartInstance) {
                 statsChartInstance.data.datasets[0].data = [
-                    Math.floor(totalSales * 0.4), 
-                    Math.floor(totalSales * 0.3), 
-                    Math.floor(totalSales * 0.3)
+                    Math.max(100000, totalSales * 0.5), 
+                    Math.max(50000, totalSales * 0.3), 
+                    Math.max(30000, totalSales * 0.2)
                 ];
                 statsChartInstance.update();
             }
@@ -864,15 +1055,11 @@
             statsChartInstance = new Chart(ctx, {
                 type: 'doughnut',
                 data: {
-                    labels: ['Osh va Milliy taomlar', 'Kaboblar va Somsalar', 'Ichimliklar va Fast-Food'],
+                    labels: ['Milliy taomlar', 'Kaboblar', 'Ichimliklar'],
                     datasets: [{
-                        label: 'Savdo ulushi (so\'m)',
-                        data: [550000, 380000, 270000],
-                        backgroundColor: [
-                            '#0288d1',
-                            '#ffb74d',
-                            '#66bb6a'
-                        ],
+                        label: 'Savdo ulushi',
+                        data: [500000, 300000, 200000],
+                        backgroundColor: ['#0288d1', '#ffb74d', '#66bb6a'],
                         borderWidth: 1
                     }]
                 },
@@ -880,57 +1067,21 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                        legend: {
-                            position: 'bottom',
-                            labels: {
-                                font: { size: 11 }
-                            }
-                        },
-                        title: {
-                            display: true,
-                            text: 'Kategoriyalar bo\'yicha savdo statistikasi',
-                            color: '#0d47a1',
-                            font: { size: 14 }
-                        }
+                        legend: { position: 'bottom' }
                     }
                 }
             });
         }
 
         function saveData() {
-            localStorage.setItem('admin_menu', JSON.stringify(menuDatabase));
-            localStorage.setItem('admin_warehouse', JSON.stringify(warehouseDatabase));
-            localStorage.setItem('admin_orders', JSON.stringify(ordersDatabase));
-        }
-
-        setInterval(() => {
-            let savedWaiterOrders = JSON.parse(localStorage.getItem('waiter_orders')) || [];
-            let savedActiveOrders = JSON.parse(localStorage.getItem('active_orders')) || [];
-            let savedAdminOrders = JSON.parse(localStorage.getItem('admin_orders')) || [];
-            let combined = [...savedWaiterOrders, ...savedActiveOrders, ...savedAdminOrders];
-            
-            if (JSON.stringify(combined) !== JSON.stringify(ordersDatabase)) {
-                loadOrdersFromStorage();
-                renderOrders();
-                renderIncome();
-                updateStatsInfo();
+            try {
+                localStorage.setItem('admin_menu', JSON.stringify(menuDatabase));
+                localStorage.setItem('admin_warehouse', JSON.stringify(warehouseDatabase));
+                localStorage.setItem('admin_orders', JSON.stringify(ordersDatabase));
+            } catch (e) {
+                console.error("Saqlashda xatolik:", e);
             }
-        }, 1500);
-    </script><!-- Socket.io kutubxonasi (agar oldindan qo'shilmagan bo'lsa) -->
-<script src="/socket.io/socket.io.js"></script>
-
-<script>
-  const socket = io();
-
-  document.querySelectorAll('.status-btn').forEach(button => {
-      button.addEventListener('click', (e) => {
-          const orderId = e.target.getAttribute('data-order-id');
-          const newStatus = e.target.getAttribute('data-status'); 
-          const waiterId = e.target.getAttribute('data-waiter-id'); 
-
-          socket.emit('admin_update_status', { orderId, newStatus, waiterId });
-      });
-  });
-</script>
+        }
+    </script>
 </body>
 </html>

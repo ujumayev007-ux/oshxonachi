@@ -243,7 +243,7 @@
 
             <div style="margin-top: 20px; display: flex; justify-content: flex-end; gap: 10px;">
                 <button onclick="printCheck()" style="padding: 8px 15px; background: #ff9800; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">Chek chiqarish</button>
-                <button onclick="sendOrderToAdmin()" style="padding: 8px 15px; background: #27ae60; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">Buyurtmani yuborish</button>
+                <button id="submit-order-btn" onclick="sendOrderToAdmin()" style="padding: 8px 15px; background: #27ae60; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">Buyurtmani yuborish</button>
             </div>
         </div>
     </div>
@@ -403,7 +403,9 @@
             selectedTableNumber = tableKey;
             document.getElementById('modal-title').innerText = `${tableKey} Boshqaruvi`;
             
+            let submitBtn = document.getElementById('submit-order-btn');
             let existingOrder = tablesState[tableKey];
+
             if (existingOrder) {
                 currentGuestsCount = existingOrder.guestsCount || 1;
                 currentCart = {};
@@ -412,9 +414,11 @@
                         currentCart[item.id] = { ...item };
                     });
                 }
+                if (submitBtn) submitBtn.innerText = "Buyurtmani yangilash";
             } else {
                 currentGuestsCount = 1;
                 currentCart = {};
+                if (submitBtn) submitBtn.innerText = "Buyurtmani yuborish";
             }
 
             document.getElementById('modal-guests-val').innerText = currentGuestsCount;
@@ -517,14 +521,17 @@
                 return;
             }
 
+            let existingOrder = tablesState[selectedTableNumber];
+            let isUpdate = !!existingOrder;
+
             let orderData = {
                 id: selectedTableNumber,
                 tableNumber: selectedTableNumber,
                 waiterName: activeWaiter,
                 guestsCount: currentGuestsCount,
                 items: items,
-                status: 'yangi',
-                time: new Date().toLocaleTimeString()
+                status: existingOrder ? (existingOrder.status || 'yangi') : 'yangi',
+                time: existingOrder ? existingOrder.time : new Date().toLocaleTimeString()
             };
 
             let waiterOrders = JSON.parse(localStorage.getItem('waiter_orders')) || [];
@@ -544,7 +551,11 @@
             closeModal();
             loadOrdersFromStorage();
             renderTables();
-            alert("Buyurtma admin panelga real vaqt rejimida yuborildi!");
+            if (isUpdate) {
+                alert("Buyurtma muvaffaqiyatli yangilandi va admin panelga yuborildi!");
+            } else {
+                alert("Buyurtma admin panelga real vaqt rejimida yuborildi!");
+            }
         }
 
         function printCheck() {

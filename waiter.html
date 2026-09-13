@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ofitsiant Paneli</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Socket.io Kutubxonasi -->
-    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <!-- Socket.io client kutubxonasi -->
+    <script src="/socket.io/socket.io.js"></script>
     <style>
         * {
             box-sizing: border-box;
@@ -17,7 +17,6 @@
             background-color: #f4f6f9;
         }
 
-        /* Asosiy panel */
         #main-panel {
             display: block;
             padding: 20px;
@@ -33,7 +32,6 @@
             position: relative;
         }
         
-        /* Soat va sana chap yuqori burchakda */
         .top-left-clock {
             position: absolute;
             top: 15px;
@@ -69,39 +67,54 @@
             gap: 15px;
         }
 
-        /* Grid va Kartochkalar dizayni */
         .grid-container {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
             gap: 15px;
             margin-top: 20px;
         }
         .table-card {
             background: white;
-            border: 2px solid #ddd;
+            border: 2px solid #27ae60;
             border-radius: 10px;
             padding: 15px;
             text-align: center;
             cursor: pointer;
             transition: 0.2s;
             box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            position: relative;
         }
         .table-card:hover {
             transform: translateY(-3px);
-            border-color: #2a5298;
         }
         .table-card.busy {
             background-color: #ffe6e6;
-            border-color: #ff4d4d;
+            border-color: #e74c3c;
         }
-        .table-icon {
-            width: 40px;
-            height: 40px;
-            object-fit: contain;
-            margin-bottom: 5px;
+        .table-card.preparing {
+            background-color: #e3f2fd;
+            border-color: #0288d1;
         }
+        .table-card.ready {
+            background-color: #e8f5e9;
+            border-color: #2e7d32;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: bold;
+            margin-top: 5px;
+            text-transform: uppercase;
+        }
+        .status-yangi { background: #ffe0b2; color: #e65100; }
+        .status-qabul { background: #fff9c4; color: #f57f17; }
+        .status-jarayonda { background: #bbdefb; color: #0d47a1; }
+        .status-tayyor { background: #c8e6c9; color: #1b5e20; }
+        .status-bosh { background: #e0e0e0; color: #424242; }
 
-        /* Chaqiruvlar paneli */
         #call-notifications-container {
             margin: 20px 0;
             display: flex;
@@ -119,7 +132,6 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
 
-        /* Modal oyna */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -145,12 +157,6 @@
             margin-bottom: 10px;
             border-bottom: 1px solid #eee;
             padding-bottom: 8px;
-        }
-        .menu-item-img {
-            width: 40px;
-            height: 40px;
-            object-fit: cover;
-            border-radius: 6px;
         }
         .qty-btn {
             padding: 2px 8px;
@@ -181,7 +187,6 @@
 </head>
 <body>
 
-    <!-- Asosiy Panel -->
     <div id="main-panel">
         <div class="header">
             <div id="realtime-clock" class="top-left-clock"></div>
@@ -197,18 +202,17 @@
             </div>
         </div>
 
-        <!-- Mijozlardan kelgan chaqiruvlar chiqadigan joy -->
         <div id="call-notifications-container"></div>
 
-        <h2 id="section-heading-title" style="margin-top: 25px;">Zal Stollari (16 ta)</h2>
+        <h2 id="section-heading-title" style="margin-top: 25px; font-weight: bold; font-size: 18px;">Zal Stollari (16 ta)</h2>
         <div id="tables-grid" class="grid-container"></div>
     </div>
 
-    <!-- Stol / Xona Boshqaruv Modali -->
+    <!-- Modal Buyurtma Boshqaruvi -->
     <div id="modal-overlay" class="modal-overlay">
         <div class="modal-content">
             <div style="display: flex; justify-content: space-between; align-items: center;">
-                <h3 id="modal-title" style="margin: 0;">Boshqaruv</h3>
+                <h3 id="modal-title" style="margin: 0; font-weight: bold; font-size: 18px;">Boshqaruv</h3>
                 <button onclick="closeModal()" style="border: none; background: none; font-size: 20px; cursor: pointer;">&times;</button>
             </div>
 
@@ -244,331 +248,353 @@
         </div>
     </div>
 
-    <!-- QR / Check Modali -->
-    <div id="qr-modal" class="modal-overlay">
-        <div class="modal-content" style="width: 350px; text-align: center;">
-            <h3>Chek</h3>
-            <div id="qr-check-content" style="text-align: left; margin: 15px 0; font-size: 14px;"></div>
-            <button onclick="closeQrModal()" style="padding: 8px 20px; background: #2a5298; color: white; border: none; border-radius: 5px; cursor: pointer;">Yopish</button>
-        </div>
-    </div>
-
     <!-- Tarix Modali -->
     <div id="history-modal" class="modal-overlay">
         <div class="modal-content">
-            <h3>Xizmat tarixi</h3>
+            <h3 style="font-weight: bold; font-size: 18px;">Xizmat tarixi</h3>
             <div id="history-list" style="max-height: 300px; overflow-y: auto; margin: 15px 0;"></div>
             <button onclick="closeHistory()" style="padding: 8px 15px; background: #2a5298; color: white; border: none; border-radius: 5px; cursor: pointer;">Yopish</button>
         </div>
     </div>
 
     <script>
-        const SOCKET_URL = ''; // Server bilan bir xil domen yoki to'liq URL
-        const socket = io(SOCKET_URL, {
-            reconnection: true,
-            reconnectionAttempts: 20,
-            reconnectionDelay: 1000,
-            timeout: 30000
-        });
-
+        let socket = null;
         let activeSection = 'zal';
         let activeWaiter = "Admin";
-        let currentTable = null;
-        let tableOrders = {}; // Stol bo'yicha buyurtmalar va orderId larni saqlash uchun
+        let selectedTableNumber = null;
+        let currentGuestsCount = 1;
         let currentCart = {};
-        let currentGuests = 1;
-        let currentFilter = 'all';
+        let activeFilter = 'all';
+
+        let tablesState = {};
+
+        const fullMenu = [
+            { id: 1, category: "Osh", name: "Toshkent oshi (Toʻy oshi)", price: 35000 },
+            { id: 2, category: "Osh", name: "Samarqand oshi", price: 38000 },
+            { id: 3, category: "Osh", name: "Buxoro oshi", price: 40000 },
+            { id: 10, category: "Suyuq ovqatlar", name: "Qaynatma shoʻrva", price: 25000 },
+            { id: 11, category: "Suyuq ovqatlar", name: "Mastava", price: 22000 },
+            { id: 20, category: "Quyuq taomlar", name: "Bifsteks", price: 38000 },
+            { id: 21, category: "Quyuq taomlar", name: "Lagʻman (Qovurma lagʻman)", price: 32000 },
+            { id: 30, category: "Hamirli taomlar", name: "Manti (Goʻshtli)", price: 6000 },
+            { id: 40, category: "Kaboblar", name: "Qiyma kabob", price: 16000 },
+            { id: 41, category: "Kaboblar", name: "Qoʻy goʻshti shashligi", price: 20000 },
+            { id: 80, category: "Somsalar", name: "Tandir somsa", price: 10000 },
+            { id: 110, category: "Fast Food", name: "Lavash", price: 32000 },
+            { id: 111, category: "Fast Food", name: "Gamburger", price: 30000 },
+            { id: 140, category: "Ichimliklar", name: "Coca-Cola - 0.5L", price: 10000 }
+        ];
 
         window.onload = function() {
+            if (typeof io !== 'undefined') {
+                socket = io();
+
+                socket.on('connect', () => {
+                    console.log("Ofitsiant paneli serverga ulandi!");
+                });
+
+                // ADMIN statusni o'zgartirganda real vaqt rejimida avtomatik qabul qilish
+                socket.on('status_updated', (data) => {
+                    console.log("Status yangilanishi keldi:", data);
+                    updateLocalTableStatus(data.orderId, data.status, data.isPrinted, data.isPaid);
+                });
+
+                socket.on('call_waiter', (data) => {
+                    playNotificationSound();
+                    addCallNotification(data.tableNumber);
+                });
+            }
+
             initClock();
-            loadSavedData();
+            loadOrdersFromStorage();
             renderTables();
-
-            socket.on('connect', () => {
-                console.log("Ofitsiant paneli serverga ulandi!");
-            });
-
-            socket.on('call_waiter', (data) => {
-                playNotificationSound();
-                addCallNotification(data.tableNumber);
-            });
-
-            // Stol bo'shatilganda yoki to'langanda lokal holatni tozalash
-            socket.on('status_updated', (data) => {
-                if (data.status === 'tolandi' || data.isPaid) {
-                    for (let tKey in tableOrders) {
-                        if (tableOrders[tKey].orderId === data.orderId || tableOrders[tKey].tableNumber == data.tableNumber) {
-                            delete tableOrders[tKey];
-                        }
-                    }
-                    saveSavedData();
-                    renderTables();
-                }
-            });
         };
 
-        function initClock() {
-            function update() {
-                const now = new Date();
-                const dateStr = String(now.getDate()).padStart(2, '0') + '.' + String(now.getMonth() + 1).padStart(2, '0') + '.' + now.getFullYear();
-                const timeStr = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0') + ':' + String(now.getSeconds()).padStart(2, '0');
-                document.getElementById('realtime-clock').innerHTML = `📅 ${dateStr}<br>⏰ ${timeStr}`;
-            }
-            update();
-            setInterval(update, 1000);
+        function updateLocalTableStatus(tableOrOrderId, newStatus, isPrinted, isPaid) {
+            let waiterOrders = JSON.parse(localStorage.getItem('waiter_orders')) || [];
+            let activeOrders = JSON.parse(localStorage.getItem('active_orders')) || [];
+
+            waiterOrders = waiterOrders.map(o => {
+                let id = o.id !== undefined ? o.id : o.tableNumber;
+                if (String(id) === String(tableOrOrderId) || String(o.tableNumber) === String(tableOrOrderId)) {
+                    o.status = newStatus;
+                    if (isPrinted !== undefined) o.isPrinted = isPrinted;
+                    if (isPaid !== undefined) o.isPaid = isPaid;
+                }
+                return o;
+            });
+
+            activeOrders = activeOrders.map(o => {
+                let id = o.id !== undefined ? o.id : o.tableNumber;
+                if (String(id) === String(tableOrOrderId) || String(o.tableNumber) === String(tableOrOrderId)) {
+                    o.status = newStatus;
+                    if (isPrinted !== undefined) o.isPrinted = isPrinted;
+                    if (isPaid !== undefined) o.isPaid = isPaid;
+                }
+                return o;
+            });
+
+            localStorage.setItem('waiter_orders', JSON.stringify(waiterOrders));
+            localStorage.setItem('active_orders', JSON.stringify(activeOrders));
+
+            loadOrdersFromStorage();
+            renderTables();
         }
 
-        function switchSection(section) {
-            activeSection = section;
-            document.getElementById('folder-zal').classList.toggle('active', section === 'zal');
-            document.getElementById('folder-xonalar').classList.toggle('active', section === 'xonalar');
-            document.getElementById('section-heading-title').innerText = section === 'zal' ? "Zal Stollari (16 ta)" : "Xonalar (8 ta)";
-            renderTables();
+        function loadOrdersFromStorage() {
+            tablesState = {};
+            let waiterOrders = JSON.parse(localStorage.getItem('waiter_orders')) || [];
+            let activeOrders = JSON.parse(localStorage.getItem('active_orders')) || [];
+            let combined = [...waiterOrders, ...activeOrders];
+
+            combined.forEach(o => {
+                if (o.tableNumber && o.status !== 'tolandi') {
+                    tablesState[o.tableNumber] = o;
+                }
+            });
         }
 
         function renderTables() {
             const grid = document.getElementById('tables-grid');
             grid.innerHTML = '';
-            const count = activeSection === 'zal' ? 16 : 8;
+
+            let count = activeSection === 'zal' ? 16 : 8;
+            let prefix = activeSection === 'zal' ? 'Stol #' : 'Xona #';
 
             for (let i = 1; i <= count; i++) {
-                const tableKey = `${activeSection}_${i}`;
-                const isBusy = tableOrders[tableKey] && tableOrders[tableKey].items && tableOrders[tableKey].items.length > 0;
-                
-                const card = document.createElement('div');
-                card.className = `table-card ${isBusy ? 'busy' : ''}`;
-                card.onclick = () => openTableModal(i);
-                card.innerHTML = `
-                    <img src="https://cdn-icons-png.flaticon.com/512/3422/3422894.png" alt="Stol" class="table-icon">
-                    <div style="font-weight: bold; font-size: 15px;">${activeSection === 'zal' ? 'Stol' : 'Xona'} #${i}</div>
-                    <div style="font-size: 12px; color: #666; margin-top: 4px;">${isBusy ? 'Band' : 'Bo\'sh'}</div>
+                let tableKey = prefix + i;
+                let tableData = tablesState[tableKey];
+                let isBusy = !!tableData;
+                let status = tableData ? (tableData.status || 'yangi') : 'bo\'sh';
+
+                let cardClass = 'table-card';
+                let statusText = 'BO\'SH';
+                let badgeClass = 'status-badge status-bosh';
+
+                if (isBusy) {
+                    if (status === 'qabul_qilindi') {
+                        cardClass += ' busy';
+                        statusText = 'QABUL QILINDI';
+                        badgeClass = 'status-badge status-qabul';
+                    } else if (status === 'tayyorlanyapti') {
+                        cardClass += ' preparing';
+                        statusText = 'TAYYORLANYAPTI';
+                        badgeClass = 'status-badge status-jarayonda';
+                    } else if (status === 'tayyor') {
+                        cardClass += ' ready';
+                        statusText = 'TAYYOR';
+                        badgeClass = 'status-badge status-tayyor';
+                    } else {
+                        cardClass += ' busy';
+                        statusText = 'YANGI';
+                        badgeClass = 'status-badge status-yangi';
+                    }
+                }
+
+                grid.innerHTML += `
+                    <div class="${cardClass}" onclick="openTableModal('${tableKey}')">
+                        <div style="font-size: 24px; margin-bottom: 5px;">🪑</div>
+                        <div style="font-weight: bold; font-size: 16px;">${tableKey}</div>
+                        <div class="${badgeClass}">${statusText}</div>
+                    </div>
                 `;
-                grid.appendChild(card);
             }
         }
 
-        function openTableModal(tableNum) {
-            currentTable = tableNum;
-            const tableKey = `${activeSection}_${tableNum}`;
+        function openTableModal(tableKey) {
+            selectedTableNumber = tableKey;
+            document.getElementById('modal-title').innerText = `${tableKey} Boshqaruvi`;
             
-            document.getElementById('modal-title').innerText = `${activeSection === 'zal' ? 'Stol' : 'Xona'} #${tableNum} boshqaruvi`;
-            
-            if (tableOrders[tableKey]) {
-                currentGuests = tableOrders[tableKey].guests || 1;
+            let existingOrder = tablesState[tableKey];
+            if (existingOrder) {
+                currentGuestsCount = existingOrder.guestsCount || 1;
                 currentCart = {};
-                if (tableOrders[tableKey].items) {
-                    tableOrders[tableKey].items.forEach(item => {
+                if (Array.isArray(existingOrder.items)) {
+                    existingOrder.items.forEach(item => {
                         currentCart[item.id] = { ...item };
                     });
                 }
             } else {
-                currentGuests = 1;
+                currentGuestsCount = 1;
                 currentCart = {};
             }
 
-            document.getElementById('modal-guests-val').innerText = currentGuests;
-            document.getElementById('modal-overlay').style.display = 'flex';
-            renderModalMenuList();
+            document.getElementById('modal-guests-val').innerText = currentGuestsCount;
+            renderModalMenu();
             updateOrderSummary();
+            document.getElementById('modal-overlay').style.display = 'flex';
         }
 
         function closeModal() {
             document.getElementById('modal-overlay').style.display = 'none';
-            currentTable = null;
-            currentCart = {};
         }
 
-        function changeGuests(val) {
-            currentGuests += val;
-            if (currentGuests < 1) currentGuests = 1;
-            document.getElementById('modal-guests-val').innerText = currentGuests;
+        function changeGuests(delta) {
+            currentGuestsCount = Math.max(1, currentGuestsCount + delta);
+            document.getElementById('modal-guests-val').innerText = currentGuestsCount;
         }
 
-        const fullMenu = [
-            { id: 1, category: "Osh", name: "Toshkent oshi (Toʻy oshi)", price: 38000, internal_price: 25000 },
-            { id: 2, category: "Osh", name: "Samarqand oshi", price: 40000, internal_price: 27000 },
-            { id: 3, category: "Osh", name: "Buxoro oshi (\"Sochqi oshi\")", price: 42000, internal_price: 28000 },
-            { id: 6, category: "Suyuq ovqatlar", name: "Qaynatma shoʻrva", price: 30000, internal_price: 20000 },
-            { id: 7, category: "Suyuq ovqatlar", name: "Mastava", price: 27000, internal_price: 18000 },
-            { id: 14, category: "Quyuq taomlar", name: "Bifsteks", price: 45000, internal_price: 30000 },
-            { id: 17, category: "Quyuq taomlar", name: "Lagʻman (Qovurma lagʻman)", price: 36000, internal_price: 24000 },
-            { id: 21, category: "Hamirli taomlar", name: "Manti (Goʻshtli va piyozli)", price: 33000, internal_price: 22000 },
-            { id: 28, category: "Kaboblar", name: "Qiyma kabob", price: 25000, internal_price: 15000 },
-            { id: 29, category: "Kaboblar", name: "Qoʻy goʻshti shashligi", price: 28000, internal_price: 18000 },
-            { id: 60, category: "Somsalar", name: "Tandir somsa", price: 14000, internal_price: 8000 },
-            { id: 80, category: "Fast Food", name: "Lavash", price: 28000, internal_price: 18000 },
-            { id: 100, category: "Ichimliklar", name: "Coca-Cola: 0.5L", price: 11000, internal_price: 6000 }
-        ];
-
-        function filterModalMenu(category, event) {
-            currentFilter = category;
-            document.querySelectorAll('#menu-categories-tabs .tab-btn').forEach(btn => btn.classList.remove('active'));
-            if(event && event.currentTarget) event.currentTarget.classList.add('active');
-            renderModalMenuList();
+        function filterModalMenu(category, evt) {
+            activeFilter = category;
+            document.querySelectorAll('#menu-categories-tabs .tab-btn').forEach(b => b.classList.remove('active'));
+            if(evt) evt.target.classList.add('active');
+            renderModalMenu();
         }
 
-        function renderModalMenuList() {
-            const listEl = document.getElementById('menu-selection-list');
-            listEl.innerHTML = '';
+        function renderModalMenu() {
+            const container = document.getElementById('menu-selection-list');
+            let filtered = fullMenu;
+            if (activeFilter !== 'all') {
+                filtered = fullMenu.filter(m => m.category === activeFilter);
+            }
 
-            const filtered = currentFilter === 'all' ? fullMenu : fullMenu.filter(m => m.category === currentFilter);
-
-            filtered.forEach(item => {
-                let qty = currentCart[item.id] ? currentCart[item.id].qty : 0;
-                const row = document.createElement('div');
-                row.className = 'menu-item-row';
-                row.innerHTML = `
-                    <div>
-                        <div style="font-weight: bold; font-size: 14px;">${item.name}</div>
-                        <div style="font-size: 12px; color: #666;">${item.price.toLocaleString()} so'm</div>
-                    </div>
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                        <button class="qty-btn" onclick="updateCartItem(${item.id}, -1)">-</button>
-                        <span id="cart-qty-${item.id}" style="font-weight: bold; width: 20px; text-align: center;">${qty}</span>
-                        <button class="qty-btn" onclick="updateCartItem(${item.id}, 1)">+</button>
+            container.innerHTML = filtered.map(item => {
+                let inCartQty = currentCart[item.id] ? currentCart[item.id].qty : 0;
+                return `
+                    <div class="menu-item-row">
+                        <div>
+                            <div style="font-weight: bold; font-size: 14px;">${item.name}</div>
+                            <div style="font-size: 12px; color: #666;">${item.price.toLocaleString()} so'm</div>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <button class="qty-btn" onclick="updateCartItem(${item.id}, -1)">-</button>
+                            <span style="font-weight: bold; font-size: 14px;">${inCartQty}</span>
+                            <button class="qty-btn" onclick="updateCartItem(${item.id}, 1)">+</button>
+                        </div>
                     </div>
                 `;
-                listEl.appendChild(row);
-            });
+            }).join('');
         }
 
         function updateCartItem(itemId, delta) {
-            const item = fullMenu.find(m => m.id === itemId);
+            let item = fullMenu.find(m => m.id === itemId);
             if (!item) return;
 
             if (!currentCart[itemId]) {
-                if (delta > 0) {
-                    currentCart[itemId] = { ...item, qty: 1 };
-                }
-            } else {
-                currentCart[itemId].qty += delta;
-                if (currentCart[itemId].qty <= 0) {
-                    delete currentCart[itemId];
-                }
+                currentCart[itemId] = { ...item, qty: 0 };
             }
 
-            const qtySpan = document.getElementById(`cart-qty-${itemId}`);
-            if (qtySpan) {
-                qtySpan.innerText = currentCart[itemId] ? currentCart[itemId].qty : 0;
+            currentCart[itemId].qty += delta;
+
+            if (currentCart[itemId].qty <= 0) {
+                delete currentCart[itemId];
             }
+
+            renderModalMenu();
             updateOrderSummary();
         }
 
         function updateOrderSummary() {
-            const summaryEl = document.getElementById('current-order-summary');
-            let itemsArr = Object.values(currentCart);
-            if (itemsArr.length === 0) {
-                summaryEl.innerHTML = `<span style="font-size: 13px; color: #777;">Hozircha taomlar tanlanmadi</span>`;
+            const container = document.getElementById('current-order-summary');
+            let items = Object.values(currentCart);
+            if (items.length === 0) {
+                container.innerHTML = "<p style='font-size: 13px; color: #777;'>Hozircha hech narsa tanlanmadi.</p>";
                 return;
             }
 
             let total = 0;
-            let text = itemsArr.map(i => {
+            let listHTML = items.map(i => {
                 let sum = i.price * i.qty;
                 total += sum;
-                return `${i.name} (${i.qty} ta - ${sum.toLocaleString()} so'm)`;
-            }).join(', <br>');
+                return `<div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 4px;">
+                    <span>${i.name} x ${i.qty}</span>
+                    <b>${sum.toLocaleString()} so'm</b>
+                </div>`;
+            }).join('');
 
-            summaryEl.innerHTML = `
-                <div style="font-size: 13px; margin-bottom: 4px;"><b>Tanlanganlar:</b><br>${text}</div>
-                <div style="font-weight: bold; color: #2a5298;">Jami summa: ${total.toLocaleString()} so'm</div>
+            container.innerHTML = `
+                ${listHTML}
+                <hr style="margin: 8px 0;">
+                <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 15px; color: #2a5298;">
+                    <span>Jami:</span>
+                    <span>${total.toLocaleString()} so'm</span>
+                </div>
             `;
         }
 
-        // MANTIQ: orderId mavjudligini tekshirish va backendga yuborish
         function sendOrderToAdmin() {
-            let itemsArr = Object.values(currentCart);
-            if (itemsArr.length === 0) {
-                alert("Iltimos, buyurtma uchun kamida bitta taom tanlang!");
+            let items = Object.values(currentCart);
+            if (items.length === 0) {
+                alert("Iltimos, kamida bitta taom tanlang!");
                 return;
             }
 
-            const tableKey = `${activeSection}_${currentTable}`;
-            
-            // Agar avvaldan buyurtma bo'lsa uning orderId sini saqlab qolamiz, aks holda yangi ID generatsiya qilamiz
-            let existingOrderId = tableOrders[tableKey] && tableOrders[tableKey].orderId ? tableOrders[tableKey].orderId : `ord_${Date.now()}_${Math.floor(Math.random()*1000)}`;
-
-            const orderData = {
-                orderId: existingOrderId,
-                tableNumber: `${activeSection === 'zal' ? 'Zal-' : 'Xona-'}${currentTable}`,
-                guests: currentGuests,
+            let orderData = {
+                id: selectedTableNumber,
+                tableNumber: selectedTableNumber,
                 waiterName: activeWaiter,
-                items: itemsArr,
+                guestsCount: currentGuestsCount,
+                items: items,
                 status: 'yangi',
-                isPrinted: false,
-                timestamp: new Date().toISOString()
+                time: new Date().toLocaleTimeString()
             };
 
-            // LocalStorage va xotirani yangilash
-            tableOrders[tableKey] = orderData;
-            saveSavedData();
+            let waiterOrders = JSON.parse(localStorage.getItem('waiter_orders')) || [];
+            let index = waiterOrders.findIndex(o => o.tableNumber === selectedTableNumber);
+            if (index >= 0) {
+                waiterOrders[index] = orderData;
+            } else {
+                waiterOrders.push(orderData);
+            }
 
-            // Socket orqali backendga yuborish
-            socket.emit('new_order', orderData);
+            localStorage.setItem('waiter_orders', JSON.stringify(waiterOrders));
+
+            // Socket orqali Admin panelga real vaqt rejimida yuborish
+            if (socket) {
+                socket.emit('new_order', orderData);
+            }
 
             closeModal();
+            loadOrdersFromStorage();
             renderTables();
-            alert(`Stol #${currentTable} buyurtmasi muvaffaqiyatli yuborildi/yangilandi!`);
+            alert("Buyurtma admin panelga real vaqt rejimida yuborildi!");
         }
 
         function printCheck() {
-            let itemsArr = Object.values(currentCart);
-            if (itemsArr.length === 0) {
-                alert("Chek chiqarish uchun taomlar tanlanmagan!");
+            let existingOrder = tablesState[selectedTableNumber];
+            if (!existingOrder) {
+                alert("Chek chiqarish uchun avval buyurtma yuborilishi kerak!");
                 return;
             }
 
-            const tableKey = `${activeSection}_${currentTable}`;
-            if (tableOrders[tableKey]) {
-                tableOrders[tableKey].isPrinted = true;
-                saveSavedData();
-                if (tableOrders[tableKey].orderId) {
-                    socket.emit('change_status', { orderId: tableOrders[tableKey].orderId, isPrinted: true });
-                }
-            }
-
-            let total = 0;
-            let html = `<b>Restoran Cheki</b><br>`;
-            html += `Stol: ${activeSection} #${currentTable}<br>`;
-            html += `Ofitsiant: ${activeWaiter}<br>`;
-            html += `Mehmonlar soni: ${currentGuests}<br>`;
-            html += `--------------------------------<br>`;
-            itemsArr.forEach(i => {
-                let sum = i.price * i.qty;
-                total += sum;
-                html += `${i.name} x ${i.qty} = ${sum.toLocaleString()} so'm<br>`;
+            existingOrder.isPrinted = true;
+            let waiterOrders = JSON.parse(localStorage.getItem('waiter_orders')) || [];
+            waiterOrders = waiterOrders.map(o => {
+                if (o.tableNumber === selectedTableNumber) o.isPrinted = true;
+                return o;
             });
-            html += `--------------------------------<br>`;
-            html += `<b>Jami: ${total.toLocaleString()} so'm</b>`;
+            localStorage.setItem('waiter_orders', JSON.stringify(waiterOrders));
 
-            document.getElementById('qr-check-content').innerHTML = html;
-            document.getElementById('qr-modal').style.display = 'flex';
-        }
-
-        function closeQrModal() {
-            document.getElementById('qr-modal').style.display = 'none';
-        }
-
-        function openHistory() {
-            let historyHtml = "";
-            for (let k in tableOrders) {
-                let o = tableOrders[k];
-                historyHtml += `<div style="border-bottom: 1px solid #eee; padding: 6px 0;"><b>${o.tableNumber}</b> | Ofitsiant: ${o.waiterName} | Holat: ${o.status}</div>`;
+            if (socket) {
+                socket.emit('change_status', { orderId: selectedTableNumber, status: existingOrder.status, isPrinted: true });
             }
-            document.getElementById('history-list').innerHTML = historyHtml || "Hozircha tarix mavjud emas.";
-            document.getElementById('history-modal').style.display = 'flex';
+
+            alert(`${selectedTableNumber} uchun chek kassa printeriga yuborildi!`);
+            closeModal();
+            renderTables();
         }
 
-        function closeHistory() {
-            document.getElementById('history-modal').style.display = 'none';
+        function switchSection(sec) {
+            activeSection = sec;
+            document.getElementById('folder-zal').classList.toggle('active', sec === 'zal');
+            document.getElementById('folder-xonalar').classList.toggle('active', sec === 'xonalar');
+            document.getElementById('section-heading-title').innerText = sec === 'zal' ? 'Zal Stollari (16 ta)' : 'Alohida Xonalar (8 ta)';
+            renderTables();
         }
 
         function changeWaiterName() {
-            let name = prompt("Ofitsiant ismini kiriting:", activeWaiter);
+            let name = prompt("Ismingizni kiriting:", activeWaiter);
             if (name) {
                 activeWaiter = name;
-                document.getElementById('logged-waiter-name').innerText = `Ofitsiant: ${name}`;
+                document.getElementById('logged-waiter-name').innerText = "Ofitsiant: " + activeWaiter;
             }
+        }
+
+        function initClock() {
+            setInterval(() => {
+                const now = new Date();
+                document.getElementById('realtime-clock').innerText = now.toLocaleDateString() + "\n" + now.toLocaleTimeString();
+            }, 1000);
         }
 
         function playNotificationSound() {
@@ -589,40 +615,46 @@
         function addCallNotification(tableNumber) {
             const container = document.getElementById('call-notifications-container');
             const callId = 'call_' + Date.now();
+            
             const card = document.createElement('div');
             card.className = 'call-alert-card';
             card.id = callId;
             card.innerHTML = `
-                <div><strong>🔔 Diqqat!</strong> <span>${tableNumber}</span> dan mijoz chaqirmoqda!</div>
+                <div>
+                    <strong>🔔 Diqqat!</strong> <span>${tableNumber}</span> dan mijoz chaqirmoqda!
+                </div>
                 <button onclick="acceptCall('${tableNumber}', '${callId}')" style="padding: 6px 14px; background: #27ae60; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">Hozir boryapman</button>
             `;
             container.appendChild(card);
         }
 
         function acceptCall(tableNumber, callId) {
-            socket.emit('waiter_on_the_way', { tableNumber: tableNumber, waiter: activeWaiter });
+            if (socket) {
+                socket.emit('waiter_on_the_way', { tableNumber: tableNumber, waiter: activeWaiter });
+            }
             const card = document.getElementById(callId);
             if (card) card.remove();
-            alert(`${tableNumber} ga "Hozir boryapman" xabari yuborildi!`);
         }
 
-        function saveSavedData() {
-            localStorage.setItem('waiter_table_orders', JSON.stringify(tableOrders));
+        function openHistory() {
+            document.getElementById('history-modal').style.display = 'flex';
+            let waiterOrders = JSON.parse(localStorage.getItem('waiter_orders')) || [];
+            let container = document.getElementById('history-list');
             
-            // Admin paneli bilan sinxronlashish uchun active_orders formatida ham saqlaymiz
-            let arr = Object.values(tableOrders);
-            localStorage.setItem('active_orders', JSON.stringify(arr));
+            if (waiterOrders.length === 0) {
+                container.innerHTML = "<p>Hali xizmat ko'rsatilgan buyurtmalar yo'q.</p>";
+                return;
+            }
+
+            container.innerHTML = waiterOrders.map(o => `
+                <div style="border-bottom: 1px solid #eee; padding: 8px 0;">
+                    <b>${o.tableNumber}</b> - Status: <span style="color: #27ae60; font-weight: bold;">${(o.status || 'yangi').toUpperCase()}</span>
+                </div>
+            `).join('');
         }
 
-        function loadSavedData() {
-            try {
-                let saved = localStorage.getItem('waiter_table_orders');
-                if (saved) {
-                    tableOrders = JSON.parse(saved);
-                }
-            } catch (e) {
-                tableOrders = {};
-            }
+        function closeHistory() {
+            document.getElementById('history-modal').style.display = 'none';
         }
     </script>
 </body>

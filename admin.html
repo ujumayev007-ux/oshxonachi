@@ -266,7 +266,7 @@
             setInterval(() => {
                 loadOrdersFromStorage();
                 renderAll();
-            }, 500);
+            }, 300);
         };
 
         function loadInitialData() {
@@ -319,7 +319,8 @@
                 let waiterOrders = JSON.parse(localStorage.getItem('waiter_orders')) || [];
                 let activeOrders = JSON.parse(localStorage.getItem('active_orders')) || [];
                 let adminOrders = JSON.parse(localStorage.getItem('admin_orders')) || [];
-                let combined = [...waiterOrders, ...activeOrders, ...adminOrders];
+                let ordersKey = JSON.parse(localStorage.getItem('orders')) || [];
+                let combined = [...waiterOrders, ...activeOrders, ...adminOrders, ...ordersKey];
                 let uniqueMap = new Map();
                 
                 combined.forEach(o => {
@@ -546,6 +547,7 @@
             localStorage.setItem('waiter_orders', JSON.stringify(ordersDatabase));
             localStorage.setItem('active_orders', JSON.stringify(ordersDatabase));
             localStorage.setItem('admin_orders', JSON.stringify(ordersDatabase));
+            localStorage.setItem('orders', JSON.stringify(ordersDatabase));
         }
 
         function renderHistory() {
@@ -615,6 +617,9 @@
             localStorage.setItem('admin_menu', JSON.stringify(menuDatabase));
             localStorage.setItem('admin_warehouse', JSON.stringify(warehouseDatabase));
             localStorage.setItem('admin_orders', JSON.stringify(ordersDatabase));
+            localStorage.setItem('waiter_orders', JSON.stringify(ordersDatabase));
+            localStorage.setItem('active_orders', JSON.stringify(ordersDatabase));
+            localStorage.setItem('orders', JSON.stringify(ordersDatabase));
         }
     </script>
 </body>

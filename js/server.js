@@ -1,3 +1,4 @@
+```javascript
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
@@ -7,10 +8,12 @@ const cors = require('cors');
 const app = express();
 const server = http.createServer(app);
 
-// Express uchun CORS ni yoqish
+// Express uchun CORS va ma'lumotlarni o'qish sozlamalari
 app.use(cors());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(__dirname)); // HTML fayllar turgan asosiy papka uchun
 
 // Render va turli domenlardan ulana olish uchun Socket.io CORS sozlamasi
 const io = new Server(server, {
@@ -20,9 +23,14 @@ const io = new Server(server, {
     }
 });
 
+// Yo'nalishlar (Routes)
+app.use('/api/admin', require('./routes/admin.routes'));
+app.use('/api/waiter', require('./routes/waiter.routes'));
+
 // Xotiradagi vaqtinchalik buyurtmalar ro'yxati
 let orders = [];
 
+// Socket.io real-vaqt mantiqi
 io.on('connection', (socket) => {
     console.log('Foydalanuvchi ulandi: ', socket.id);
 
@@ -65,6 +73,7 @@ io.on('connection', (socket) => {
     socket.on('waiter_on_the_way', (data) => {
         io.emit('waiter_on_the_way', data);
     });
+
     // Admin panelidan buyurtma holatini o'zgartirganda (Qabul / Jarayonda / Tayyor)
     socket.on('change_status', ({ orderId, status }) => {
         const order = orders.find(o => o.id === orderId);
@@ -92,3 +101,5 @@ const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
     console.log(`Server ishga tushdi: http://localhost:${PORT}`);
 });
+
+```

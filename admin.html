@@ -271,19 +271,37 @@
 
         function loadInitialData() {
             try {
+                // Database seeddagi to'liq mahsulotlar bazasi bilan moslashtirildi[cite: 7]
                 let defaultMenu = [
-                    { id: 1, name: "Toshkent oshi (To'y oshi)", category: "Osh", internal_price: 25000, sale_price: 38000, is_visible: true },
-                    { id: 2, name: "Samarqand oshi", category: "Osh", internal_price: 27000, sale_price: 40000, is_visible: true },
-                    { id: 14, name: "Bifsteks", category: "Quyuq taomlar", internal_price: 30000, sale_price: 45000, is_visible: true },
-                    { id: 100, name: "Coca-Cola: 0.5L", category: "Ichimliklar", internal_price: 6000, sale_price: 11000, is_visible: true }
+                    { id: 1, category: "Osh", name: "Toshkent oshi (Toʻy oshi)", internal_price: 35000, sale_price: 50000, is_visible: true },
+                    { id: 2, category: "Osh", name: "Samarqand oshi", internal_price: 38000, sale_price: 55000, is_visible: true },
+                    { id: 3, category: "Osh", name: "Buxoro oshi (\"Sochqi oshi\")", internal_price: 40000, sale_price: 60000, is_visible: true },
+                    { id: 4, category: "Suyuq ovqatlar", name: "Qaynatma shoʻrva", internal_price: 22000, sale_price: 35000, is_visible: true },
+                    { id: 5, category: "Suyuq ovqatlar", name: "Mastava", internal_price: 18000, sale_price: 28000, is_visible: true },
+                    { id: 6, category: "Quyuq taomlar", name: "Bifsteks", internal_price: 45000, sale_price: 70000, is_visible: true },
+                    { id: 7, category: "Hamirli taomlar", name: "Manti (Goʻshtli va piyozli)", internal_price: 25000, sale_price: 40000, is_visible: true },
+                    { id: 8, category: "Kaboblar", name: "Qoʻy goʻshti shashligi (Klassik shashlik)", internal_price: 18000, sale_price: 30000, is_visible: true },
+                    { id: 9, category: "Somsalar", name: "Tandir somsa", internal_price: 8000, sale_price: 14000, is_visible: true },
+                    { id: 10, category: "Fast Food", name: "Lavash", internal_price: 20000, sale_price: 35000, is_visible: true },
+                    { id: 11, category: "Ichimliklar", name: "Coca-Cola (klassik): 0.5L", internal_price: 6000, sale_price: 10000, is_visible: true }
                 ];
-                menuDatabase = JSON.parse(localStorage.getItem('admin_menu')) || defaultMenu;
-                localStorage.setItem('admin_menu', JSON.stringify(menuDatabase));
+                
+                let storedMenu = JSON.parse(localStorage.getItem('admin_menu'));
+                if (!storedMenu || storedMenu.length === 0) {
+                    menuDatabase = defaultMenu;
+                    localStorage.setItem('admin_menu', JSON.stringify(menuDatabase));
+                } else {
+                    menuDatabase = storedMenu.map(m => ({
+                        ...m,
+                        sale_price: Number(m.sale_price || m.external_price || 0),
+                        external_price: Number(m.sale_price || m.external_price || 0)
+                    }));
+                }
 
                 warehouseDatabase = JSON.parse(localStorage.getItem('admin_warehouse')) || [
-                    { name: "Coca-Cola: 0.5L", quantity: 50, unit: "dona" },
-                    { name: "Go'sht", quantity: 20, unit: "kg" },
-                    { name: "Guruch", quantity: 30, unit: "kg" }
+                    { name: "Coca-Cola (klassik): 0.5L", quantity: 100, unit: "dona" },
+                    { name: "Go'sht", quantity: 50, unit: "kg" },
+                    { name: "Guruch", quantity: 60, unit: "kg" }
                 ];
                 loadOrdersFromStorage();
             } catch (err) { console.error("Yuklashda xato:", err); }
@@ -377,8 +395,8 @@
                     <td><input type="number" value="${item.sale_price}" onchange="updateMenuField(${item.id}, 'sale_price', Number(this.value))"></td>
                     <td>
                         <select onchange="updateMenuField(${item.id}, 'is_visible', this.value === 'true')">
-                            <option value="true" ${item.is_visible ? 'selected' : ''}>Ko'rinadi</option>
-                            <option value="false" ${!item.is_visible ? 'selected' : ''}>Yashiringan</option>
+                            <option value="true" ${item.is_visible !== false ? 'selected' : ''}>Ko'rinadi</option>
+                            <option value="false" ${item.is_visible === false ? 'selected' : ''}>Yashiringan</option>
                         </select>
                     </td>
                     <td><button class="btn btn-blue" onclick="renderAll()">Saqlash</button></td>
@@ -388,7 +406,11 @@
 
         function updateMenuField(id, field, value) {
             const item = menuDatabase.find(m => m.id === id);
-            if (item) { item[field] = value; saveData(); }
+            if (item) { 
+                item[field] = value; 
+                if (field === 'sale_price') item.external_price = value;
+                saveData(); 
+            }
         }
 
         function addNewMenuItem() {
@@ -398,7 +420,7 @@
             const salePrice = Number(document.getElementById('new-menu-sale').value);
             if (name && intPrice && salePrice) {
                 const newId = menuDatabase.length > 0 ? Math.max(...menuDatabase.map(m => m.id)) + 1 : 1;
-                menuDatabase.push({ id: newId, name, category, internal_price: intPrice, sale_price: salePrice, is_visible: true });
+                menuDatabase.push({ id: newId, name, category, internal_price: intPrice, sale_price: salePrice, external_price: salePrice, is_visible: true });
                 renderAll();
                 document.getElementById('new-menu-name').value = '';
                 document.getElementById('new-menu-internal').value = '';
@@ -406,7 +428,6 @@
             } else { alert("Barcha maydonlarni to'ldiring!"); }
         }
 
-        // ANBAR AUTOCOMPLETE FUNKSIYASI
         function handleAutocomplete(val) {
             const listContainer = document.getElementById('autocomplete-list');
             listContainer.innerHTML = '';
@@ -461,7 +482,6 @@
             }
         }
 
-        // AMBDAN MAHSULOTNI AVTOMATIK YECHISH MEXANIZMI
         function deductWarehouseForOrder(order) {
             if (!order || !order.items) return;
             order.items.forEach(item => {
@@ -490,7 +510,7 @@
                 let orderTotalSum = 0;
                 let itemsListHTML = `<ul style="list-style: none; padding: 0; margin: 8px 0; background: #ffffff; border: 1px solid #b3d7ff; border-radius: 6px; padding: 8px;">` + 
                     (order.items || []).map(i => {
-                        let price = Number(i.sale_price || i.price || 0);
+                        let price = Number(i.sale_price || i.external_price || i.price || 0);
                         let qty = Number(i.qty || 1);
                         orderTotalSum += price * qty;
                         return `<li style="padding: 6px 0; border-bottom: 1px dashed #e1f5fe; display: flex; justify-content: space-between; font-size: 14px;">
@@ -536,7 +556,7 @@
 
         function calculateOrderTotal(order) {
             let total = 0;
-            (order.items || []).forEach(i => total += Number(i.sale_price || i.price || 0) * Number(i.qty || 1));
+            (order.items || []).forEach(i => total += Number(i.sale_price || i.external_price || i.price || 0) * Number(i.qty || 1));
             return total;
         }
 
@@ -636,7 +656,7 @@
                 let orderSale = 0, orderInternal = 0;
                 (order.items || []).forEach(i => {
                     let qty = Number(i.qty || 1);
-                    let sPrice = Number(i.sale_price || i.price || 0);
+                    let sPrice = Number(i.sale_price || i.external_price || i.price || 0);
                     let iPrice = Number(i.internal_price || Math.floor(sPrice * 0.7));
                     orderSale += sPrice * qty; orderInternal += iPrice * qty;
                 });

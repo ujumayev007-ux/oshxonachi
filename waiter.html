@@ -175,6 +175,7 @@
             });
 
             setInterval(() => {
+                loadMenuFromAdmin();
                 loadOrdersFromStorage();
                 renderTables();
             }, 1000);
@@ -183,15 +184,19 @@
         function loadMenuFromAdmin() {
             let adminMenu = JSON.parse(localStorage.getItem('admin_menu'));
             if(adminMenu && adminMenu.length > 0) {
-                fullMenu = adminMenu.map(m => ({ 
-                    id: m.id, 
-                    category: m.category, 
-                    name: m.name, 
-                    price: Number(m.sale_price || m.price || 0), 
-                    sale_price: Number(m.sale_price || m.price || 0), 
-                    internal_price: Number(m.internal_price || 0), 
-                    is_visible: m.is_visible 
-                }));
+                fullMenu = adminMenu.map(m => {
+                    let sPrice = Number(m.sale_price || m.external_price || m.price || 0);
+                    return { 
+                        id: m.id, 
+                        category: m.category, 
+                        name: m.name, 
+                        price: sPrice, 
+                        sale_price: sPrice, 
+                        external_price: sPrice,
+                        internal_price: Number(m.internal_price || 0), 
+                        is_visible: m.is_visible !== false && m.is_visible !== "false"
+                    };
+                });
             }
         }
 
@@ -282,8 +287,8 @@
             if (existingOrder && existingOrder.items) {
                 currentGuestsCount = existingOrder.guestsCount || 1;
                 existingOrder.items.forEach(item => {
-                    let itemPrice = Number(item.sale_price || item.price || 0);
-                    currentCart[item.id] = { ...item, price: itemPrice, sale_price: itemPrice };
+                    let itemPrice = Number(item.sale_price || item.external_price || item.price || 0);
+                    currentCart[item.id] = { ...item, price: itemPrice, sale_price: itemPrice, external_price: itemPrice };
                 });
                 document.getElementById('submit-order-btn').innerText = "Buyurtmani yangilash";
             } else {
@@ -314,9 +319,16 @@
         function renderModalMenu() {
             const container = document.getElementById('menu-selection-list');
             let filtered = activeFilter === 'all' ? fullMenu : fullMenu.filter(m => m.category === activeFilter);
-            container.innerHTML = filtered.filter(m => m.is_visible !== false).map(item => {
+            
+            if (filtered.length === 0) {
+                container.innerHTML = "<p style='padding:10px; color:#666;'>Bu kategoriyada taomlar topilmadi yoki menyu yuklanmagan.</p>";
+                return;
+            }
+
+            container.innerHTML = filtered.map(item => {
+                if (item.is_visible === false) return '';
                 let inCartQty = currentCart[item.id] ? currentCart[item.id].qty : 0;
-                let displayPrice = Number(item.sale_price || item.price || 0);
+                let displayPrice = Number(item.sale_price || item.external_price || item.price || 0);
                 return `
                     <div class="menu-item-row">
                         <div>
@@ -335,8 +347,8 @@
         function updateCartItem(itemId, delta) {
             let item = fullMenu.find(m => m.id === itemId);
             if (!item) return;
-            let itemPrice = Number(item.sale_price || item.price || 0);
-            if (!currentCart[itemId]) currentCart[itemId] = { ...item, price: itemPrice, sale_price: itemPrice, qty: 0 };
+            let itemPrice = Number(item.sale_price || item.external_price || item.price || 0);
+            if (!currentCart[itemId]) currentCart[itemId] = { ...item, price: itemPrice, sale_price: itemPrice, external_price: itemPrice, qty: 0 };
             currentCart[itemId].qty += delta;
             if (currentCart[itemId].qty <= 0) delete currentCart[itemId];
             renderModalMenu(); 
@@ -349,7 +361,7 @@
             if (items.length === 0) { container.innerHTML = "<p style='font-size: 13px; color: #777;'>Hozircha hech narsa tanlanmadi.</p>"; return; }
             let total = 0;
             let listHTML = items.map(i => {
-                let p = Number(i.sale_price || i.price || 0);
+                let p = Number(i.sale_price || i.external_price || i.price || 0);
                 let sum = p * i.qty; total += sum;
                 return `<div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 4px;"><span>${i.name} x ${i.qty}</span><b>${sum.toLocaleString()} so'm</b></div>`;
             }).join('');
@@ -440,7 +452,7 @@
             let total = 0;
             let checkHTML = `<b>${order.tableNumber}</b> | № ${order.orderNumber}<br><hr style="margin:5px 0">`;
             order.items.forEach(i => {
-                let p = Number(i.sale_price || i.price || 0);
+                let p = Number(i.sale_price || i.external_price || i.price || 0);
                 let sum = p * Number(i.qty || 1); 
                 total += sum;
                 checkHTML += `${i.name} - ${i.qty}x = ${sum.toLocaleString()}<br>`;

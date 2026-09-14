@@ -140,9 +140,20 @@
 
         window.onload = function() {
             loadMenuFromAdmin();
+            loadOrdersFromStorage();
+
             try {
                 socket = io('https://oshxonachi-server.onrender.com');
-                socket.on('status_updated', (data) => { updateLocalTableStatus(data.orderId, data.status, data.isPrinted, data.isPaid); });
+
+                socket.on('connect', () => {
+                    console.log("Ofitsiant serverga ulandi");
+                });
+
+                socket.on('status_updated', (data) => {
+                    if (!data) return;
+                    updateLocalTableStatus(data.orderId || data.tableNumber, data.status, data.isPrinted, data.isPaid);
+                });
+
                 socket.on('update_orders', (serverOrders) => {
                     if (Array.isArray(serverOrders)) {
                         localStorage.setItem('waiter_orders', JSON.stringify(serverOrders));
@@ -153,15 +164,21 @@
             } catch (e) {}
 
             initClock();
-            loadOrdersFromStorage();
             renderTables();
 
             window.addEventListener('storage', function(e) {
                 if(e.key === 'admin_menu') loadMenuFromAdmin();
-                if(e.key === 'waiter_orders' || e.key === 'active_orders' || e.key === 'orders') {
-                    loadOrdersFromStorage(); renderTables();
+                if(['waiter_orders', 'active_orders', 'admin_orders', 'orders'].includes(e.key)) {
+                    loadOrdersFromStorage(); 
+                    renderTables();
                 }
             });
+
+            // Ma'lumotlarni doimiy sinxronlab turish uchun
+            setInterval(() => {
+                loadOrdersFromStorage();
+                renderTables();
+            }, 2000);
         };
 
         function loadMenuFromAdmin() {
@@ -173,15 +190,25 @@
 
         function updateLocalTableStatus(tableOrOrderId, newStatus, isPrinted, isPaid) {
             let waiterOrders = JSON.parse(localStorage.getItem('waiter_orders')) || [];
+            let updated = false;
+
             waiterOrders = waiterOrders.map(o => {
-                if (String(o.id || o.tableNumber) === String(tableOrOrderId)) {
-                    o.status = newStatus;
+                let currentKey = String(o.tableNumber || o.id);
+                if (currentKey === String(tableOrOrderId)) {
+                    if (newStatus !== undefined) o.status = newStatus;
                     if (isPrinted !== undefined) o.isPrinted = isPrinted;
                     if (isPaid !== undefined) o.isPaid = isPaid;
+                    updated = true;
                 }
                 return o;
             });
-            localStorage.setItem('waiter_orders', JSON.stringify(waiterOrders));
+
+            if (updated) {
+                localStorage.setItem('waiter_orders', JSON.stringify(waiterOrders));
+                localStorage.setItem('active_orders', JSON.stringify(waiterOrders));
+                localStorage.setItem('admin_orders', JSON.stringify(waiterOrders));
+            }
+
             loadOrdersFromStorage();
             renderTables();
             if(document.getElementById('history-modal').style.display === 'flex') renderWaiterHistory();
@@ -190,17 +217,31 @@
         function loadOrdersFromStorage() {
             tablesState = {};
             let waiterOrders = JSON.parse(localStorage.getItem('waiter_orders')) || [];
-            waiterOrders.forEach(o => {
-                // Tolandi va Bekor qilingan stollar zalda ko'rinmasligi kerak (stol bo'shaydi)
-                if (o.tableNumber && o.status !== 'tolandi' && o.status !== 'bekor_qilindi') {
-                    tablesState[o.tableNumber] = o;
+            let activeOrders = JSON.parse(localStorage.getItem('active_orders')) || [];
+            let adminOrders = JSON.parse(localStorage.getItem('admin_orders')) || [];
+            
+            let combined = [...waiterOrders, ...activeOrders, ...adminOrders];
+            let uniqueMap = new Map();
+
+            combined.forEach(o => {
+                let key = String(o.tableNumber || o.id);
+                if (!key || key === 'undefined') return;
+                uniqueMap.set(key, o);
+            });
+
+            uniqueMap.forEach((tableData, key) => {
+                if (tableData && tableData.status !== 'tolandi' && tableData.status !== 'bekor_qilindi') {
+                    tablesState[key] = tableData;
                 }
             });
         }
 
         function renderTables() {
             const grid = document.getElementById('tables-grid');
+            if (!grid) return;
             grid.innerHTML = '';
+            
+            // Xonalar va stollar soni (Zal: 16 ta, Xonalar: 8 ta)
             let count = activeSection === 'zal' ? 16 : 8;
             let prefix = activeSection === 'zal' ? 'Stol #' : 'Xona #';
 
@@ -210,7 +251,7 @@
                 let status = tableData ? (tableData.status || 'yangi') : 'bo\'sh';
                 let cardClass = 'table-card', statusText = 'BO\'SH', badgeClass = 'status-badge status-bosh';
 
-                if (tableData) {
+                if (tableData && tableData.status !== 'tolandi' && tableData.status !== 'bekor_qilindi') {
                     if (status === 'qabul_qilindi') { cardClass += ' busy'; statusText = 'QABUL QILINDI'; badgeClass = 'status-badge status-qabul'; }
                     else if (status === 'tayyorlanyapti') { cardClass += ' preparing'; statusText = 'TAYYORLANYAPTI'; badgeClass = 'status-badge status-jarayonda'; }
                     else if (status === 'tayyor') { cardClass += ' ready'; statusText = 'TAYYOR'; badgeClass = 'status-badge status-tayyor'; }
@@ -232,9 +273,11 @@
             let existingOrder = tablesState[tableKey];
             currentCart = {};
             
-            if (existingOrder) {
+            if (existingOrder && existingOrder.items) {
                 currentGuestsCount = existingOrder.guestsCount || 1;
-                (existingOrder.items || []).forEach(item => currentCart[item.id] = { ...item });
+                existingOrder.items.forEach(item => {
+                    currentCart[item.id] = { ...item };
+                });
                 document.getElementById('submit-order-btn').innerText = "Buyurtmani yangilash";
             } else {
                 currentGuestsCount = 1;
@@ -242,7 +285,8 @@
             }
 
             document.getElementById('modal-guests-val').innerText = currentGuestsCount;
-            renderModalMenu(); updateOrderSummary();
+            renderModalMenu(); 
+            updateOrderSummary();
             document.getElementById('modal-overlay').style.display = 'flex';
         }
 
@@ -286,7 +330,8 @@
             if (!currentCart[itemId]) currentCart[itemId] = { ...item, qty: 0 };
             currentCart[itemId].qty += delta;
             if (currentCart[itemId].qty <= 0) delete currentCart[itemId];
-            renderModalMenu(); updateOrderSummary();
+            renderModalMenu(); 
+            updateOrderSummary();
         }
 
         function updateOrderSummary() {
@@ -299,7 +344,8 @@
                 return `<div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 4px;"><span>${i.name} x ${i.qty}</span><b>${sum.toLocaleString()} so'm</b></div>`;
             }).join('');
             
-            let orderInfo = tablesState[selectedTableNumber] ? `<div style="font-weight:bold; color:#0d47a1; margin-bottom:8px;">Buyurtma №: ${tablesState[selectedTableNumber].orderNumber}</div>` : '';
+            let existingOrder = tablesState[selectedTableNumber];
+            let orderInfo = existingOrder ? `<div style="font-weight:bold; color:#0d47a1; margin-bottom:8px;">Buyurtma №: ${existingOrder.orderNumber}</div>` : '';
             container.innerHTML = `${orderInfo}${listHTML}<hr style="margin: 8px 0;"><div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 15px; color: #2a5298;"><span>Jami:</span><span>${total.toLocaleString()} so'm</span></div>`;
         }
 
@@ -310,23 +356,39 @@
             let orderNumber = existingOrder ? existingOrder.orderNumber : Math.floor(10000 + Math.random() * 90000).toString();
 
             let orderData = {
-                id: selectedTableNumber, tableNumber: selectedTableNumber, orderNumber: orderNumber,
-                waiterName: activeWaiter, guestsCount: currentGuestsCount, items: items,
+                id: selectedTableNumber, 
+                tableNumber: selectedTableNumber, 
+                orderNumber: orderNumber,
+                waiterName: activeWaiter, 
+                guestsCount: currentGuestsCount, 
+                items: items,
                 status: existingOrder ? (existingOrder.status || 'yangi') : 'yangi',
-                time: existingOrder ? existingOrder.time : new Date().toLocaleTimeString()
+                time: existingOrder ? existingOrder.time : new Date().toLocaleTimeString(),
+                isPrinted: existingOrder ? !!existingOrder.isPrinted : false
             };
 
             let waiterOrders = JSON.parse(localStorage.getItem('waiter_orders')) || [];
-            let index = waiterOrders.findIndex(o => o.tableNumber === selectedTableNumber && o.status !== 'tolandi' && o.status !== 'bekor_qilindi');
-            if (index >= 0) waiterOrders[index] = orderData; else waiterOrders.push(orderData);
+            let index = waiterOrders.findIndex(o => String(o.tableNumber || o.id) === String(selectedTableNumber));
+            
+            if (index >= 0) {
+                waiterOrders[index] = orderData;
+            } else {
+                waiterOrders.push(orderData);
+            }
             
             localStorage.setItem('waiter_orders', JSON.stringify(waiterOrders));
-            if (socket) socket.emit('new_order', orderData);
+            localStorage.setItem('active_orders', JSON.stringify(waiterOrders));
+            localStorage.setItem('admin_orders', JSON.stringify(waiterOrders));
+
+            if (socket) {
+                socket.emit('new_order', orderData);
+            }
             
-            closeModal(); loadOrdersFromStorage(); renderTables();
+            closeModal(); 
+            loadOrdersFromStorage(); 
+            renderTables();
         }
 
-        // Vozvrat funksiyasi
         function openReturnModal() {
             let items = Object.values(currentCart);
             if(items.length === 0) { alert("Qaytarish uchun taom yo'q"); return; }
@@ -344,17 +406,20 @@
             if(currentCart[id] && currentCart[id].qty > 0) {
                 currentCart[id].qty -= 1;
                 if(currentCart[id].qty === 0) delete currentCart[id];
-                openReturnModal(); updateOrderSummary(); renderModalMenu();
+                openReturnModal(); 
+                updateOrderSummary(); 
+                renderModalMenu();
             }
         }
+
         function confirmReturn() {
-            sendOrderToAdmin(); // Avtomatik tarzda admin panelda ham summalar o'zgaradi
+            sendOrderToAdmin(); 
             document.getElementById('return-modal').style.display = 'none';
             alert("Vozvrat muvaffaqiyatli amalga oshirildi!");
         }
+
         function closeReturnModal() { document.getElementById('return-modal').style.display = 'none'; }
 
-        // Chek va QR Kod
         function printCheck() {
             let order = tablesState[selectedTableNumber];
             if (!order) { alert("Buyurtma yuborilmagan!"); return; }
@@ -373,14 +438,27 @@
             
             order.isPrinted = true;
             let waiterOrders = JSON.parse(localStorage.getItem('waiter_orders')) || [];
-            waiterOrders = waiterOrders.map(o => { if (o.tableNumber === selectedTableNumber) o.isPrinted = true; return o; });
+            waiterOrders = waiterOrders.map(o => { 
+                if (String(o.tableNumber || o.id) === String(selectedTableNumber)) o.isPrinted = true; 
+                return o; 
+            });
+            
             localStorage.setItem('waiter_orders', JSON.stringify(waiterOrders));
-            if (socket) socket.emit('change_status', { orderId: selectedTableNumber, status: order.status, isPrinted: true });
+            localStorage.setItem('admin_orders', JSON.stringify(waiterOrders));
+
+            if (socket) {
+                socket.emit('change_status', { orderId: selectedTableNumber, tableNumber: selectedTableNumber, status: order.status, isPrinted: true });
+            }
             
             closeModal();
             document.getElementById('check-modal').style.display = 'flex';
         }
-        function closeCheckModal() { document.getElementById('check-modal').style.display = 'none'; renderTables(); }
+
+        function closeCheckModal() { 
+            document.getElementById('check-modal').style.display = 'none'; 
+            loadOrdersFromStorage();
+            renderTables(); 
+        }
 
         function switchSection(sec) {
             activeSection = sec;
@@ -389,10 +467,12 @@
             document.getElementById('section-heading-title').innerText = sec === 'zal' ? 'Zal Stollari (16 ta)' : 'Alohida Xonalar (8 ta)';
             renderTables();
         }
+
         function changeWaiterName() {
             let name = prompt("Ismingizni kiriting:", activeWaiter);
             if (name) { activeWaiter = name; document.getElementById('logged-waiter-name').innerText = "Ofitsiant: " + activeWaiter; }
         }
+
         function initClock() { setInterval(() => { const now = new Date(); document.getElementById('realtime-clock').innerText = now.toLocaleDateString() + "\n" + now.toLocaleTimeString(); }, 1000); }
 
         function openHistory() { document.getElementById('history-modal').style.display = 'flex'; renderWaiterHistory(); }

@@ -256,6 +256,7 @@
             initChart();
             initLiveClock();
 
+            // Storage hodisalarini vaqt yo'qotmasdan tezkor o'qish
             window.addEventListener('storage', function(e) {
                 if(['waiter_orders', 'active_orders', 'admin_orders', 'orders'].includes(e.key)) {
                     loadOrdersFromStorage();
@@ -263,10 +264,11 @@
                 }
             });
 
+            // Har 1 soniyada ma'lumotlarni sinxronlash (tezlik va ishonchlilik uchun)
             setInterval(() => {
                 loadOrdersFromStorage();
                 renderAll();
-            }, 300);
+            }, 1000);
         };
 
         function loadInitialData() {
@@ -319,8 +321,7 @@
                 let waiterOrders = JSON.parse(localStorage.getItem('waiter_orders')) || [];
                 let activeOrders = JSON.parse(localStorage.getItem('active_orders')) || [];
                 let adminOrders = JSON.parse(localStorage.getItem('admin_orders')) || [];
-                let ordersKey = JSON.parse(localStorage.getItem('orders')) || [];
-                let combined = [...waiterOrders, ...activeOrders, ...adminOrders, ...ordersKey];
+                let combined = [...waiterOrders, ...activeOrders, ...adminOrders];
                 let uniqueMap = new Map();
                 
                 combined.forEach(o => {
@@ -456,6 +457,7 @@
                 const orderId = String(order.tableNumber || order.id);
                 let paymentHTML = "";
                 
+                // Chek chiqarilgan bo'lsa darhol naqd va plastik to'lov tugmalarini ko'rsatish
                 if (order.isPrinted && order.status !== 'tolandi') {
                     paymentHTML = `
                         <div style="margin-top: 8px; background: #fffde7; padding: 10px; border: 1px solid #ffd54f; border-radius: 6px;">
@@ -547,7 +549,6 @@
             localStorage.setItem('waiter_orders', JSON.stringify(ordersDatabase));
             localStorage.setItem('active_orders', JSON.stringify(ordersDatabase));
             localStorage.setItem('admin_orders', JSON.stringify(ordersDatabase));
-            localStorage.setItem('orders', JSON.stringify(ordersDatabase));
         }
 
         function renderHistory() {
@@ -617,9 +618,6 @@
             localStorage.setItem('admin_menu', JSON.stringify(menuDatabase));
             localStorage.setItem('admin_warehouse', JSON.stringify(warehouseDatabase));
             localStorage.setItem('admin_orders', JSON.stringify(ordersDatabase));
-            localStorage.setItem('waiter_orders', JSON.stringify(ordersDatabase));
-            localStorage.setItem('active_orders', JSON.stringify(ordersDatabase));
-            localStorage.setItem('orders', JSON.stringify(ordersDatabase));
         }
     </script>
 </body>

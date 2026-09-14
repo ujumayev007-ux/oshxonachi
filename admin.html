@@ -133,10 +133,15 @@
                     <button class="btn btn-blue" onclick="addWarehouseItem()" style="white-space: nowrap;">Qo'shish / Yangilash</button>
                 </div>
             </div>
+            <div style="margin-bottom: 15px;">
+                <input type="text" id="warehouse-search-input" placeholder="Ombordan mahsulot qidirish..." oninput="renderWarehouse()">
+            </div>
             <table>
                 <thead>
                     <tr>
+                        <th>№</th>
                         <th>Mahsulot Nomi</th>
+                        <th>Guruhi</th>
                         <th>Qolgan Miqdor</th>
                         <th>Birligi</th>
                         <th>Tahrirlash / Miqdor qo'shish</th>
@@ -297,17 +302,130 @@
                     }));
                 }
 
+                let defaultWarehouse = [
+                    { name: "Mol goʻshti", group: "Go'sht va yarim tayyor mahsulotlar", quantity: 0, unit: "gramm (g)" },
+                    { name: "Qoʻy goʻshti", group: "Go'sht va yarim tayyor mahsulotlar", quantity: 0, unit: "gramm (g)" },
+                    { name: "Qayla goʻshti", group: "Go'sht va yarim tayyor mahsulotlar", quantity: 0, unit: "gramm (g)" },
+                    { name: "Jigar", group: "Go'sht va yarim tayyor mahsulotlar", quantity: 0, unit: "gramm (g)" },
+                    { name: "Qanotcha", group: "Go'sht va yarim tayyor mahsulotlar", quantity: 0, unit: "gramm (g)" },
+                    { name: "Qazi", group: "Go'sht va yarim tayyor mahsulotlar", quantity: 0, unit: "gramm (g)" },
+                    { name: "Jo'ja", group: "Go'sht va yarim tayyor mahsulotlar", quantity: 0, unit: "dona" },
+                    { name: "Chuchvara", group: "Go'sht va yarim tayyor mahsulotlar", quantity: 0, unit: "gramm (g)" },
+                    { name: "Manti", group: "Go'sht va yarim tayyor mahsulotlar", quantity: 0, unit: "gramm (g)" },
+                    { name: "Xamir", group: "Go'sht va yarim tayyor mahsulotlar", quantity: 0, unit: "gramm (g)" },
+                    { name: "Guruch (Alanga)", group: "Guruch va don mahsulotlari", quantity: 0, unit: "gramm (g)" },
+                    { name: "Guruch (Lazer)", group: "Guruch va don mahsulotlari", quantity: 0, unit: "gramm (g)" },
+                    { name: "Guruch (Devzira)", group: "Guruch va don mahsulotlari", quantity: 0, unit: "gramm (g)" },
+                    { name: "Guruch (Suyuq)", group: "Guruch va don mahsulotlari", quantity: 0, unit: "gramm (g)" },
+                    { name: "Noʻxat", group: "Guruch va don mahsulotlari", quantity: 0, unit: "gramm (g)" },
+                    { name: "Mosh", group: "Guruch va don mahsulotlari", quantity: 0, unit: "gramm (g)" },
+                    { name: "Un", group: "Guruch va don mahsulotlari", quantity: 0, unit: "gramm (g)" },
+                    { name: "Mayiz", group: "Guruch va don mahsulotlari", quantity: 0, unit: "gramm (g)" },
+                    { name: "Qizil Sabzi", group: "Sabzavotlar va ko'katlar", quantity: 0, unit: "gramm (g)" },
+                    { name: "Sariq sabzi", group: "Sabzavotlar va ko'katlar", quantity: 0, unit: "gramm (g)" },
+                    { name: "Piyoz", group: "Sabzavotlar va ko'katlar", quantity: 0, unit: "gramm (g)" },
+                    { name: "Kartoshka", group: "Sabzavotlar va ko'katlar", quantity: 0, unit: "gramm (g)" },
+                    { name: "Pomidor", group: "Sabzavotlar va ko'katlar", quantity: 0, unit: "gramm (g)" },
+                    { name: "Bodring", group: "Sabzavotlar va ko'katlar", quantity: 0, unit: "gramm (g)" },
+                    { name: "Sarimsoqpiyoz", group: "Sabzavotlar va ko'katlar", quantity: 0, unit: "gramm (g)" },
+                    { name: "Bulg'or qalampiri", group: "Sabzavotlar va ko'katlar", quantity: 0, unit: "gramm (g)" },
+                    { name: "Qizil qalampir", group: "Sabzavotlar va ko'katlar", quantity: 0, unit: "gramm (g)" },
+                    { name: "Ko'k qalampir", group: "Sabzavotlar va ko'katlar", quantity: 0, unit: "gramm (g)" },
+                    { name: "Selderey poyasi", group: "Sabzavotlar va ko'katlar", quantity: 0, unit: "gramm (g)" },
+                    { name: "Karam", group: "Sabzavotlar va ko'katlar", quantity: 0, unit: "gramm (g)" },
+                    { name: "Gulkaram", group: "Sabzavotlar va ko'katlar", quantity: 0, unit: "gramm (g)" },
+                    { name: "Rediska", group: "Sabzavotlar va ko'katlar", quantity: 0, unit: "gramm (g)" },
+                    { name: "Kashnush", group: "Sabzavotlar va ko'katlar", quantity: 0, unit: "gramm (g)" },
+                    { name: "Ukrob", group: "Sabzavotlar va ko'katlar", quantity: 0, unit: "gramm (g)" },
+                    { name: "Yangi shivit", group: "Sabzavotlar va ko'katlar", quantity: 0, unit: "gramm (g)" },
+                    { name: "Paxta Yogʻi", group: "Yog'lar va ziravorlar", quantity: 0, unit: "litr (L) / gramm (g)" },
+                    { name: "Salat Yog'i", group: "Yog'lar va ziravorlar", quantity: 0, unit: "litr (L) / gramm (g)" },
+                    { name: "Dumba yog'i", group: "Yog'lar va ziravorlar", quantity: 0, unit: "gramm (g)" },
+                    { name: "Sariyog'", group: "Yog'lar va ziravorlar", quantity: 0, unit: "gramm (g)" },
+                    { name: "Tuz", group: "Yog'lar va ziravorlar", quantity: 0, unit: "gramm (g)" },
+                    { name: "Zira", group: "Yog'lar va ziravorlar", quantity: 0, unit: "gramm (g)" },
+                    { name: "Tuz qalampir (aralashma)", group: "Yog'lar va ziravorlar", quantity: 0, unit: "gramm (g)" },
+                    { name: "Laza", group: "Yog'lar va ziravorlar", quantity: 0, unit: "gramm (g)" },
+                    { name: "Tomat", group: "Yog'lar va ziravorlar", quantity: 0, unit: "gramm (g)" },
+                    { name: "Uksus", group: "Yog'lar va ziravorlar", quantity: 0, unit: "litr (L) / gramm (g)" },
+                    { name: "Sut", group: "Sut va sut mahsulotlari", quantity: 0, unit: "litr (L)" },
+                    { name: "Qatiq", group: "Sut va sut mahsulotlari", quantity: 0, unit: "litr (L) / gramm (g)" },
+                    { name: "Suzma", group: "Sut va sut mahsulotlari", quantity: 0, unit: "gramm (g)" },
+                    { name: "Qaymoq", group: "Sut va sut mahsulotlari", quantity: 0, unit: "gramm (g)" },
+                    { name: "Smetana", group: "Sut va sut mahsulotlari", quantity: 0, unit: "gramm (g)" },
+                    { name: "Garnir", group: "Sut va sut mahsulotlari", quantity: 0, unit: "gramm (g)" },
+                    { name: "Shakar", group: "Sut va sut mahsulotlari", quantity: 0, unit: "gramm (g)" },
+                    { name: "Tuxum", group: "Sut va sut mahsulotlari", quantity: 0, unit: "dona" },
+                    // Ichimliklar
+                    { name: "Coca-Cola (klassik) — 0.33L", group: "Ichimliklar", quantity: 0, unit: "dona" },
+                    { name: "Coca-Cola (klassik) — 0.5L", group: "Ichimliklar", quantity: 0, unit: "dona" },
+                    { name: "Coca-Cola (klassik) — 1L", group: "Ichimliklar", quantity: 0, unit: "dona" },
+                    { name: "Coca-Cola (klassik) — 1.5L", group: "Ichimliklar", quantity: 0, unit: "dona" },
+                    { name: "Coca-Cola (klassik) — 2.0L", group: "Ichimliklar", quantity: 0, unit: "dona" },
+                    { name: "Coca-Cola Zero — 0.33L", group: "Ichimliklar", quantity: 0, unit: "dona" },
+                    { name: "Coca-Cola Zero — 0.5L", group: "Ichimliklar", quantity: 0, unit: "dona" },
+                    { name: "Coca-Cola Zero — 1L", group: "Ichimliklar", quantity: 0, unit: "dona" },
+                    { name: "Coca-Cola Zero — 1.5L", group: "Ichimliklar", quantity: 0, unit: "dona" },
+                    { name: "Coca-Cola Zero — 2.0L", group: "Ichimliklar", quantity: 0, unit: "dona" },
+                    { name: "Fanta (apelsin) — 0.33L", group: "Ichimliklar", quantity: 0, unit: "dona" },
+                    { name: "Fanta (apelsin) — 0.5L", group: "Ichimliklar", quantity: 0, unit: "dona" },
+                    { name: "Fanta (apelsin) — 1L", group: "Ichimliklar", quantity: 0, unit: "dona" },
+                    { name: "Fanta (apelsin) — 1.5L", group: "Ichimliklar", quantity: 0, unit: "dona" },
+                    { name: "Fanta (apelsin) — 2.0L", group: "Ichimliklar", quantity: 0, unit: "dona" },
+                    { name: "Sprite — 0.33L", group: "Ichimliklar", quantity: 0, unit: "dona" },
+                    { name: "Sprite — 0.5L", group: "Ichimliklar", quantity: 0, unit: "dona" },
+                    { name: "Sprite — 1L", group: "Ichimliklar", quantity: 0, unit: "dona" },
+                    { name: "Sprite — 1.5L", group: "Ichimliklar", quantity: 0, unit: "dona" },
+                    { name: "Sprite — 2.0L", group: "Ichimliklar", quantity: 0, unit: "dona" },
+                    { name: "Pepsi — 0.33L", group: "Ichimliklar", quantity: 0, unit: "dona" },
+                    { name: "Pepsi — 0.5L", group: "Ichimliklar", quantity: 0, unit: "dona" },
+                    { name: "Pepsi — 1L", group: "Ichimliklar", quantity: 0, unit: "dona" },
+                    { name: "Pepsi — 1.5L", group: "Ichimliklar", quantity: 0, unit: "dona" },
+                    { name: "Pepsi — 2.0L", group: "Ichimliklar", quantity: 0, unit: "dona" },
+                    { name: "7Up — 0.33L", group: "Ichimliklar", quantity: 0, unit: "dona" },
+                    { name: "7Up — 0.5L", group: "Ichimliklar", quantity: 0, unit: "dona" },
+                    { name: "7Up — 1L", group: "Ichimliklar", quantity: 0, unit: "dona" },
+                    { name: "7Up — 1.5L", group: "Ichimliklar", quantity: 0, unit: "dona" },
+                    { name: "7Up — 2.0L", group: "Ichimliklar", quantity: 0, unit: "dona" },
+                    { name: "Mirinda — 0.33L", group: "Ichimliklar", quantity: 0, unit: "dona" },
+                    { name: "Mirinda — 0.5L", group: "Ichimliklar", quantity: 0, unit: "dona" },
+                    { name: "Mirinda — 1L", group: "Ichimliklar", quantity: 0, unit: "dona" },
+                    { name: "Mirinda — 1.5L", group: "Ichimliklar", quantity: 0, unit: "dona" },
+                    { name: "Mirinda — 2.0L", group: "Ichimliklar", quantity: 0, unit: "dona" },
+                    { name: "Mountain Dew — 0.33L", group: "Ichimliklar", quantity: 0, unit: "dona" },
+                    { name: "Mountain Dew — 0.5L", group: "Ichimliklar", quantity: 0, unit: "dona" },
+                    { name: "Mountain Dew — 1L", group: "Ichimliklar", quantity: 0, unit: "dona" },
+                    { name: "Mountain Dew — 1.5L", group: "Ichimliklar", quantity: 0, unit: "dona" },
+                    { name: "Mountain Dew — 2.0L", group: "Ichimliklar", quantity: 0, unit: "dona" },
+                    { name: "Schweppes (Tonic / Bitter Lemon) — 0.33L", group: "Ichimliklar", quantity: 0, unit: "dona" },
+                    { name: "Schweppes (Tonic / Bitter Lemon) — 0.5L", group: "Ichimliklar", quantity: 0, unit: "dona" },
+                    { name: "Schweppes (Tonic / Bitter Lemon) — 1L", group: "Ichimliklar", quantity: 0, unit: "dona" },
+                    { name: "Limonad klassik", group: "Ichimliklar", quantity: 0, unit: "stakan / grafinda" },
+                    { name: "Mojito (alkogolsiz)", group: "Ichimliklar", quantity: 0, unit: "porsiya" },
+                    { name: "Tarhun", group: "Ichimliklar", quantity: 0, unit: "0.5L, 1L, 1.5L" },
+                    { name: "Baykal", group: "Ichimliklar", quantity: 0, unit: "0.5L, 1L, 1.5L" },
+                    { name: "Dushes", group: "Ichimliklar", quantity: 0, unit: "0.5L, 1L, 1.5L" },
+                    { name: "Red Bull", group: "Ichimliklar", quantity: 0, unit: "0.25L, 0.5L" },
+                    { name: "Flash Up", group: "Ichimliklar", quantity: 0, unit: "0.45L, 0.5L" },
+                    { name: "Adrenaline Rush", group: "Ichimliklar", quantity: 0, unit: "0.25L, 0.5L" },
+                    { name: "Suv (Gazli)", group: "Ichimliklar", quantity: 0, unit: "litr / dona" },
+                    { name: "Suv (Gazsiz)", group: "Ichimliklar", quantity: 0, unit: "litr / dona" },
+                    { name: "Soklar va Nektarlar", group: "Ichimliklar", quantity: 0, unit: "stakan / paket" },
+                    { name: "Choylar", group: "Ichimliklar", quantity: 0, unit: "choynakda" },
+                    { name: "Muzli choy (Ice Tea)", group: "Ichimliklar", quantity: 0, unit: "0.5L, 1L" },
+                    { name: "Ayron", group: "Ichimliklar", quantity: 0, unit: "stakan / litr" },
+                    { name: "Milkshake", group: "Ichimliklar", quantity: 0, unit: "porsiya" },
+                    { name: "Fresh", group: "Ichimliklar", quantity: 0, unit: "stakan" },
+                    { name: "Kompot, Mors", group: "Ichimliklar", quantity: 0, unit: "stakan / grafinda" },
+                    { name: "Kofe", group: "Ichimliklar", quantity: 0, unit: "porsiya" }
+                ];
+
                 let storedWarehouse = JSON.parse(localStorage.getItem('admin_warehouse'));
                 if (!storedWarehouse || storedWarehouse.length === 0) {
-                    warehouseDatabase = [
-                        { name: "Coca-Cola (klassik): 0.5L", quantity: 100, unit: "dona" },
-                        { name: "Go'sht", quantity: 50, unit: "kg" },
-                        { name: "Guruch", quantity: 60, unit: "kg" },
-                        { name: "Piyoz", quantity: 30, unit: "kg" },
-                        { name: "Yog'", quantity: 40, unit: "litr" }
-                    ];
+                    warehouseDatabase = defaultWarehouse;
                     localStorage.setItem('admin_warehouse', JSON.stringify(warehouseDatabase));
                 } else {
+                    // Agar eski omborda guruh yoki boshqa elementlar yetishmasa, to'ldirib ketamiz
                     warehouseDatabase = storedWarehouse;
                 }
 
@@ -457,14 +575,22 @@
 
         function renderWarehouse() {
             const tbody = document.getElementById('warehouse-table-body');
-            tbody.innerHTML = warehouseDatabase.map((w, index) => `
-                <tr>
-                    <td>${w.name}</td>
-                    <td><input type="number" value="${w.quantity}" id="wh-qty-${index}" style="width: 120px;"></td>
-                    <td>${w.unit}</td>
-                    <td><button class="btn btn-blue" onclick="updateWarehouseQty(${index})">Yangilash</button></td>
-                </tr>
-            `).join('');
+            const query = (document.getElementById('warehouse-search-input') || {}).value || "";
+            const filteredWarehouse = warehouseDatabase.filter(w => w.name.toLowerCase().includes(query.toLowerCase()) || (w.group && w.group.toLowerCase().includes(query.toLowerCase())));
+
+            tbody.innerHTML = filteredWarehouse.map((w, index) => {
+                let originalIndex = warehouseDatabase.findIndex(item => item.name === w.name);
+                return `
+                    <tr>
+                        <td>${originalIndex + 1}</td>
+                        <td><b>${w.name}</b></td>
+                        <td><span style="background: #e1f5fe; padding: 3px 8px; border-radius: 4px; font-size: 12px; color: #0288d1;">${w.group || 'Umumiy'}</span></td>
+                        <td><input type="number" value="${w.quantity}" id="wh-qty-${originalIndex}" style="width: 120px;"></td>
+                        <td>${w.unit}</td>
+                        <td><button class="btn btn-blue" onclick="updateWarehouseQty(${originalIndex})">Yangilash</button></td>
+                    </tr>
+                `;
+            }).join('');
         }
 
         function updateWarehouseQty(index) {
@@ -479,7 +605,7 @@
             if (name && qty) {
                 let existing = warehouseDatabase.find(w => w.name.toLowerCase() === name.toLowerCase());
                 if (existing) { existing.quantity += qty; if(unit) existing.unit = unit; }
-                else { warehouseDatabase.push({ name, quantity: qty, unit: unit || 'dona' }); }
+                else { warehouseDatabase.push({ name, group: "Boshqa mahsulotlar", quantity: qty, unit: unit || 'dona' }); }
                 renderAll();
                 document.getElementById('new-item-name').value = '';
                 document.getElementById('new-item-qty').value = '';

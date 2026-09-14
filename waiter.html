@@ -174,11 +174,10 @@
                 }
             });
 
-            // Har 1 soniyada ma'lumotlarni fon rejimida sinxronlash
             setInterval(() => {
                 loadOrdersFromStorage();
                 renderTables();
-            }, 1000);
+            }, 500);
         };
 
         function loadMenuFromAdmin() {
@@ -386,6 +385,8 @@
             localStorage.setItem('active_orders', JSON.stringify(waiterOrders));
             localStorage.setItem('admin_orders', JSON.stringify(waiterOrders));
 
+            tablesState[orderData.tableNumber] = orderData;
+
             if (socket) {
                 socket.emit('new_order', orderData);
             }
@@ -439,7 +440,6 @@
             document.getElementById('qrcode-container').innerHTML = "";
             new QRCode(document.getElementById('qrcode-container'), { text: `Buyurtma: ${order.orderNumber} | Jami: ${total} so'm`, width: 128, height: 128 });
             
-            // Holatni darhol yangilash va xotiraga yozish
             order.isPrinted = true;
             
             let waiterOrders = JSON.parse(localStorage.getItem('waiter_orders')) || [];
@@ -454,7 +454,6 @@
             localStorage.setItem('active_orders', JSON.stringify(updatedOrders));
             localStorage.setItem('admin_orders', JSON.stringify(updatedOrders));
 
-            // tablesState obyektini ham zudlik bilan yangilash
             if (tablesState[selectedTableNumber]) {
                 tablesState[selectedTableNumber].isPrinted = true;
             }

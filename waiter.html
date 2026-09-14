@@ -156,7 +156,7 @@
 
                 socket.on('update_orders', (serverOrders) => {
                     if (Array.isArray(serverOrders)) {
-                        saveToAllStorage(serverOrders);
+                        localStorage.setItem('waiter_orders', JSON.stringify(serverOrders));
                         loadOrdersFromStorage();
                         renderTables();
                     }
@@ -174,10 +174,11 @@
                 }
             });
 
+            // Har 1 soniyada ma'lumotlarni fon rejimida sinxronlash
             setInterval(() => {
                 loadOrdersFromStorage();
                 renderTables();
-            }, 300);
+            }, 1000);
         };
 
         function loadMenuFromAdmin() {
@@ -185,13 +186,6 @@
             if(adminMenu && adminMenu.length > 0) {
                 fullMenu = adminMenu.map(m => ({ id: m.id, category: m.category, name: m.name, price: m.sale_price, is_visible: m.is_visible }));
             }
-        }
-
-        function saveToAllStorage(ordersArray) {
-            localStorage.setItem('waiter_orders', JSON.stringify(ordersArray));
-            localStorage.setItem('active_orders', JSON.stringify(ordersArray));
-            localStorage.setItem('admin_orders', JSON.stringify(ordersArray));
-            localStorage.setItem('orders', JSON.stringify(ordersArray));
         }
 
         function updateLocalTableStatus(tableOrOrderId, newStatus, isPrinted, isPaid) {
@@ -210,7 +204,9 @@
             });
 
             if (updated) {
-                saveToAllStorage(waiterOrders);
+                localStorage.setItem('waiter_orders', JSON.stringify(waiterOrders));
+                localStorage.setItem('active_orders', JSON.stringify(waiterOrders));
+                localStorage.setItem('admin_orders', JSON.stringify(waiterOrders));
             }
 
             loadOrdersFromStorage();
@@ -223,9 +219,8 @@
             let waiterOrders = JSON.parse(localStorage.getItem('waiter_orders')) || [];
             let activeOrders = JSON.parse(localStorage.getItem('active_orders')) || [];
             let adminOrders = JSON.parse(localStorage.getItem('admin_orders')) || [];
-            let ordersKey = JSON.parse(localStorage.getItem('orders')) || [];
             
-            let combined = [...waiterOrders, ...activeOrders, ...adminOrders, ...ordersKey];
+            let combined = [...waiterOrders, ...activeOrders, ...adminOrders];
             let uniqueMap = new Map();
 
             combined.forEach(o => {
@@ -387,12 +382,12 @@
                 waiterOrders.push(orderData);
             }
             
-            saveToAllStorage(waiterOrders);
-            tablesState[orderData.tableNumber] = orderData;
+            localStorage.setItem('waiter_orders', JSON.stringify(waiterOrders));
+            localStorage.setItem('active_orders', JSON.stringify(waiterOrders));
+            localStorage.setItem('admin_orders', JSON.stringify(waiterOrders));
 
             if (socket) {
                 socket.emit('new_order', orderData);
-                socket.emit('status_updated', orderData);
             }
         }
 
@@ -444,6 +439,7 @@
             document.getElementById('qrcode-container').innerHTML = "";
             new QRCode(document.getElementById('qrcode-container'), { text: `Buyurtma: ${order.orderNumber} | Jami: ${total} so'm`, width: 128, height: 128 });
             
+            // Holatni darhol yangilash va xotiraga yozish
             order.isPrinted = true;
             
             let waiterOrders = JSON.parse(localStorage.getItem('waiter_orders')) || [];
@@ -454,8 +450,11 @@
                 return o; 
             });
             
-            saveToAllStorage(updatedOrders);
+            localStorage.setItem('waiter_orders', JSON.stringify(updatedOrders));
+            localStorage.setItem('active_orders', JSON.stringify(updatedOrders));
+            localStorage.setItem('admin_orders', JSON.stringify(updatedOrders));
 
+            // tablesState obyektini ham zudlik bilan yangilash
             if (tablesState[selectedTableNumber]) {
                 tablesState[selectedTableNumber].isPrinted = true;
             }

@@ -256,7 +256,6 @@
             initChart();
             initLiveClock();
 
-            // Storage hodisalarini vaqt yo'qotmasdan tezkor o'qish
             window.addEventListener('storage', function(e) {
                 if(['waiter_orders', 'active_orders', 'admin_orders', 'orders'].includes(e.key)) {
                     loadOrdersFromStorage();
@@ -264,7 +263,6 @@
                 }
             });
 
-            // Har 1 soniyada ma'lumotlarni sinxronlash (tezlik va ishonchlilik uchun)
             setInterval(() => {
                 loadOrdersFromStorage();
                 renderAll();
@@ -282,7 +280,11 @@
                 menuDatabase = JSON.parse(localStorage.getItem('admin_menu')) || defaultMenu;
                 localStorage.setItem('admin_menu', JSON.stringify(menuDatabase));
 
-                warehouseDatabase = JSON.parse(localStorage.getItem('admin_warehouse')) || [];
+                warehouseDatabase = JSON.parse(localStorage.getItem('admin_warehouse')) || [
+                    { name: "Coca-Cola: 0.5L", quantity: 50, unit: "dona" },
+                    { name: "Go'sht", quantity: 20, unit: "kg" },
+                    { name: "Guruch", quantity: 30, unit: "kg" }
+                ];
                 loadOrdersFromStorage();
             } catch (err) { console.error("Yuklashda xato:", err); }
         }
@@ -404,6 +406,26 @@
             } else { alert("Barcha maydonlarni to'ldiring!"); }
         }
 
+        // ANBAR AUTOCOMPLETE FUNKSIYASI
+        function handleAutocomplete(val) {
+            const listContainer = document.getElementById('autocomplete-list');
+            listContainer.innerHTML = '';
+            if (!val || val.trim() === '') return;
+            
+            const matches = warehouseDatabase.filter(w => w.name.toLowerCase().includes(val.toLowerCase()));
+            matches.forEach(m => {
+                const div = document.createElement('div');
+                div.innerHTML = `<b>${m.name}</b> (${m.quantity} ${m.unit})`;
+                div.onclick = function() {
+                    document.getElementById('new-item-name').value = m.name;
+                    document.getElementById('new-item-unit').value = m.unit;
+                    document.getElementById('new-item-qty').value = '';
+                    listContainer.innerHTML = '';
+                };
+                listContainer.appendChild(div);
+            });
+        }
+
         function renderWarehouse() {
             const tbody = document.getElementById('warehouse-table-body');
             tbody.innerHTML = warehouseDatabase.map((w, index) => `
@@ -415,10 +437,12 @@
                 </tr>
             `).join('');
         }
+
         function updateWarehouseQty(index) {
             const val = Number(document.getElementById(`wh-qty-${index}`).value);
             if (!isNaN(val)) { warehouseDatabase[index].quantity = val; renderAll(); }
         }
+
         function addWarehouseItem() {
             const name = document.getElementById('new-item-name').value.trim();
             const qty = Number(document.getElementById('new-item-qty').value);
@@ -426,9 +450,30 @@
             if (name && qty) {
                 let existing = warehouseDatabase.find(w => w.name.toLowerCase() === name.toLowerCase());
                 if (existing) { existing.quantity += qty; if(unit) existing.unit = unit; }
-                else { warehouseDatabase.push({ name, quantity: qty, unit: unit || 'g' }); }
+                else { warehouseDatabase.push({ name, quantity: qty, unit: unit || 'dona' }); }
                 renderAll();
+                document.getElementById('new-item-name').value = '';
+                document.getElementById('new-item-qty').value = '';
+                document.getElementById('new-item-unit').value = '';
+                document.getElementById('autocomplete-list').innerHTML = '';
+            } else {
+                alert("Mahsulot nomi va miqdorini kiriting!");
             }
+        }
+
+        // AMBDAN MAHSULOTNI AVTOMATIK YECHISH MEXANIZMI
+        function deductWarehouseForOrder(order) {
+            if (!order || !order.items) return;
+            order.items.forEach(item => {
+                let itemName = item.name;
+                let itemQty = Number(item.qty || 1);
+                let whItem = warehouseDatabase.find(w => w.name.toLowerCase() === itemName.toLowerCase());
+                if (whItem) {
+                    whItem.quantity = Math.max(0, whItem.quantity - itemQty);
+                }
+            });
+            saveData();
+            renderWarehouse();
         }
 
         function renderOrders() {
@@ -457,7 +502,6 @@
                 const orderId = String(order.tableNumber || order.id);
                 let paymentHTML = "";
                 
-                // Chek chiqarilgan bo'lsa darhol naqd va plastik to'lov tugmalarini ko'rsatish
                 if (order.isPrinted && order.status !== 'tolandi') {
                     paymentHTML = `
                         <div style="margin-top: 8px; background: #fffde7; padding: 10px; border: 1px solid #ffd54f; border-radius: 6px;">
@@ -472,7 +516,7 @@
                 return `
                     <div class="order-card">
                         <div style="flex: 1; min-width: 280px;">
-                            <p style="font-size: 16px; margin-bottom: 6px;">🪑 <b style="color: #0d47a1; font-size: 18px;">${order.tableNumber}</b> | № <b>${order.orderNumber}</b> | Ofitsant: <b>${order.waiterName || 'Ofitsant'}</b></p>
+                            <p style="font-size: 16px; margin-bottom: 6px;">🪑 <b style="color: #0d47a1; font-size: 18px;">${order.tableNumber}</b> | № <b>${order.orderNumber}</b> | Ofitsant: <b>${order.waiterName || 'Ofitsiant'}</b></p>
                             <p style="font-size: 14px;">Holat: <b style="color: #d32f2f;">${(order.status || 'yangi').toUpperCase()}</b></p>
                             ${itemsListHTML}
                             <div style="margin-top: 6px; font-size: 15px; font-weight: bold; color: #0d47a1; background: #e1f5fe; padding: 6px 10px; border-radius: 5px; display: inline-block;">
@@ -523,12 +567,21 @@
         }
 
         function acceptPayment(orderId, paymentType) {
+            let paidOrder = null;
             ordersDatabase = ordersDatabase.map(o => {
                 if (String(o.tableNumber || o.id) === String(orderId)) {
-                    o.status = 'tolandi'; o.paymentType = paymentType; o.isPaid = true;
+                    o.status = 'tolandi'; 
+                    o.paymentType = paymentType; 
+                    o.isPaid = true;
+                    paidOrder = o;
                 }
                 return o;
             });
+            
+            if (paidOrder) {
+                deductWarehouseForOrder(paidOrder);
+            }
+
             syncOrdersToStorage();
             if (socket) socket.emit('change_status', { orderId: orderId, status: 'tolandi', paymentType: paymentType, isPaid: true });
             renderAll();
@@ -568,7 +621,7 @@
                     <tr>
                         <td><b>${order.orderNumber}</b></td>
                         <td>${order.tableNumber}</td>
-                        <td>${order.waiterName || 'Ofitsant'}</td>
+                        <td>${order.waiterName || 'Ofitsiant'}</td>
                         <td>${(order.paymentType || '-').toUpperCase()}</td>
                         <td>${calculateOrderTotal(order).toLocaleString()} so'm</td>
                         <td style="${color}">${statusText}</td>

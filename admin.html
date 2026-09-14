@@ -271,7 +271,6 @@
 
         function loadInitialData() {
             try {
-                // Database seeddagi to'liq mahsulotlar bazasi bilan moslashtirildi[cite: 7]
                 let defaultMenu = [
                     { id: 1, category: "Osh", name: "Toshkent oshi (Toʻy oshi)", internal_price: 35000, sale_price: 50000, is_visible: true },
                     { id: 2, category: "Osh", name: "Samarqand oshi", internal_price: 38000, sale_price: 55000, is_visible: true },
@@ -298,11 +297,20 @@
                     }));
                 }
 
-                warehouseDatabase = JSON.parse(localStorage.getItem('admin_warehouse')) || [
-                    { name: "Coca-Cola (klassik): 0.5L", quantity: 100, unit: "dona" },
-                    { name: "Go'sht", quantity: 50, unit: "kg" },
-                    { name: "Guruch", quantity: 60, unit: "kg" }
-                ];
+                let storedWarehouse = JSON.parse(localStorage.getItem('admin_warehouse'));
+                if (!storedWarehouse || storedWarehouse.length === 0) {
+                    warehouseDatabase = [
+                        { name: "Coca-Cola (klassik): 0.5L", quantity: 100, unit: "dona" },
+                        { name: "Go'sht", quantity: 50, unit: "kg" },
+                        { name: "Guruch", quantity: 60, unit: "kg" },
+                        { name: "Piyoz", quantity: 30, unit: "kg" },
+                        { name: "Yog'", quantity: 40, unit: "litr" }
+                    ];
+                    localStorage.setItem('admin_warehouse', JSON.stringify(warehouseDatabase));
+                } else {
+                    warehouseDatabase = storedWarehouse;
+                }
+
                 loadOrdersFromStorage();
             } catch (err) { console.error("Yuklashda xato:", err); }
         }

@@ -174,11 +174,11 @@
                 }
             });
 
-            // Ma'lumotlarni doimiy sinxronlab turish uchun
+            // Har 1 soniyada ma'lumotlarni fon rejimida sinxronlash
             setInterval(() => {
                 loadOrdersFromStorage();
                 renderTables();
-            }, 2000);
+            }, 1000);
         };
 
         function loadMenuFromAdmin() {
@@ -241,7 +241,6 @@
             if (!grid) return;
             grid.innerHTML = '';
             
-            // Xonalar va stollar soni (Zal: 16 ta, Xonalar: 8 ta)
             let count = activeSection === 'zal' ? 16 : 8;
             let prefix = activeSection === 'zal' ? 'Stol #' : 'Xona #';
 
@@ -367,11 +366,18 @@
                 isPrinted: existingOrder ? !!existingOrder.isPrinted : false
             };
 
+            saveAndBroadcastOrder(orderData);
+            closeModal(); 
+            loadOrdersFromStorage(); 
+            renderTables();
+        }
+
+        function saveAndBroadcastOrder(orderData) {
             let waiterOrders = JSON.parse(localStorage.getItem('waiter_orders')) || [];
-            let index = waiterOrders.findIndex(o => String(o.tableNumber || o.id) === String(selectedTableNumber));
+            let index = waiterOrders.findIndex(o => String(o.tableNumber || o.id) === String(orderData.tableNumber));
             
             if (index >= 0) {
-                waiterOrders[index] = orderData;
+                waiterOrders[index] = { ...waiterOrders[index], ...orderData };
             } else {
                 waiterOrders.push(orderData);
             }
@@ -383,10 +389,6 @@
             if (socket) {
                 socket.emit('new_order', orderData);
             }
-            
-            closeModal(); 
-            loadOrdersFromStorage(); 
-            renderTables();
         }
 
         function openReturnModal() {
@@ -422,12 +424,13 @@
 
         function printCheck() {
             let order = tablesState[selectedTableNumber];
-            if (!order) { alert("Buyurtma yuborilmagan!"); return; }
+            if (!order) { alert("Avval buyurtmani yuboring!"); return; }
             
             let total = 0;
             let checkHTML = `<b>${order.tableNumber}</b> | № ${order.orderNumber}<br><hr style="margin:5px 0">`;
             order.items.forEach(i => {
-                let sum = i.price * i.qty; total += sum;
+                let sum = Number(i.sale_price || i.price || 0) * Number(i.qty || 1); 
+                total += sum;
                 checkHTML += `${i.name} - ${i.qty}x = ${sum.toLocaleString()}<br>`;
             });
             checkHTML += `<hr style="margin:5px 0"><b>JAMI: ${total.toLocaleString()} so'm</b>`;
@@ -436,21 +439,28 @@
             document.getElementById('qrcode-container').innerHTML = "";
             new QRCode(document.getElementById('qrcode-container'), { text: `Buyurtma: ${order.orderNumber} | Jami: ${total} so'm`, width: 128, height: 128 });
             
+            // isPrinted ni true qilib darhol barcha saqlash joylariga yozish va adminga yuborish
             order.isPrinted = true;
+            
             let waiterOrders = JSON.parse(localStorage.getItem('waiter_orders')) || [];
             waiterOrders = waiterOrders.map(o => { 
-                if (String(o.tableNumber || o.id) === String(selectedTableNumber)) o.isPrinted = true; 
+                if (String(o.tableNumber || o.id) === String(selectedTableNumber)) {
+                    o.isPrinted = true;
+                }
                 return o; 
             });
             
             localStorage.setItem('waiter_orders', JSON.stringify(waiterOrders));
+            localStorage.setItem('active_orders', JSON.stringify(waiterOrders));
             localStorage.setItem('admin_orders', JSON.stringify(waiterOrders));
 
             if (socket) {
-                socket.emit('change_status', { orderId: selectedTableNumber, tableNumber: selectedTableNumber, status: order.status, isPrinted: true });
+                socket.emit('status_updated', { orderId: selectedTableNumber, tableNumber: selectedTableNumber, status: order.status, isPrinted: true });
             }
             
             closeModal();
+            loadOrdersFromStorage();
+            renderTables();
             document.getElementById('check-modal').style.display = 'flex';
         }
 

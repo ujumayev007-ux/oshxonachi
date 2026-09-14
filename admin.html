@@ -231,18 +231,22 @@
         let socket = null;
 
         window.onload = function() {
+            loadInitialData();
+            
             if (typeof io !== 'undefined') {
                 socket = io('https://oshxonachi-server.onrender.com');
 
+                socket.on('connect', () => {
+                    console.log("Admin serverga ulandi");
+                });
+
                 socket.on('new_order', (data) => {
                     if (!data) return;
-                    let targetId = data.id !== undefined ? data.id : data.tableNumber;
-                    let existingIndex = ordersDatabase.findIndex(o => {
-                        let currentId = o.id !== undefined ? o.id : o.tableNumber;
-                        return String(currentId) === String(targetId) || String(o.tableNumber) === String(data.tableNumber);
-                    });
+                    let targetKey = String(data.tableNumber || data.id);
+                    let existingIndex = ordersDatabase.findIndex(o => String(o.tableNumber || o.id) === targetKey);
+                    
                     if (existingIndex !== -1) {
-                        ordersDatabase[existingIndex] = { ...ordersDatabase[existingIndex], ...data, items: data.items };
+                        ordersDatabase[existingIndex] = { ...ordersDatabase[existingIndex], ...data };
                     } else {
                         ordersDatabase.push(data);
                     }
@@ -251,10 +255,12 @@
                 });
 
                 socket.on('status_updated', (data) => {
-                    ordersDatabase = ordersDatabase.map((o, index) => {
-                        let currentId = o.id !== undefined ? o.id : (o.tableNumber !== undefined ? o.tableNumber : index);
-                        if (String(currentId) === String(data.orderId) || String(o.tableNumber) === String(data.orderId)) {
-                            o.status = data.status;
+                    if (!data) return;
+                    let targetKey = String(data.orderId || data.tableNumber);
+                    ordersDatabase = ordersDatabase.map(o => {
+                        let currentKey = String(o.tableNumber || o.id);
+                        if (currentKey === targetKey) {
+                            if (data.status !== undefined) o.status = data.status;
                             if (data.isPrinted !== undefined) o.isPrinted = data.isPrinted;
                             if (data.paymentType !== undefined) o.paymentType = data.paymentType;
                             if (data.isPaid !== undefined) o.isPaid = data.isPaid;
@@ -266,7 +272,6 @@
                 });
             }
 
-            loadInitialData();
             renderAll();
             initChart();
             initLiveClock();
@@ -277,6 +282,11 @@
                     renderAll();
                 }
             });
+
+            // Avtomatik yangilanishni ta'minlash uchun har 2 soniyada storage tekshiruvi
+            setInterval(() => {
+                loadOrdersFromStorage();
+            }, 2000);
         };
 
         function loadInitialData() {
@@ -288,7 +298,7 @@
                     { id: 100, name: "Coca-Cola: 0.5L", category: "Ichimliklar", internal_price: 6000, sale_price: 11000, is_visible: true }
                 ];
                 menuDatabase = JSON.parse(localStorage.getItem('admin_menu')) || defaultMenu;
-                localStorage.setItem('admin_menu', JSON.stringify(menuDatabase)); // Ofitsiant ko'rishi uchun
+                localStorage.setItem('admin_menu', JSON.stringify(menuDatabase));
 
                 warehouseDatabase = JSON.parse(localStorage.getItem('admin_warehouse')) || [];
                 loadOrdersFromStorage();
@@ -328,12 +338,22 @@
             try {
                 let waiterOrders = JSON.parse(localStorage.getItem('waiter_orders')) || [];
                 let activeOrders = JSON.parse(localStorage.getItem('active_orders')) || [];
-                let combined = [...waiterOrders, ...activeOrders];
+                let adminOrders = JSON.parse(localStorage.getItem('admin_orders')) || [];
+                let combined = [...waiterOrders, ...activeOrders, ...adminOrders];
                 let uniqueMap = new Map();
+                
                 combined.forEach(o => {
-                    let key = o.id !== undefined ? o.id : o.tableNumber;
-                    if (!o.orderNumber) o.orderNumber = Math.floor(10000 + Math.random() * 90000).toString(); // Noyob ID
-                    uniqueMap.set(key, o);
+                    let key = String(o.tableNumber || o.id);
+                    if (!key || key === 'undefined') return;
+                    if (!o.orderNumber) o.orderNumber = Math.floor(10000 + Math.random() * 90000).toString();
+                    
+                    if (uniqueMap.has(key)) {
+                        let existing = uniqueMap.get(key);
+                        // Eng oxirgi holatni saqlab qolish
+                        uniqueMap.set(key, { ...existing, ...o, items: o.items && o.items.length > 0 ? o.items : existing.items });
+                    } else {
+                        uniqueMap.set(key, o);
+                    }
                 });
                 ordersDatabase = Array.from(uniqueMap.values());
             } catch (e) { ordersDatabase = []; }
@@ -411,13 +431,15 @@
 
         function renderOrders() {
             const container = document.getElementById('orders-container');
+            loadOrdersFromStorage();
             let activeOrders = ordersDatabase.filter(o => o.status !== 'tolandi' && o.status !== 'bekor_qilindi');
+            
             if (activeOrders.length === 0) {
                 container.innerHTML = "<p>Hozircha faol buyurtmalar mavjud emas.</p>";
                 return;
             }
 
-            container.innerHTML = activeOrders.map((order, index) => {
+            container.innerHTML = activeOrders.map((order) => {
                 let orderTotalSum = 0;
                 let itemsListHTML = `<ul style="list-style: none; padding: 0; margin: 8px 0; background: #ffffff; border: 1px solid #b3d7ff; border-radius: 6px; padding: 8px;">` + 
                     (order.items || []).map(i => {
@@ -430,7 +452,7 @@
                         </li>`;
                     }).join('') + `</ul>`;
 
-                const orderId = order.id !== undefined ? order.id : order.tableNumber;
+                const orderId = String(order.tableNumber || order.id);
                 let paymentHTML = "";
                 if (order.isPrinted && order.status !== 'tolandi') {
                     paymentHTML = `
@@ -446,7 +468,7 @@
                 return `
                     <div class="order-card">
                         <div style="flex: 1; min-width: 280px;">
-                            <p style="font-size: 16px; margin-bottom: 6px;">🪑 <b style="color: #0d47a1; font-size: 18px;">Stol #${order.tableNumber}</b> | № <b>${order.orderNumber}</b> | Ofitsant: <b>${order.waiterName || 'Ofitsant'}</b></p>
+                            <p style="font-size: 16px; margin-bottom: 6px;">🪑 <b style="color: #0d47a1; font-size: 18px;">${order.tableNumber}</b> | № <b>${order.orderNumber}</b> | Ofitsant: <b>${order.waiterName || 'Ofitsant'}</b></p>
                             <p style="font-size: 14px;">Holat: <b style="color: #d32f2f;">${(order.status || 'yangi').toUpperCase()}</b></p>
                             ${itemsListHTML}
                             <div style="margin-top: 6px; font-size: 15px; font-weight: bold; color: #0d47a1; background: #e1f5fe; padding: 6px 10px; border-radius: 5px; display: inline-block;">
@@ -471,7 +493,7 @@
         }
 
         function openCashModal(orderId) {
-            let order = ordersDatabase.find(o => String(o.id || o.tableNumber) === String(orderId));
+            let order = ordersDatabase.find(o => String(o.tableNumber || o.id) === String(orderId));
             if (!order) return;
             currentPayingOrderId = orderId;
             currentOrderTotalSum = calculateOrderTotal(order);
@@ -498,7 +520,7 @@
 
         function acceptPayment(orderId, paymentType) {
             ordersDatabase = ordersDatabase.map(o => {
-                if (String(o.id || o.tableNumber) === String(orderId)) {
+                if (String(o.tableNumber || o.id) === String(orderId)) {
                     o.status = 'tolandi'; o.paymentType = paymentType; o.isPaid = true;
                 }
                 return o;
@@ -510,7 +532,7 @@
 
         function changeOrderStatus(orderId, newStatus) {
             ordersDatabase = ordersDatabase.map(o => {
-                if (String(o.id || o.tableNumber) === String(orderId)) o.status = newStatus;
+                if (String(o.tableNumber || o.id) === String(orderId)) o.status = newStatus;
                 return o;
             });
             syncOrdersToStorage();
@@ -520,8 +542,9 @@
 
         function syncOrdersToStorage() {
             saveData();
-            localStorage.setItem('waiter_orders', JSON.stringify(ordersDatabase)); // Ofitsiant bilan sinxronlash
+            localStorage.setItem('waiter_orders', JSON.stringify(ordersDatabase));
             localStorage.setItem('active_orders', JSON.stringify(ordersDatabase));
+            localStorage.setItem('admin_orders', JSON.stringify(ordersDatabase));
         }
 
         function renderHistory() {
@@ -540,7 +563,7 @@
                 return `
                     <tr>
                         <td><b>${order.orderNumber}</b></td>
-                        <td>Stol #${order.tableNumber}</td>
+                        <td>${order.tableNumber}</td>
                         <td>${order.waiterName || 'Ofitsant'}</td>
                         <td>${(order.paymentType || '-').toUpperCase()}</td>
                         <td>${calculateOrderTotal(order).toLocaleString()} so'm</td>

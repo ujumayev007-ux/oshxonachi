@@ -47,7 +47,7 @@
                 <button id="folder-xonalar" class="folder-btn" onclick="switchSection('xonalar')">Xonalar</button>
             </div>
             <div class="header-right">
-                <span id="logged-waiter-name" style="font-weight: bold;cursor: pointer;" onclick="changeWaiterName()">Ofitsiant: Admin</span>
+                <span id="logged-waiter-name" style="font-weight: bold; cursor: pointer;" onclick="changeWaiterName()">Ofitsiant: Admin</span>
                 <button onclick="openHistory()" style="padding: 6px 12px; background: #ff9800; color: white; border: none; border-radius: 5px; cursor: pointer;">Tarix</button>
             </div>
         </div>
@@ -174,7 +174,6 @@
                 }
             });
 
-            // Har 1 soniyada ma'lumotlarni fon rejimida sinxronlash
             setInterval(() => {
                 loadOrdersFromStorage();
                 renderTables();
@@ -184,7 +183,15 @@
         function loadMenuFromAdmin() {
             let adminMenu = JSON.parse(localStorage.getItem('admin_menu'));
             if(adminMenu && adminMenu.length > 0) {
-                fullMenu = adminMenu.map(m => ({ id: m.id, category: m.category, name: m.name, price: m.sale_price, is_visible: m.is_visible }));
+                fullMenu = adminMenu.map(m => ({ 
+                    id: m.id, 
+                    category: m.category, 
+                    name: m.name, 
+                    price: Number(m.sale_price || m.price || 0), 
+                    sale_price: Number(m.sale_price || m.price || 0), 
+                    internal_price: Number(m.internal_price || 0), 
+                    is_visible: m.is_visible 
+                }));
             }
         }
 
@@ -275,7 +282,8 @@
             if (existingOrder && existingOrder.items) {
                 currentGuestsCount = existingOrder.guestsCount || 1;
                 existingOrder.items.forEach(item => {
-                    currentCart[item.id] = { ...item };
+                    let itemPrice = Number(item.sale_price || item.price || 0);
+                    currentCart[item.id] = { ...item, price: itemPrice, sale_price: itemPrice };
                 });
                 document.getElementById('submit-order-btn').innerText = "Buyurtmani yangilash";
             } else {
@@ -308,11 +316,12 @@
             let filtered = activeFilter === 'all' ? fullMenu : fullMenu.filter(m => m.category === activeFilter);
             container.innerHTML = filtered.filter(m => m.is_visible !== false).map(item => {
                 let inCartQty = currentCart[item.id] ? currentCart[item.id].qty : 0;
+                let displayPrice = Number(item.sale_price || item.price || 0);
                 return `
                     <div class="menu-item-row">
                         <div>
                             <div style="font-weight: bold; font-size: 14px;">${item.name}</div>
-                            <div style="font-size: 12px; color: #666;">${item.price.toLocaleString()} so'm</div>
+                            <div style="font-size: 12px; color: #666;">${displayPrice.toLocaleString()} so'm</div>
                         </div>
                         <div style="display: flex; align-items: center; gap: 8px;">
                             <button class="qty-btn" onclick="updateCartItem(${item.id}, -1)">-</button>
@@ -326,7 +335,8 @@
         function updateCartItem(itemId, delta) {
             let item = fullMenu.find(m => m.id === itemId);
             if (!item) return;
-            if (!currentCart[itemId]) currentCart[itemId] = { ...item, qty: 0 };
+            let itemPrice = Number(item.sale_price || item.price || 0);
+            if (!currentCart[itemId]) currentCart[itemId] = { ...item, price: itemPrice, sale_price: itemPrice, qty: 0 };
             currentCart[itemId].qty += delta;
             if (currentCart[itemId].qty <= 0) delete currentCart[itemId];
             renderModalMenu(); 
@@ -339,7 +349,8 @@
             if (items.length === 0) { container.innerHTML = "<p style='font-size: 13px; color: #777;'>Hozircha hech narsa tanlanmadi.</p>"; return; }
             let total = 0;
             let listHTML = items.map(i => {
-                let sum = i.price * i.qty; total += sum;
+                let p = Number(i.sale_price || i.price || 0);
+                let sum = p * i.qty; total += sum;
                 return `<div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 4px;"><span>${i.name} x ${i.qty}</span><b>${sum.toLocaleString()} so'm</b></div>`;
             }).join('');
             
@@ -429,7 +440,8 @@
             let total = 0;
             let checkHTML = `<b>${order.tableNumber}</b> | № ${order.orderNumber}<br><hr style="margin:5px 0">`;
             order.items.forEach(i => {
-                let sum = Number(i.sale_price || i.price || 0) * Number(i.qty || 1); 
+                let p = Number(i.sale_price || i.price || 0);
+                let sum = p * Number(i.qty || 1); 
                 total += sum;
                 checkHTML += `${i.name} - ${i.qty}x = ${sum.toLocaleString()}<br>`;
             });
@@ -439,7 +451,6 @@
             document.getElementById('qrcode-container').innerHTML = "";
             new QRCode(document.getElementById('qrcode-container'), { text: `Buyurtma: ${order.orderNumber} | Jami: ${total} so'm`, width: 128, height: 128 });
             
-            // Holatni darhol yangilash va xotiraga yozish
             order.isPrinted = true;
             
             let waiterOrders = JSON.parse(localStorage.getItem('waiter_orders')) || [];
@@ -454,7 +465,6 @@
             localStorage.setItem('active_orders', JSON.stringify(updatedOrders));
             localStorage.setItem('admin_orders', JSON.stringify(updatedOrders));
 
-            // tablesState obyektini ham zudlik bilan yangilash
             if (tablesState[selectedTableNumber]) {
                 tablesState[selectedTableNumber].isPrinted = true;
             }

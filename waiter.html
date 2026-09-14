@@ -95,10 +95,10 @@
     <!-- Chek va QR Kod Modal -->
     <div id="check-modal" class="modal-overlay">
         <div class="modal-content" style="text-align: center; width: 350px;">
-            <h3 style="font-weight: bold; font-size: 18px; color: #2a5298;">Restoran Cheki va QR Kod</h3>
+            <h3 style="font-weight: bold; font-size: 18px; color: #2a5298;">Restoran Cheki</h3>
             <div id="check-content-area" style="margin: 15px 0; text-align: left; font-size: 14px; background: #f9f9f9; padding: 10px; border-radius: 5px; border: 1px dashed #ccc;"></div>
             <div id="qrcode-container" style="display: flex; justify-content: center; margin: 15px 0;"></div>
-            <p style="font-size: 12px; color: #666; margin-bottom: 15px;">Admin to'lovni tasdiqlaganidan keyingina stol bo'shaydi.</p>
+            <p style="font-size: 12px; color: #666; margin-bottom: 15px;">To'lov qabul qilingach, stol avtomatik bo'shatiladi.</p>
             <button onclick="closeCheckModal()" style="padding: 8px 15px; background: #2a5298; color: white; border: none; border-radius: 5px; cursor: pointer;">Yopish</button>
         </div>
     </div>
@@ -118,9 +118,9 @@
     <!-- Tarix Modali -->
     <div id="history-modal" class="modal-overlay">
         <div class="modal-content" style="width: 700px;">
-            <h3 style="font-weight: bold; font-size: 18px;">Xizmat tarixi va Qidiruv</h3>
+            <h3 style="font-weight: bold; font-size: 18px;">Xizmat tarixi</h3>
             <div style="margin: 10px 0;">
-                <input type="text" id="waiter-history-search" placeholder="Buyurtma raqami yoki stol bo'yicha qidirish..." oninput="renderWaiterHistory()" style="padding: 6px; width: 100%; border: 1px solid #ccc; border-radius: 4px;">
+                <input type="text" id="waiter-history-search" placeholder="Buyurtma raqami yoki stol qidirish..." oninput="renderWaiterHistory()" style="padding: 6px; width: 100%; border: 1px solid #ccc; border-radius: 4px;">
             </div>
             <div id="history-list" style="max-height: 300px; overflow-y: auto; margin: 15px 0;"></div>
             <button onclick="closeHistory()" style="padding: 8px 15px; background: #2a5298; color: white; border: none; border-radius: 5px; cursor: pointer;">Yopish</button>
@@ -142,11 +142,7 @@
             loadMenuFromAdmin();
             try {
                 socket = io('https://oshxonachi-server.onrender.com');
-
-                socket.on('status_updated', (data) => {
-                    updateLocalTableStatus(data.orderId, data.status, data.isPrinted, data.isPaid);
-                });
-
+                socket.on('status_updated', (data) => { updateLocalTableStatus(data.orderId, data.status, data.isPrinted, data.isPaid); });
                 socket.on('update_orders', (serverOrders) => {
                     if (Array.isArray(serverOrders)) {
                         localStorage.setItem('waiter_orders', JSON.stringify(serverOrders));
@@ -162,9 +158,8 @@
 
             window.addEventListener('storage', function(e) {
                 if(e.key === 'admin_menu') loadMenuFromAdmin();
-                if(['waiter_orders', 'active_orders', 'admin_orders', 'orders'].includes(e.key)) {
-                    loadOrdersFromStorage(); 
-                    renderTables();
+                if(e.key === 'waiter_orders' || e.key === 'active_orders' || e.key === 'orders') {
+                    loadOrdersFromStorage(); renderTables();
                 }
             });
         };
@@ -173,42 +168,20 @@
             let adminMenu = JSON.parse(localStorage.getItem('admin_menu'));
             if(adminMenu && adminMenu.length > 0) {
                 fullMenu = adminMenu.map(m => ({ id: m.id, category: m.category, name: m.name, price: m.sale_price, is_visible: m.is_visible }));
-            } else {
-                fullMenu = [
-                    { id: 1, name: "Toshkent oshi (Toʻy oshi)", category: "Osh", price: 38000, is_visible: true },
-                    { id: 2, name: "Samarqand oshi", category: "Osh", price: 40000, is_visible: true }
-                ];
             }
         }
 
         function updateLocalTableStatus(tableOrOrderId, newStatus, isPrinted, isPaid) {
             let waiterOrders = JSON.parse(localStorage.getItem('waiter_orders')) || [];
-            let activeOrders = JSON.parse(localStorage.getItem('active_orders')) || [];
-            
-            let updater = (arr) => arr.map(o => {
-                let id = o.id !== undefined ? o.id : o.tableNumber;
-                if (String(id) === String(tableOrOrderId) || String(o.tableNumber) === String(tableOrOrderId)) {
+            waiterOrders = waiterOrders.map(o => {
+                if (String(o.id || o.tableNumber) === String(tableOrOrderId)) {
                     o.status = newStatus;
                     if (isPrinted !== undefined) o.isPrinted = isPrinted;
                     if (isPaid !== undefined) o.isPaid = isPaid;
-                    if (newStatus === 'tolandi' || newStatus === 'bekor_qilindi') {
-                        moveToWaiterHistory(o);
-                    }
                 }
                 return o;
             });
-
-            waiterOrders = updater(waiterOrders);
-            activeOrders = updater(activeOrders);
-
-            if (newStatus === 'tolandi' || newStatus === 'bekor_qilindi') {
-                waiterOrders = waiterOrders.filter(o => String(o.tableNumber) !== String(tableOrOrderId) && String(o.id) !== String(tableOrOrderId));
-                activeOrders = activeOrders.filter(o => String(o.tableNumber) !== String(tableOrOrderId) && String(o.id) !== String(tableOrOrderId));
-            }
-
             localStorage.setItem('waiter_orders', JSON.stringify(waiterOrders));
-            localStorage.setItem('active_orders', JSON.stringify(activeOrders));
-
             loadOrdersFromStorage();
             renderTables();
             if(document.getElementById('history-modal').style.display === 'flex') renderWaiterHistory();
@@ -217,9 +190,8 @@
         function loadOrdersFromStorage() {
             tablesState = {};
             let waiterOrders = JSON.parse(localStorage.getItem('waiter_orders')) || [];
-            let activeOrders = JSON.parse(localStorage.getItem('active_orders')) || [];
-            let combined = [...waiterOrders, ...activeOrders];
-            combined.forEach(o => {
+            waiterOrders.forEach(o => {
+                // Tolandi va Bekor qilingan stollar zalda ko'rinmasligi kerak (stol bo'shaydi)
                 if (o.tableNumber && o.status !== 'tolandi' && o.status !== 'bekor_qilindi') {
                     tablesState[o.tableNumber] = o;
                 }
@@ -270,8 +242,7 @@
             }
 
             document.getElementById('modal-guests-val').innerText = currentGuestsCount;
-            renderModalMenu(); 
-            updateOrderSummary();
+            renderModalMenu(); updateOrderSummary();
             document.getElementById('modal-overlay').style.display = 'flex';
         }
 
@@ -315,8 +286,7 @@
             if (!currentCart[itemId]) currentCart[itemId] = { ...item, qty: 0 };
             currentCart[itemId].qty += delta;
             if (currentCart[itemId].qty <= 0) delete currentCart[itemId];
-            renderModalMenu(); 
-            updateOrderSummary();
+            renderModalMenu(); updateOrderSummary();
         }
 
         function updateOrderSummary() {
@@ -343,70 +313,48 @@
                 id: selectedTableNumber, tableNumber: selectedTableNumber, orderNumber: orderNumber,
                 waiterName: activeWaiter, guestsCount: currentGuestsCount, items: items,
                 status: existingOrder ? (existingOrder.status || 'yangi') : 'yangi',
-                time: existingOrder ? existingOrder.time : new Date().toLocaleTimeString(),
-                isPrinted: existingOrder ? existingOrder.isPrinted : false
+                time: existingOrder ? existingOrder.time : new Date().toLocaleTimeString()
             };
 
             let waiterOrders = JSON.parse(localStorage.getItem('waiter_orders')) || [];
-            let index = waiterOrders.findIndex(o => String(o.tableNumber) === String(selectedTableNumber) && o.status !== 'tolandi' && o.status !== 'bekor_qilindi');
+            let index = waiterOrders.findIndex(o => o.tableNumber === selectedTableNumber && o.status !== 'tolandi' && o.status !== 'bekor_qilindi');
             if (index >= 0) waiterOrders[index] = orderData; else waiterOrders.push(orderData);
             
             localStorage.setItem('waiter_orders', JSON.stringify(waiterOrders));
             if (socket) socket.emit('new_order', orderData);
             
-            closeModal(); 
-            loadOrdersFromStorage(); 
-            renderTables();
+            closeModal(); loadOrdersFromStorage(); renderTables();
         }
 
+        // Vozvrat funksiyasi
         function openReturnModal() {
-            let existingOrder = tablesState[selectedTableNumber];
-            let items = existingOrder && existingOrder.items ? existingOrder.items : Object.values(currentCart);
+            let items = Object.values(currentCart);
             if(items.length === 0) { alert("Qaytarish uchun taom yo'q"); return; }
             const list = document.getElementById('return-items-list');
-            list.innerHTML = items.map((i, idx) => `
+            list.innerHTML = items.map(i => `
                 <div class="menu-item-row">
                     <span>${i.name} (${i.qty} ta)</span>
-                    <input type="number" id="return-qty-${idx}" min="0" max="${i.qty}" value="0" style="width: 70px; padding: 4px; border: 1px solid #ccc; border-radius: 4px;">
+                    <button class="qty-btn" style="background:#ffcdd2; color:#c62828;" onclick="returnItem(${i.id})">Qaytarish (-1)</button>
                 </div>
             `).join('');
             document.getElementById('return-modal').style.display = 'flex';
         }
 
-        function confirmReturn() {
-            let existingOrder = tablesState[selectedTableNumber];
-            if (!existingOrder) return;
-
-            existingOrder.items.forEach((i, idx) => {
-                let retQtyInput = document.getElementById(`return-qty-${idx}`);
-                if (retQtyInput) {
-                    let rQty = Number(retQtyInput.value) || 0;
-                    if (rQty > 0) {
-                        i.qty = Math.max(0, i.qty - rQty);
-                    }
-                }
-            });
-
-            existingOrder.items = existingOrder.items.filter(i => i.qty > 0);
-
-            let waiterOrders = JSON.parse(localStorage.getItem('waiter_orders')) || [];
-            waiterOrders = waiterOrders.map(o => {
-                if (String(o.tableNumber) === String(selectedTableNumber)) o.items = existingOrder.items;
-                return o;
-            });
-            localStorage.setItem('waiter_orders', JSON.stringify(waiterOrders));
-
-            if (socket) socket.emit('new_order', existingOrder);
-
-            closeReturnModal();
-            closeModal();
-            loadOrdersFromStorage();
-            renderTables();
-            alert("Vozvrat muvaffaqiyatli amalga oshirildi va admin panelga yuborildi!");
+        function returnItem(id) {
+            if(currentCart[id] && currentCart[id].qty > 0) {
+                currentCart[id].qty -= 1;
+                if(currentCart[id].qty === 0) delete currentCart[id];
+                openReturnModal(); updateOrderSummary(); renderModalMenu();
+            }
         }
-
+        function confirmReturn() {
+            sendOrderToAdmin(); // Avtomatik tarzda admin panelda ham summalar o'zgaradi
+            document.getElementById('return-modal').style.display = 'none';
+            alert("Vozvrat muvaffaqiyatli amalga oshirildi!");
+        }
         function closeReturnModal() { document.getElementById('return-modal').style.display = 'none'; }
 
+        // Chek va QR Kod
         function printCheck() {
             let order = tablesState[selectedTableNumber];
             if (!order) { alert("Buyurtma yuborilmagan!"); return; }
@@ -425,14 +373,13 @@
             
             order.isPrinted = true;
             let waiterOrders = JSON.parse(localStorage.getItem('waiter_orders')) || [];
-            waiterOrders = waiterOrders.map(o => { if (String(o.tableNumber) === String(selectedTableNumber)) o.isPrinted = true; return o; });
+            waiterOrders = waiterOrders.map(o => { if (o.tableNumber === selectedTableNumber) o.isPrinted = true; return o; });
             localStorage.setItem('waiter_orders', JSON.stringify(waiterOrders));
-            if (socket) socket.emit('status_updated', { orderId: selectedTableNumber, status: order.status, isPrinted: true });
+            if (socket) socket.emit('change_status', { orderId: selectedTableNumber, status: order.status, isPrinted: true });
             
             closeModal();
             document.getElementById('check-modal').style.display = 'flex';
         }
-
         function closeCheckModal() { document.getElementById('check-modal').style.display = 'none'; renderTables(); }
 
         function switchSection(sec) {
@@ -442,41 +389,28 @@
             document.getElementById('section-heading-title').innerText = sec === 'zal' ? 'Zal Stollari (16 ta)' : 'Alohida Xonalar (8 ta)';
             renderTables();
         }
-
         function changeWaiterName() {
             let name = prompt("Ismingizni kiriting:", activeWaiter);
             if (name) { activeWaiter = name; document.getElementById('logged-waiter-name').innerText = "Ofitsiant: " + activeWaiter; }
         }
-
         function initClock() { setInterval(() => { const now = new Date(); document.getElementById('realtime-clock').innerText = now.toLocaleDateString() + "\n" + now.toLocaleTimeString(); }, 1000); }
-
-        function moveToWaiterHistory(orderObj) {
-            let hist = JSON.parse(localStorage.getItem('waiter_history')) || [];
-            if (!hist.some(h => String(h.orderNumber) === String(orderObj.orderNumber))) {
-                hist.unshift({ ...orderObj, finishedAt: new Date().toLocaleString() });
-                localStorage.setItem('waiter_history', JSON.stringify(hist));
-            }
-        }
 
         function openHistory() { document.getElementById('history-modal').style.display = 'flex'; renderWaiterHistory(); }
         function closeHistory() { document.getElementById('history-modal').style.display = 'none'; }
         
         function renderWaiterHistory() {
-            let hist = JSON.parse(localStorage.getItem('waiter_history')) || [];
+            let waiterOrders = JSON.parse(localStorage.getItem('waiter_orders')) || [];
             let container = document.getElementById('history-list');
             const query = (document.getElementById('waiter-history-search') || {}).value || "";
             
-            let filtered = hist;
-            if(query) {
-                filtered = hist.filter(o => String(o.orderNumber).includes(query) || String(o.tableNumber).includes(query));
-            }
+            let historyOrders = waiterOrders.filter(o => o.status === 'tolandi' || o.status === 'bekor_qilindi');
+            if(query) historyOrders = historyOrders.filter(o => String(o.orderNumber).includes(query) || String(o.tableNumber).includes(query));
 
-            if (filtered.length === 0) { container.innerHTML = "<p>Tarix bo'sh.</p>"; return; }
-            container.innerHTML = filtered.map(o => {
-                let isCanceled = o.status === 'bekor_qilindi';
-                let color = isCanceled ? '#d32f2f' : '#27ae60';
-                let text = isCanceled ? 'BEKOR QILINGAN' : 'TOLANDI';
-                return `<div style="border-bottom: 1px solid #eee; padding: 8px 0; display:flex; justify-content:space-between; ${isCanceled ? 'background: #ffebee;' : ''}">
+            if (historyOrders.length === 0) { container.innerHTML = "<p>Tarix bo'sh.</p>"; return; }
+            container.innerHTML = historyOrders.map(o => {
+                let color = o.status === 'bekor_qilindi' ? '#d32f2f' : '#27ae60';
+                let text = o.status === 'bekor_qilindi' ? 'BEKOR QILINGAN' : 'TOLANDI';
+                return `<div style="border-bottom: 1px solid #eee; padding: 8px 0; display:flex; justify-content:space-between;">
                     <span><b>№ ${o.orderNumber || '-'}</b> | ${o.tableNumber}</span>
                     <span style="color: ${color}; font-weight: bold;">${text}</span>
                 </div>`;

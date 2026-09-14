@@ -17,7 +17,6 @@
         .nav-tabs { display: flex; gap: 10px; flex-wrap: wrap; }
         .tab-btn { padding: 8px 16px; border: none; background: #bbdefb; color: #0d47a1; font-weight: bold; border-radius: 6px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 6px; }
         .tab-btn.active, .tab-btn:hover { background: #0288d1; color: white; }
-        .tab-icon { width: 18px; height: 18px; object-fit: contain; }
         .section-content { display: none; background: #ffffff; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
         .section-content.active { display: block; }
         table { width: 100%; border-collapse: collapse; margin-top: 15px; }
@@ -242,32 +241,13 @@
 
                 socket.on('new_order', (data) => {
                     if (!data) return;
-                    let targetKey = String(data.tableNumber || data.id);
-                    let existingIndex = ordersDatabase.findIndex(o => String(o.tableNumber || o.id) === targetKey);
-                    
-                    if (existingIndex !== -1) {
-                        ordersDatabase[existingIndex] = { ...ordersDatabase[existingIndex], ...data };
-                    } else {
-                        ordersDatabase.push(data);
-                    }
-                    syncOrdersToStorage();
+                    upsertOrder(data);
                     renderAll();
                 });
 
                 socket.on('status_updated', (data) => {
                     if (!data) return;
-                    let targetKey = String(data.orderId || data.tableNumber);
-                    ordersDatabase = ordersDatabase.map(o => {
-                        let currentKey = String(o.tableNumber || o.id);
-                        if (currentKey === targetKey) {
-                            if (data.status !== undefined) o.status = data.status;
-                            if (data.isPrinted !== undefined) o.isPrinted = data.isPrinted;
-                            if (data.paymentType !== undefined) o.paymentType = data.paymentType;
-                            if (data.isPaid !== undefined) o.isPaid = data.isPaid;
-                        }
-                        return o;
-                    });
-                    syncOrdersToStorage();
+                    upsertOrder(data);
                     renderAll();
                 });
             }
@@ -276,6 +256,7 @@
             initChart();
             initLiveClock();
 
+            // Storage hodisalarini vaqt yo'qotmasdan tezkor o'qish
             window.addEventListener('storage', function(e) {
                 if(['waiter_orders', 'active_orders', 'admin_orders', 'orders'].includes(e.key)) {
                     loadOrdersFromStorage();
@@ -283,16 +264,17 @@
                 }
             });
 
-            // Avtomatik yangilanishni ta'minlash uchun har 2 soniyada storage tekshiruvi
+            // Har 1 soniyada ma'lumotlarni sinxronlash (tezlik va ishonchlilik uchun)
             setInterval(() => {
                 loadOrdersFromStorage();
-            }, 2000);
+                renderAll();
+            }, 1000);
         };
 
         function loadInitialData() {
             try {
                 let defaultMenu = [
-                    { id: 1, name: "Toshkent oshi (Toʻy oshi)", category: "Osh", internal_price: 25000, sale_price: 38000, is_visible: true },
+                    { id: 1, name: "Toshkent oshi (To'y oshi)", category: "Osh", internal_price: 25000, sale_price: 38000, is_visible: true },
                     { id: 2, name: "Samarqand oshi", category: "Osh", internal_price: 27000, sale_price: 40000, is_visible: true },
                     { id: 14, name: "Bifsteks", category: "Quyuq taomlar", internal_price: 30000, sale_price: 45000, is_visible: true },
                     { id: 100, name: "Coca-Cola: 0.5L", category: "Ichimliklar", internal_price: 6000, sale_price: 11000, is_visible: true }
@@ -349,14 +331,34 @@
                     
                     if (uniqueMap.has(key)) {
                         let existing = uniqueMap.get(key);
-                        // Eng oxirgi holatni saqlab qolish
-                        uniqueMap.set(key, { ...existing, ...o, items: o.items && o.items.length > 0 ? o.items : existing.items });
+                        uniqueMap.set(key, { 
+                            ...existing, 
+                            ...o, 
+                            items: o.items && o.items.length > 0 ? o.items : existing.items,
+                            isPrinted: o.isPrinted !== undefined ? o.isPrinted : existing.isPrinted
+                        });
                     } else {
                         uniqueMap.set(key, o);
                     }
                 });
                 ordersDatabase = Array.from(uniqueMap.values());
             } catch (e) { ordersDatabase = []; }
+        }
+
+        function upsertOrder(incomingData) {
+            let targetKey = String(incomingData.tableNumber || incomingData.id || incomingData.orderId);
+            let index = ordersDatabase.findIndex(o => String(o.tableNumber || o.id) === targetKey);
+            if (index !== -1) {
+                ordersDatabase[index] = { 
+                    ...ordersDatabase[index], 
+                    ...incomingData, 
+                    items: incomingData.items && incomingData.items.length > 0 ? incomingData.items : ordersDatabase[index].items,
+                    isPrinted: incomingData.isPrinted !== undefined ? incomingData.isPrinted : ordersDatabase[index].isPrinted
+                };
+            } else {
+                ordersDatabase.push(incomingData);
+            }
+            syncOrdersToStorage();
         }
 
         function renderMenu() {
@@ -454,6 +456,8 @@
 
                 const orderId = String(order.tableNumber || order.id);
                 let paymentHTML = "";
+                
+                // Chek chiqarilgan bo'lsa darhol naqd va plastik to'lov tugmalarini ko'rsatish
                 if (order.isPrinted && order.status !== 'tolandi') {
                     paymentHTML = `
                         <div style="margin-top: 8px; background: #fffde7; padding: 10px; border: 1px solid #ffd54f; border-radius: 6px;">

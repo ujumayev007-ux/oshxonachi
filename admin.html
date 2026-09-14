@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Restoran Admin Paneli</title>
+    <title>Restoran Boshqaruv Tizimi - Admin Paneli</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
     <style>
@@ -17,6 +17,7 @@
         .nav-tabs { display: flex; gap: 10px; flex-wrap: wrap; }
         .tab-btn { padding: 8px 16px; border: none; background: #bbdefb; color: #0d47a1; font-weight: bold; border-radius: 6px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 6px; }
         .tab-btn.active, .tab-btn:hover { background: #0288d1; color: white; }
+        .tab-icon { width: 18px; height: 18px; object-fit: contain; }
         .section-content { display: none; background: #ffffff; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
         .section-content.active { display: block; }
         table { width: 100%; border-collapse: collapse; margin-top: 15px; }
@@ -36,8 +37,14 @@
         .autocomplete-items { position: absolute; border: 1px solid #90caf9; border-bottom: none; border-top: none; z-index: 99; top: 100%; left: 0; right: 0; background-color: #fff; max-height: 150px; overflow-y: auto; border-radius: 0 0 4px 4px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         .autocomplete-items div { padding: 8px 10px; cursor: pointer; border-bottom: 1px solid #e1f5fe; font-size: 14px; }
         .autocomplete-items div:hover { background-color: #e3f2fd; color: #0d47a1; }
+        .payment-options-container { display: flex; gap: 8px; margin-top: 8px; }
+        .pay-option-btn { flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 8px 10px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; color: white; font-size: 13px; transition: 0.2s; }
+        .pay-cash-btn { background-color: #2e7d32; }
+        .pay-cash-btn:hover { background-color: #1b5e20; }
+        .pay-card-btn { background-color: #0288d1; }
+        .pay-card-btn:hover { background-color: #01579b; }
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); display: flex; justify-content: center; align-items: center; z-index: 1000; }
-        .modal-content { background: #ffffff; padding: 25px; border-radius: 10px; width: 380px; max-width: 90%; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+        .modal-content { background: #ffffff; padding: 25px; border-radius: 10px; width: 350px; max-width: 90%; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
         .modal-content h3 { color: #0d47a1; margin-bottom: 15px; font-size: 18px; }
         .modal-content p { margin-bottom: 10px; font-size: 14px; }
         .modal-content input { margin-bottom: 12px; }
@@ -119,7 +126,7 @@
                 <h3 style="font-size: 16px; color: #0d47a1; margin-bottom: 10px;">Yangi mahsulot qo'shish yoki mavjudini to'ldirish</h3>
                 <div style="display: flex; gap: 10px; position: relative;">
                     <div class="autocomplete-container">
-                        <input type="text" id="new-item-name" placeholder="Mahsulot nomi" autocomplete="off" oninput="handleWarehouseAutocomplete(this.value)">
+                        <input type="text" id="new-item-name" placeholder="Mahsulot nomi" autocomplete="off" oninput="handleAutocomplete(this.value)">
                         <div id="autocomplete-list" class="autocomplete-items"></div>
                     </div>
                     <input type="number" id="new-item-qty" placeholder="Miqdori" style="width: 120px;">
@@ -173,7 +180,7 @@
                 <thead>
                     <tr>
                         <th>Buyurtma №</th>
-                        <th>Stol / Xona</th>
+                        <th>Stol</th>
                         <th>Ofitsant</th>
                         <th>To'lov turi</th>
                         <th>Summa</th>
@@ -199,7 +206,7 @@
         </div>
     </div>
 
-    <!-- Naqd to'lov uchun modal oynasi (Qaytim hisoblash bilan) -->
+    <!-- Naqd to'lov uchun modal oynasi -->
     <div id="cash-payment-modal" class="modal-overlay" style="display: none;">
         <div class="modal-content">
             <h3>Naqd pul bilan to'lov</h3>
@@ -219,7 +226,6 @@
         let menuDatabase = [];
         let warehouseDatabase = [];
         let ordersDatabase = [];
-        let historyDatabase = [];
         let currentPayingOrderId = null;
         let currentOrderTotalSum = 0;
         let socket = null;
@@ -245,8 +251,8 @@
                 });
 
                 socket.on('status_updated', (data) => {
-                    ordersDatabase = ordersDatabase.map((o) => {
-                        let currentId = o.id !== undefined ? o.id : o.tableNumber;
+                    ordersDatabase = ordersDatabase.map((o, index) => {
+                        let currentId = o.id !== undefined ? o.id : (o.tableNumber !== undefined ? o.tableNumber : index);
                         if (String(currentId) === String(data.orderId) || String(o.tableNumber) === String(data.orderId)) {
                             o.status = data.status;
                             if (data.isPrinted !== undefined) o.isPrinted = data.isPrinted;
@@ -266,9 +272,8 @@
             initLiveClock();
 
             window.addEventListener('storage', function(e) {
-                if(['waiter_orders', 'active_orders', 'admin_orders', 'orders', 'admin_menu'].includes(e.key)) {
+                if(['waiter_orders', 'active_orders', 'admin_orders', 'orders'].includes(e.key)) {
                     loadOrdersFromStorage();
-                    loadInitialData();
                     renderAll();
                 }
             });
@@ -283,10 +288,9 @@
                     { id: 100, name: "Coca-Cola: 0.5L", category: "Ichimliklar", internal_price: 6000, sale_price: 11000, is_visible: true }
                 ];
                 menuDatabase = JSON.parse(localStorage.getItem('admin_menu')) || defaultMenu;
-                localStorage.setItem('admin_menu', JSON.stringify(menuDatabase));
+                localStorage.setItem('admin_menu', JSON.stringify(menuDatabase)); // Ofitsiant ko'rishi uchun
 
                 warehouseDatabase = JSON.parse(localStorage.getItem('admin_warehouse')) || [];
-                historyDatabase = JSON.parse(localStorage.getItem('admin_history')) || [];
                 loadOrdersFromStorage();
             } catch (err) { console.error("Yuklashda xato:", err); }
         }
@@ -324,12 +328,11 @@
             try {
                 let waiterOrders = JSON.parse(localStorage.getItem('waiter_orders')) || [];
                 let activeOrders = JSON.parse(localStorage.getItem('active_orders')) || [];
-                let adminOrders = JSON.parse(localStorage.getItem('admin_orders')) || [];
-                let combined = [...waiterOrders, ...activeOrders, ...adminOrders];
+                let combined = [...waiterOrders, ...activeOrders];
                 let uniqueMap = new Map();
                 combined.forEach(o => {
                     let key = o.id !== undefined ? o.id : o.tableNumber;
-                    if (!o.orderNumber) o.orderNumber = Math.floor(10000 + Math.random() * 90000).toString();
+                    if (!o.orderNumber) o.orderNumber = Math.floor(10000 + Math.random() * 90000).toString(); // Noyob ID
                     uniqueMap.set(key, o);
                 });
                 ordersDatabase = Array.from(uniqueMap.values());
@@ -350,8 +353,8 @@
                     <td><input type="number" value="${item.sale_price}" onchange="updateMenuField(${item.id}, 'sale_price', Number(this.value))"></td>
                     <td>
                         <select onchange="updateMenuField(${item.id}, 'is_visible', this.value === 'true')">
-                            <option value="true" ${item.is_visible !== false ? 'selected' : ''}>Ko'rinadi</option>
-                            <option value="false" ${item.is_visible === false ? 'selected' : ''}>Yashiringan</option>
+                            <option value="true" ${item.is_visible ? 'selected' : ''}>Ko'rinadi</option>
+                            <option value="false" ${!item.is_visible ? 'selected' : ''}>Yashiringan</option>
                         </select>
                     </td>
                     <td><button class="btn btn-blue" onclick="renderAll()">Saqlash</button></td>
@@ -361,11 +364,7 @@
 
         function updateMenuField(id, field, value) {
             const item = menuDatabase.find(m => m.id === id);
-            if (item) {
-                item[field] = value;
-                saveData();
-                localStorage.setItem('admin_menu', JSON.stringify(menuDatabase));
-            }
+            if (item) { item[field] = value; saveData(); }
         }
 
         function addNewMenuItem() {
@@ -394,12 +393,10 @@
                 </tr>
             `).join('');
         }
-
         function updateWarehouseQty(index) {
             const val = Number(document.getElementById(`wh-qty-${index}`).value);
             if (!isNaN(val)) { warehouseDatabase[index].quantity = val; renderAll(); }
         }
-
         function addWarehouseItem() {
             const name = document.getElementById('new-item-name').value.trim();
             const qty = Number(document.getElementById('new-item-qty').value);
@@ -409,27 +406,7 @@
                 if (existing) { existing.quantity += qty; if(unit) existing.unit = unit; }
                 else { warehouseDatabase.push({ name, quantity: qty, unit: unit || 'g' }); }
                 renderAll();
-                document.getElementById('new-item-name').value = '';
-                document.getElementById('new-item-qty').value = '';
-                document.getElementById('new-item-unit').value = '';
             }
-        }
-
-        function handleWarehouseAutocomplete(val) {
-            const listDiv = document.getElementById('autocomplete-list');
-            listDiv.innerHTML = '';
-            if (!val) return;
-            let matches = warehouseDatabase.filter(w => w.name.toLowerCase().includes(val.toLowerCase()));
-            matches.forEach(m => {
-                let div = document.createElement('div');
-                div.innerHTML = `${m.name} (${m.quantity} ${m.unit})`;
-                div.onclick = function() {
-                    document.getElementById('new-item-name').value = m.name;
-                    document.getElementById('new-item-unit').value = m.unit;
-                    listDiv.innerHTML = '';
-                };
-                listDiv.appendChild(div);
-            });
         }
 
         function renderOrders() {
@@ -440,7 +417,7 @@
                 return;
             }
 
-            container.innerHTML = activeOrders.map((order) => {
+            container.innerHTML = activeOrders.map((order, index) => {
                 let orderTotalSum = 0;
                 let itemsListHTML = `<ul style="list-style: none; padding: 0; margin: 8px 0; background: #ffffff; border: 1px solid #b3d7ff; border-radius: 6px; padding: 8px;">` + 
                     (order.items || []).map(i => {
@@ -459,9 +436,9 @@
                     paymentHTML = `
                         <div style="margin-top: 8px; background: #fffde7; padding: 10px; border: 1px solid #ffd54f; border-radius: 6px;">
                             <span style="font-size: 13px; color: #f57f17; font-weight: bold;">To'lov turini tanlang:</span>
-                            <div style="display: flex; gap: 8px; margin-top: 6px;">
-                                <button class="btn" style="flex: 1; background: #2e7d32; color: white;" onclick="openCashModal('${orderId}')">Naqd</button>
-                                <button class="btn" style="flex: 1; background: #0288d1; color: white;" onclick="acceptPayment('${orderId}', 'plastik')">Plastik</button>
+                            <div class="payment-options-container">
+                                <button class="pay-option-btn pay-cash-btn" onclick="openCashModal('${orderId}')">Naqd</button>
+                                <button class="pay-option-btn pay-card-btn" onclick="acceptPayment('${orderId}', 'plastik')">Plastik</button>
                             </div>
                         </div>`;
                 }
@@ -469,7 +446,7 @@
                 return `
                     <div class="order-card">
                         <div style="flex: 1; min-width: 280px;">
-                            <p style="font-size: 16px; margin-bottom: 6px;">🪑 <b style="color: #0d47a1; font-size: 18px;">Stol / Xona: ${order.tableNumber}</b> | № <b>${order.orderNumber}</b> | Ofitsiant: <b>${order.waiterName || 'Ofitsiant'}</b></p>
+                            <p style="font-size: 16px; margin-bottom: 6px;">🪑 <b style="color: #0d47a1; font-size: 18px;">Stol #${order.tableNumber}</b> | № <b>${order.orderNumber}</b> | Ofitsant: <b>${order.waiterName || 'Ofitsant'}</b></p>
                             <p style="font-size: 14px;">Holat: <b style="color: #d32f2f;">${(order.status || 'yangi').toUpperCase()}</b></p>
                             ${itemsListHTML}
                             <div style="margin-top: 6px; font-size: 15px; font-weight: bold; color: #0d47a1; background: #e1f5fe; padding: 6px 10px; border-radius: 5px; display: inline-block;">
@@ -481,7 +458,7 @@
                             <button class="btn" style="background: #ffb74d;" onclick="changeOrderStatus('${orderId}', 'qabul_qilindi')">Qabul</button>
                             <button class="btn" style="background: #4fc3f7;" onclick="changeOrderStatus('${orderId}', 'tayyorlanyapti')">Jarayonda</button>
                             <button class="btn btn-blue" onclick="changeOrderStatus('${orderId}', 'tayyor')">Tayyor</button>
-                            <button class="btn btn-red" style="margin-top: 10px;" onclick="cancelOrder('${orderId}')">Bekor qilish</button>
+                            <button class="btn btn-red" style="margin-top: 10px;" onclick="changeOrderStatus('${orderId}', 'bekor_qilindi')">Bekor qilish</button>
                         </div>
                     </div>`;
             }).join('');
@@ -522,28 +499,12 @@
         function acceptPayment(orderId, paymentType) {
             ordersDatabase = ordersDatabase.map(o => {
                 if (String(o.id || o.tableNumber) === String(orderId)) {
-                    o.status = 'tolandi';
-                    o.paymentType = paymentType;
-                    o.isPaid = true;
-                    moveToHistory(o);
+                    o.status = 'tolandi'; o.paymentType = paymentType; o.isPaid = true;
                 }
                 return o;
             });
             syncOrdersToStorage();
-            if (socket) socket.emit('status_updated', { orderId: orderId, status: 'tolandi', paymentType: paymentType, isPaid: true });
-            renderAll();
-        }
-
-        function cancelOrder(orderId) {
-            ordersDatabase = ordersDatabase.map(o => {
-                if (String(o.id || o.tableNumber) === String(orderId)) {
-                    o.status = 'bekor_qilindi';
-                    moveToHistory(o);
-                }
-                return o;
-            });
-            syncOrdersToStorage();
-            if (socket) socket.emit('status_updated', { orderId: orderId, status: 'bekor_qilindi' });
+            if (socket) socket.emit('change_status', { orderId: orderId, status: 'tolandi', paymentType: paymentType, isPaid: true });
             renderAll();
         }
 
@@ -553,47 +514,34 @@
                 return o;
             });
             syncOrdersToStorage();
-            if (socket) socket.emit('status_updated', { orderId: orderId, status: newStatus });
+            if (socket) socket.emit('change_status', { orderId: orderId, status: newStatus });
             renderAll();
-        }
-
-        function moveToHistory(orderObj) {
-            if (!historyDatabase.some(h => String(h.orderNumber) === String(orderObj.orderNumber))) {
-                historyDatabase.unshift({ ...orderObj, finishedAt: new Date().toLocaleString() });
-                localStorage.setItem('admin_history', JSON.stringify(historyDatabase));
-            }
         }
 
         function syncOrdersToStorage() {
             saveData();
-            localStorage.setItem('waiter_orders', JSON.stringify(ordersDatabase));
+            localStorage.setItem('waiter_orders', JSON.stringify(ordersDatabase)); // Ofitsiant bilan sinxronlash
             localStorage.setItem('active_orders', JSON.stringify(ordersDatabase));
-            localStorage.setItem('admin_orders', JSON.stringify(ordersDatabase));
         }
 
         function renderHistory() {
             const tbody = document.getElementById('history-table-body');
             const query = (document.getElementById('history-search-input') || {}).value || "";
-            let historyOrders = historyDatabase;
+            let historyOrders = ordersDatabase.filter(o => o.status === 'tolandi' || o.status === 'bekor_qilindi');
             
             if(query) {
                 historyOrders = historyOrders.filter(o => String(o.orderNumber).includes(query) || String(o.tableNumber).includes(query));
             }
 
-            if (historyOrders.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" style="text-align: center;">Tarix bo'sh.</td></tr>`;
-                return;
-            }
-
             tbody.innerHTML = historyOrders.map(order => {
                 let isCanceled = order.status === 'bekor_qilindi';
                 let color = isCanceled ? 'color: #d32f2f; font-weight: bold;' : 'color: #2e7d32; font-weight: bold;';
-                let statusText = isCanceled ? 'BEKOR QILINDI' : 'TOLANDI';
+                let statusText = isCanceled ? 'BEKOR QILINGAN' : 'TOLANDI';
                 return `
-                    <tr style="${isCanceled ? 'background: #ffebee;' : ''}">
+                    <tr>
                         <td><b>${order.orderNumber}</b></td>
-                        <td>${order.tableNumber}</td>
-                        <td>${order.waiterName || 'Ofitsiant'}</td>
+                        <td>Stol #${order.tableNumber}</td>
+                        <td>${order.waiterName || 'Ofitsant'}</td>
                         <td>${(order.paymentType || '-').toUpperCase()}</td>
                         <td>${calculateOrderTotal(order).toLocaleString()} so'm</td>
                         <td style="${color}">${statusText}</td>
@@ -604,7 +552,7 @@
 
         function renderIncome() {
             let cashTotal = 0, cardTotal = 0, totalSaleSum = 0, totalInternalSum = 0;
-            historyDatabase.filter(o => o.status === 'tolandi').forEach(order => {
+            ordersDatabase.filter(o => o.status === 'tolandi').forEach(order => {
                 let orderSale = 0, orderInternal = 0;
                 (order.items || []).forEach(i => {
                     let qty = Number(i.qty || 1);
@@ -623,7 +571,7 @@
 
         function updateStatsInfo() {
             let totalSales = 0;
-            historyDatabase.filter(o => o.status === 'tolandi').forEach(o => totalSales += calculateOrderTotal(o));
+            ordersDatabase.filter(o => o.status === 'tolandi').forEach(o => totalSales += calculateOrderTotal(o));
             document.getElementById('today-sales').innerText = totalSales.toLocaleString() + " so'm";
             if(statsChartInstance) {
                 statsChartInstance.data.datasets[0].data = [Math.max(1000, totalSales * 0.5), Math.max(500, totalSales * 0.3), Math.max(200, totalSales * 0.2)];
@@ -643,7 +591,6 @@
             localStorage.setItem('admin_menu', JSON.stringify(menuDatabase));
             localStorage.setItem('admin_warehouse', JSON.stringify(warehouseDatabase));
             localStorage.setItem('admin_orders', JSON.stringify(ordersDatabase));
-            localStorage.setItem('admin_history', JSON.stringify(historyDatabase));
         }
     </script>
 </body>

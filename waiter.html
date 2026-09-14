@@ -156,7 +156,7 @@
 
                 socket.on('update_orders', (serverOrders) => {
                     if (Array.isArray(serverOrders)) {
-                        localStorage.setItem('waiter_orders', JSON.stringify(serverOrders));
+                        saveToAllStorage(serverOrders);
                         loadOrdersFromStorage();
                         renderTables();
                     }
@@ -177,7 +177,7 @@
             setInterval(() => {
                 loadOrdersFromStorage();
                 renderTables();
-            }, 500);
+            }, 300);
         };
 
         function loadMenuFromAdmin() {
@@ -185,6 +185,13 @@
             if(adminMenu && adminMenu.length > 0) {
                 fullMenu = adminMenu.map(m => ({ id: m.id, category: m.category, name: m.name, price: m.sale_price, is_visible: m.is_visible }));
             }
+        }
+
+        function saveToAllStorage(ordersArray) {
+            localStorage.setItem('waiter_orders', JSON.stringify(ordersArray));
+            localStorage.setItem('active_orders', JSON.stringify(ordersArray));
+            localStorage.setItem('admin_orders', JSON.stringify(ordersArray));
+            localStorage.setItem('orders', JSON.stringify(ordersArray));
         }
 
         function updateLocalTableStatus(tableOrOrderId, newStatus, isPrinted, isPaid) {
@@ -203,9 +210,7 @@
             });
 
             if (updated) {
-                localStorage.setItem('waiter_orders', JSON.stringify(waiterOrders));
-                localStorage.setItem('active_orders', JSON.stringify(waiterOrders));
-                localStorage.setItem('admin_orders', JSON.stringify(waiterOrders));
+                saveToAllStorage(waiterOrders);
             }
 
             loadOrdersFromStorage();
@@ -218,8 +223,9 @@
             let waiterOrders = JSON.parse(localStorage.getItem('waiter_orders')) || [];
             let activeOrders = JSON.parse(localStorage.getItem('active_orders')) || [];
             let adminOrders = JSON.parse(localStorage.getItem('admin_orders')) || [];
+            let ordersKey = JSON.parse(localStorage.getItem('orders')) || [];
             
-            let combined = [...waiterOrders, ...activeOrders, ...adminOrders];
+            let combined = [...waiterOrders, ...activeOrders, ...adminOrders, ...ordersKey];
             let uniqueMap = new Map();
 
             combined.forEach(o => {
@@ -381,14 +387,12 @@
                 waiterOrders.push(orderData);
             }
             
-            localStorage.setItem('waiter_orders', JSON.stringify(waiterOrders));
-            localStorage.setItem('active_orders', JSON.stringify(waiterOrders));
-            localStorage.setItem('admin_orders', JSON.stringify(waiterOrders));
-
+            saveToAllStorage(waiterOrders);
             tablesState[orderData.tableNumber] = orderData;
 
             if (socket) {
                 socket.emit('new_order', orderData);
+                socket.emit('status_updated', orderData);
             }
         }
 
@@ -450,9 +454,7 @@
                 return o; 
             });
             
-            localStorage.setItem('waiter_orders', JSON.stringify(updatedOrders));
-            localStorage.setItem('active_orders', JSON.stringify(updatedOrders));
-            localStorage.setItem('admin_orders', JSON.stringify(updatedOrders));
+            saveToAllStorage(updatedOrders);
 
             if (tablesState[selectedTableNumber]) {
                 tablesState[selectedTableNumber].isPrinted = true;

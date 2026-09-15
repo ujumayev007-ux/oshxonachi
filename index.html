@@ -207,7 +207,6 @@
             console.log("Server uyg'onishida kutish...", err);
         });
 
-        // Ofitsiant "hozir boryapman" deganda ishlaydigan qism[cite: 10]
         socket.on('waiter_on_the_way', (data) => {
             const banner = document.getElementById('waiter-status-banner');
             banner.style.display = 'block';
@@ -278,13 +277,13 @@
             document.getElementById('waiter-modal').style.display = 'none';
         }
 
-        // Ofitsiantni chaqirish funksiyasi (Index va Waiter o'rtasidagi lokal va server sinxronizatsiyasi qo'shildi)
+        // Ofitsiantni chaqirish (Socket va localStorage orqali universal tarqatish)[cite: 12]
         function callWaiter(tableNum) {
-            // Serverga xabar yuborish
-            socket.emit('call_waiter', { tableNumber: tableNum });
-            socket.emit('table_called', { tableNumber: tableNum });
+            try {
+                socket.emit('call_waiter', { tableNumber: tableNum });
+                socket.emit('table_called', { tableNumber: tableNum });
+            } catch(e) {}
 
-            // LocalStorage orqali ham darhol sinxronlash (tarmoq kechikishini oldini olish uchun)
             try {
                 let savedCalls = JSON.parse(localStorage.getItem('waiter_calls')) || {};
                 savedCalls[tableNum] = true;

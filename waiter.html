@@ -23,12 +23,20 @@
         .table-card.busy { background-color: #ffe6e6; border-color: #e74c3c; }
         .table-card.preparing { background-color: #e3f2fd; border-color: #0288d1; }
         .table-card.ready { background-color: #e8f5e9; border-color: #2e7d32; }
+        .table-card.calling { background-color: #fff3e0; border-color: #ff9800; animation: pulse-border 1.5s infinite; }
+        @keyframes pulse-border {
+            0% { border-color: #ff9800; box-shadow: 0 0 0 0 rgba(255, 152, 0, 0.4); }
+            70% { border-color: #f57c00; box-shadow: 0 0 0 10px rgba(255, 152, 0, 0); }
+            100% { border-color: #ff9800; box-shadow: 0 0 0 0 rgba(255, 152, 0, 0); }
+        }
         .status-badge { display: inline-block; padding: 3px 8px; border-radius: 12px; font-size: 11px; font-weight: bold; margin-top: 5px; text-transform: uppercase; }
         .status-yangi { background: #ffe0b2; color: #e65100; }
         .status-qabul { background: #fff9c4; color: #f57f17; }
         .status-jarayonda { background: #bbdefb; color: #0d47a1; }
         .status-tayyor { background: #c8e6c9; color: #1b5e20; }
         .status-bosh { background: #e0e0e0; color: #424242; }
+        .status-chaqiruv { background: #ffccbc; color: #d84315; animation: blink 1s infinite; }
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000; }
         .modal-content { background: white; padding: 20px; border-radius: 10px; width: 600px; max-width: 90%; max-height: 90vh; overflow-y: auto; }
         .menu-item-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 8px; }
@@ -63,6 +71,13 @@
                 <h3 id="modal-title" style="margin: 0; font-weight: bold; font-size: 18px;">Boshqaruv</h3>
                 <button onclick="closeModal()" style="border: none; background: none; font-size: 20px; cursor: pointer;">&times;</button>
             </div>
+            
+            <!-- Chaqiruvni o'chirish tugmasi (agar stol chaqirayotgan bo'lsa ko'rinadi) -->
+            <div id="call-alert-banner" style="display: none; margin-top: 10px; background: #ffe0b2; padding: 10px; border-radius: 6px; justify-content: space-between; align-items: center;">
+                <span style="color: #e65100; font-weight: bold;">🔔 Bu stol ofitsiantni chaqirmoqda!</span>
+                <button onclick="clearTableCall()" style="padding: 5px 10px; background: #e65100; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">Chaqiruvni o'chirish</button>
+            </div>
+
             <div style="margin: 15px 0; display: flex; align-items: center; gap: 10px;">
                 <span>Mehmonlar soni:</span>
                 <button class="qty-btn" onclick="changeGuests(-1)">-</button>
@@ -136,11 +151,13 @@
         let currentCart = {};
         let activeFilter = 'all';
         let tablesState = {};
+        let activeCalls = {}; // Mijozlardan kelgan chaqiruvlarni saqlash uchun[cite: 8]
         let fullMenu = [];
 
         window.onload = function() {
             loadMenuFromAdmin();
             loadOrdersFromStorage();
+            loadCallsFromStorage(); //[cite: 8]
 
             try {
                 socket = io('https://oshxonachi-server.onrender.com');
@@ -161,6 +178,21 @@
                         renderTables();
                     }
                 });
+
+                // Mijoz tomonidan kelgan chaqiruvni qabul qilish[cite: 8]
+                socket.on('call_waiter', (data) => {
+                    if (!data) return;
+                    let tableNum = data.tableNumber || data;
+                    
+                    activeCalls[tableNum] = true;
+                    saveCallsToStorage();
+
+                    playNotificationSound(); //[cite: 8]
+
+                    alert(`🔔 Diqqat! ${tableNum} ofitsiantni chaqirmoqda!`);
+                    
+                    renderTables();
+                });
             } catch (e) {}
 
             initClock();
@@ -172,6 +204,10 @@
                     loadOrdersFromStorage(); 
                     renderTables();
                 }
+                if(e.key === 'waiter_calls') { //[cite: 8]
+                    loadCallsFromStorage();
+                    renderTables();
+                }
             });
 
             setInterval(() => {
@@ -180,6 +216,42 @@
                 renderTables();
             }, 1000);
         };
+
+        function playNotificationSound() { //[cite: 8]
+            try {
+                let ctx = new (window.AudioContext || window.webkitAudioContext)();
+                let osc = ctx.createOscillator();
+                let gain = ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.value = 587.33; // D5 note
+                gain.gain.setValueAtTime(0.5, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.8);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start();
+                osc.stop(ctx.currentTime + 0.8);
+            } catch(e) {}
+        }
+
+        function loadCallsFromStorage() { //[cite: 8]
+            let saved = localStorage.getItem('waiter_calls');
+            if(saved) {
+                try { activeCalls = JSON.parse(saved); } catch(e) { activeCalls = {}; }
+            }
+        }
+
+        function saveCallsToStorage() { //[cite: 8]
+            localStorage.setItem('waiter_calls', JSON.stringify(activeCalls));
+        }
+
+        function clearTableCall() { //[cite: 8]
+            if(!selectedTableNumber) return;
+            delete activeCalls[selectedTableNumber];
+            saveCallsToStorage();
+            document.getElementById('call-alert-banner').style.display = 'none';
+            renderTables();
+            alert(`${selectedTableNumber} chaqiruvi bajarildi deb belgilandi.`);
+        }
 
         function loadMenuFromAdmin() {
             let adminMenu = JSON.parse(localStorage.getItem('admin_menu'));
@@ -259,10 +331,15 @@
             for (let i = 1; i <= count; i++) {
                 let tableKey = prefix + i;
                 let tableData = tablesState[tableKey];
+                let isCalling = activeCalls[tableKey]; //[cite: 8]
                 let status = tableData ? (tableData.status || 'yangi') : 'bo\'sh';
                 let cardClass = 'table-card', statusText = 'BO\'SH', badgeClass = 'status-badge status-bosh';
 
-                if (tableData && tableData.status !== 'tolandi' && tableData.status !== 'bekor_qilindi') {
+                if (isCalling) { //[cite: 8]
+                    cardClass += ' calling';
+                    statusText = '🔔 CHAQIRUV';
+                    badgeClass = 'status-badge status-chaqiruv';
+                } else if (tableData && tableData.status !== 'tolandi' && tableData.status !== 'bekor_qilindi') {
                     if (status === 'qabul_qilindi') { cardClass += ' busy'; statusText = 'QABUL QILINDI'; badgeClass = 'status-badge status-qabul'; }
                     else if (status === 'tayyorlanyapti') { cardClass += ' preparing'; statusText = 'TAYYORLANYAPTI'; badgeClass = 'status-badge status-jarayonda'; }
                     else if (status === 'tayyor') { cardClass += ' ready'; statusText = 'TAYYOR'; badgeClass = 'status-badge status-tayyor'; }
@@ -281,6 +358,15 @@
         function openTableModal(tableKey) {
             selectedTableNumber = tableKey;
             document.getElementById('modal-title').innerText = `${tableKey} Boshqaruvi`;
+            
+            // Chaqiruv bannerini tekshirish[cite: 8]
+            let callBanner = document.getElementById('call-alert-banner');
+            if (activeCalls[tableKey]) {
+                callBanner.style.display = 'flex';
+            } else {
+                callBanner.style.display = 'none';
+            }
+
             let existingOrder = tablesState[tableKey];
             currentCart = {};
             

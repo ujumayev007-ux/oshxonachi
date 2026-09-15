@@ -85,13 +85,13 @@
             </div>
             <div style="margin-bottom: 10px;" id="menu-categories-tabs">
                 <button class="tab-btn active" onclick="filterModalMenu('all', event)">Barchasi</button>
-                <button class="tab-btn" onclick="filterModalMenu('osh', event)">Osh</button>
-                <button class="tab-btn" onclick="filterModalMenu('supli', event)">Sho'rvalar</button>
-                <button class="tab-btn" onclick="filterModalMenu('asosiy', event)">Asosiy taomlar</button>
-                <button class="tab-btn" onclick="filterModalMenu('hamirli', event)">Hamirli taomlar</button>
-                <button class="tab-btn" onclick="filterModalMenu('kabob', event)">Kaboblar</button>
-                <button class="tab-btn" onclick="filterModalMenu('somsa', event)">Somsalar</button>
-                <button class="tab-btn" onclick="filterModalMenu('fastfood', event)">Fast-food</button>
+                <button class="tab-btn" onclick="filterModalMenu('Osh', event)">Osh</button>
+                <button class="tab-btn" onclick="filterModalMenu('Suyuq ovqatlar', event)">Sho'rvalar</button>
+                <button class="tab-btn" onclick="filterModalMenu('Quyuq taomlar', event)">Asosiy taomlar</button>
+                <button class="tab-btn" onclick="filterModalMenu('Hamirli taomlar', event)">Hamirli taomlar</button>
+                <button class="tab-btn" onclick="filterModalMenu('Kaboblar', event)">Kaboblar</button>
+                <button class="tab-btn" onclick="filterModalMenu('Somsalar', event)">Somsalar</button>
+                <button class="tab-btn" onclick="filterModalMenu('Fast Food', event)">Fast-food</button>
             </div>
             <div id="menu-selection-list" style="max-height: 250px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; border-radius: 6px;"></div>
             <div style="margin-top: 15px; background: #f9f9f9; padding: 10px; border-radius: 6px;" id="current-order-summary"></div>
@@ -111,7 +111,6 @@
             <h3 style="font-weight: bold; font-size: 18px; color: #2a5298;">Restoran Cheki</h3>
             <div id="check-content-area" style="margin: 15px 0; text-align: left; font-size: 14px; background: #f9f9f9; padding: 10px; border-radius: 5px; border: 1px dashed #ccc;"></div>
             <div id="qrcode-container" style="display: flex; justify-content: center; margin: 15px 0;"></div>
-            <p style="font-size: 12px; color: #666; margin-bottom: 15px;">To'lov qabul qilingach, stol avtomatik bo'shatiladi.</p>
             <button onclick="closeCheckModal()" style="padding: 8px 15px; background: #2a5298; color: white; border: none; border-radius: 5px; cursor: pointer;">Yopish</button>
         </div>
     </div>
@@ -151,24 +150,23 @@
         let tablesState = {};
         let activeCalls = {}; 
         let fullMenu = [];
+        let sessionStartTime = Date.now();
+        let waiterStats = { ordersCount: 0, totalSum: 0, tablesWorked: new Set() };
 
         window.onload = function() {
             loadMenuFromAdmin();
             loadOrdersFromStorage();
             loadCallsFromStorage(); 
+            loadWaiterStats();
 
             try {
                 socket = io('https://oshxonachi-server.onrender.com');
 
-                socket.on('connect', () => {
-                    console.log("Ofitsiant serverga ulandi");
-                });
-
+                socket.on('connect', () => console.log("Ofitsiant serverga ulandi"));
                 socket.on('status_updated', (data) => {
                     if (!data) return;
                     updateLocalTableStatus(data.orderId || data.tableNumber, data.status, data.isPrinted, data.isPaid);
                 });
-
                 socket.on('update_orders', (serverOrders) => {
                     if (Array.isArray(serverOrders)) {
                         localStorage.setItem('waiter_orders', JSON.stringify(serverOrders));
@@ -176,14 +174,8 @@
                         renderTables();
                     }
                 });
-
-                socket.on('call_waiter', (data) => {
-                    handleIncomingCall(data);
-                });
-
-                socket.on('table_called', (data) => {
-                    handleIncomingCall(data);
-                });
+                socket.on('call_waiter', (data) => handleIncomingCall(data));
+                socket.on('table_called', (data) => handleIncomingCall(data));
             } catch (e) {}
 
             initClock();
@@ -207,6 +199,7 @@
                 loadOrdersFromStorage();
                 loadCallsFromStorage();
                 renderTables();
+                updateWaiterStatsStorage();
             }, 1000);
         };
 
@@ -214,11 +207,9 @@
             if (!data) return;
             let tableNum = typeof data === 'object' ? (data.tableNumber || data.table || data.id) : data;
             if (!tableNum) return;
-
             if (!String(tableNum).includes('Stol') && !String(tableNum).includes('Xona')) {
                 tableNum = 'Stol #' + tableNum;
             }
-
             activeCalls[tableNum] = true;
             saveCallsToStorage();
             playNotificationSound();
@@ -305,7 +296,6 @@
                 localStorage.setItem('active_orders', JSON.stringify(waiterOrders));
                 localStorage.setItem('admin_orders', JSON.stringify(waiterOrders));
             }
-
             loadOrdersFromStorage();
             renderTables();
         }
@@ -315,11 +305,9 @@
             let waiterOrders = JSON.parse(localStorage.getItem('waiter_orders')) || [];
             let activeOrders = JSON.parse(localStorage.getItem('active_orders')) || [];
             let adminOrders = JSON.parse(localStorage.getItem('admin_orders')) || [];
-            
             let combined = [...waiterOrders, ...activeOrders, ...adminOrders];
             let uniqueMap = new Map();
 
-            combined.items = combined.items || [];
             combined.forEach(o => {
                 let key = String(o.tableNumber || o.id);
                 if (!key || key === 'undefined') return;
@@ -340,6 +328,7 @@
             
             let count = activeSection === 'zal' ? 16 : 12;
             let prefix = activeSection === 'zal' ? 'Stol #' : 'Xona #';
+            let tableLocks = JSON.parse(localStorage.getItem('waiter_table_locks')) || {};
 
             for (let i = 1; i <= count; i++) {
                 let tableKey = prefix + i;
@@ -347,6 +336,9 @@
                 let isCalling = activeCalls[tableKey]; 
                 let status = tableData ? (tableData.status || 'yangi') : 'bo\'sh';
                 let cardClass = 'table-card', statusText = 'BO\'SH', badgeClass = 'status-badge status-bosh';
+
+                let lockedBy = tableLocks[tableKey];
+                let lockIndicator = lockedBy ? `<div style="font-size:10px; color:#d9534f; font-weight:bold;">Band: ${lockedBy}</div>` : '';
 
                 if (isCalling) { 
                     cardClass += ' calling';
@@ -363,21 +355,27 @@
                     <div class="${cardClass}" onclick="openTableModal('${tableKey}')">
                         <div style="font-size: 24px; margin-bottom: 5px;">🪑</div>
                         <div style="font-weight: bold; font-size: 16px;">${tableKey}</div>
+                        ${lockIndicator}
                         <div class="${badgeClass}">${statusText}</div>
                     </div>`;
             }
         }
 
         function openTableModal(tableKey) {
+            let tableLocks = JSON.parse(localStorage.getItem('waiter_table_locks')) || {};
+            if (tableLocks[tableKey] && tableLocks[tableKey] !== activeWaiter && activeWaiter !== "Admin") {
+                alert(`Diqqat! Bu stol hozirda boshqa ofitsiant (${tableLocks[tableKey]}) tomonidan band qilingan!`);
+                return;
+            }
+
+            tableLocks[tableKey] = activeWaiter;
+            localStorage.setItem('waiter_table_locks', JSON.stringify(tableLocks));
+
             selectedTableNumber = tableKey;
             document.getElementById('modal-title').innerText = `${tableKey} Boshqaruvi`;
             
             let callBanner = document.getElementById('call-alert-banner');
-            if (activeCalls[tableKey]) {
-                callBanner.style.display = 'flex';
-            } else {
-                callBanner.style.display = 'none';
-            }
+            callBanner.style.display = activeCalls[tableKey] ? 'flex' : 'none';
 
             let existingOrder = tablesState[tableKey];
             currentCart = {};
@@ -400,7 +398,10 @@
             document.getElementById('modal-overlay').style.display = 'flex';
         }
 
-        function closeModal() { document.getElementById('modal-overlay').style.display = 'none'; }
+        function closeModal() { 
+            document.getElementById('modal-overlay').style.display = 'none'; 
+            renderTables();
+        }
         
         function changeGuests(delta) {
             currentGuestsCount = Math.max(1, currentGuestsCount + delta);
@@ -419,7 +420,7 @@
             let filtered = activeFilter === 'all' ? fullMenu : fullMenu.filter(m => m.category === activeFilter);
             
             if (filtered.length === 0) {
-                container.innerHTML = "<p style='padding:10px; color:#666;'>Bu kategoriyada taomlar topilmadi yoki menyu yuklanmagan.</p>";
+                container.innerHTML = "<p style='padding:10px; color:#666;'>Bu kategoriyada taomlar topilmadi.</p>";
                 return;
             }
 
@@ -487,6 +488,13 @@
                 isPrinted: existingOrder ? !!existingOrder.isPrinted : false
             };
 
+            // Update waiter stats
+            let orderTotal = items.reduce((sum, i) => sum + Number(i.sale_price || i.price || 0) * i.qty, 0);
+            waiterStats.ordersCount += 1;
+            waiterStats.totalSum += orderTotal;
+            waiterStats.tablesWorked.add(selectedTableNumber);
+            updateWaiterStatsStorage();
+
             saveAndBroadcastOrder(orderData);
             closeModal(); 
             loadOrdersFromStorage(); 
@@ -507,9 +515,7 @@
             localStorage.setItem('active_orders', JSON.stringify(waiterOrders));
             localStorage.setItem('admin_orders', JSON.stringify(waiterOrders));
 
-            if (socket) {
-                socket.emit('new_order', orderData);
-            }
+            if (socket) socket.emit('new_order', orderData);
         }
 
         function openReturnModal() {
@@ -562,12 +568,9 @@
             new QRCode(document.getElementById('qrcode-container'), { text: `Buyurtma: ${order.orderNumber} | Jami: ${total} so'm`, width: 128, height: 128 });
             
             order.isPrinted = true;
-            
             let waiterOrders = JSON.parse(localStorage.getItem('waiter_orders')) || [];
             let updatedOrders = waiterOrders.map(o => { 
-                if (String(o.tableNumber || o.id) === String(selectedTableNumber)) {
-                    o.isPrinted = true;
-                }
+                if (String(o.tableNumber || o.id) === String(selectedTableNumber)) o.isPrinted = true;
                 return o; 
             });
             
@@ -575,13 +578,7 @@
             localStorage.setItem('active_orders', JSON.stringify(updatedOrders));
             localStorage.setItem('admin_orders', JSON.stringify(updatedOrders));
 
-            if (tablesState[selectedTableNumber]) {
-                tablesState[selectedTableNumber].isPrinted = true;
-            }
-
-            if (socket) {
-                socket.emit('status_updated', { orderId: selectedTableNumber, tableNumber: selectedTableNumber, status: order.status, isPrinted: true });
-            }
+            if (socket) socket.emit('status_updated', { orderId: selectedTableNumber, tableNumber: selectedTableNumber, status: order.status, isPrinted: true });
             
             closeModal();
             loadOrdersFromStorage();
@@ -605,10 +602,20 @@
 
         function changeWaiterName() {
             let name = prompt("Ismingizni kiriting:", activeWaiter);
-            if (name) { activeWaiter = name; document.getElementById('logged-waiter-name').innerText = "Ofitsiant: " + activeWaiter; }
+            if (name) { 
+                activeWaiter = name; 
+                document.getElementById('logged-waiter-name').innerText = "Ofitsiant: " + activeWaiter; 
+                sessionStartTime = Date.now();
+                waiterStats = { ordersCount: 0, totalSum: 0, tablesWorked: new Set() };
+            }
         }
 
-        function initClock() { setInterval(() => { const now = new Date(); document.getElementById('realtime-clock').innerText = now.toLocaleDateString() + "\n" + now.toLocaleTimeString(); }, 1000); }
+        function initClock() { 
+            setInterval(() => { 
+                const now = new Date(); 
+                document.getElementById('realtime-clock').innerText = now.toLocaleDateString() + "\n" + now.toLocaleTimeString(); 
+            }, 1000); 
+        }
 
         function openHistory() { document.getElementById('history-modal').style.display = 'flex'; renderWaiterHistory(); }
         function closeHistory() { document.getElementById('history-modal').style.display = 'none'; }
@@ -626,10 +633,31 @@
                 let color = o.status === 'bekor_qilindi' ? '#d32f2f' : '#27ae60';
                 let text = o.status === 'bekor_qilindi' ? 'BEKOR QILINGAN' : 'TOLANDI';
                 return `<div style="border-bottom: 1px solid #eee; padding: 8px 0; display:flex; justify-content:space-between;">
-                    <span><b>№ ${o.orderNumber || '-'}</b> | ${o.tableNumber}</span>
+                    <span><b>№ ${o.orderNumber || '-'}</b> | ${o.tableNumber} | Vaqt: ${o.time || '-'}</span>
                     <span style="color: ${color}; font-weight: bold;">${text}</span>
                 </div>`;
             }).join('');
+        }
+
+        function loadWaiterStats() {
+            let savedStats = JSON.parse(localStorage.getItem('waiter_stats_summary')) || {};
+            if (savedStats[activeWaiter]) {
+                waiterStats.ordersCount = savedStats[activeWaiter].ordersCount || 0;
+                waiterStats.totalSum = savedStats[activeWaiter].totalSum || 0;
+                waiterStats.tablesWorked = new Set(savedStats[activeWaiter].tablesWorked || []);
+            }
+        }
+
+        function updateWaiterStatsStorage() {
+            let onlineTimeSec = Math.floor((Date.now() - sessionStartTime) / 1000);
+            let savedStats = JSON.parse(localStorage.getItem('waiter_stats_summary')) || {};
+            savedStats[activeWaiter] = {
+                onlineTime: onlineTimeSec,
+                ordersCount: waiterStats.ordersCount,
+                totalSum: waiterStats.totalSum,
+                tablesWorked: Array.from(waiterStats.tablesWorked)
+            };
+            localStorage.setItem('waiter_stats_summary', JSON.stringify(savedStats));
         }
     </script>
 </body>

@@ -8,6 +8,7 @@ try {
 
     socket.on('connect', () => {
         console.log("Admin Socket.io muvaffaqiyatli ulandi:", socket.id);
+        // Ulanish hosil bo'lganda qizil nuqtani yashilga o'tkazish
         const statusEl = document.getElementById('connection-status');
         if (statusEl) {
             statusEl.innerHTML = '<span style="color: green;">● Ulangan</span>';
@@ -22,6 +23,7 @@ try {
         }
     });
 
+    // Serverdan boshlang'ich buyurtmalar kelganda
     socket.on('init_orders', (orders) => {
         liveOrders = orders;
         localStorage.setItem('admin_orders', JSON.stringify(orders));
@@ -30,6 +32,7 @@ try {
         }
     });
 
+    // Buyurtmalar yangilanganda
     socket.on('update_orders', (orders) => {
         liveOrders = orders;
         localStorage.setItem('admin_orders', JSON.stringify(orders));
@@ -78,7 +81,7 @@ class AdminPanel {
   }
 
   changeOrderStatus(orderId, newStatus) {
-    // Serverga buyurtma holati o'zgarganini darhol xabar qilish
+    // Serverga buyurtma holati o'zgarganini darhol Socket.io orqali xabar qilish
     if (socket && socket.connected) {
         socket.emit('change_status', { orderId: Number(orderId), status: newStatus });
     }

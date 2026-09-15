@@ -72,7 +72,7 @@
                 <button onclick="closeModal()" style="border: none; background: none; font-size: 20px; cursor: pointer;">&times;</button>
             </div>
             
-            <!-- Chaqiruvni o'chirish tugmasi (agar stol chaqirayotgan bo'lsa ko'rinadi) -->
+            <!-- Chaqiruvni o'chirish tugmasi -->
             <div id="call-alert-banner" style="display: none; margin-top: 10px; background: #ffe0b2; padding: 10px; border-radius: 6px; justify-content: space-between; align-items: center;">
                 <span style="color: #e65100; font-weight: bold;">🔔 Bu stol ofitsiantni chaqirmoqda!</span>
                 <button onclick="clearTableCall()" style="padding: 5px 10px; background: #e65100; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">Chaqiruvni o'chirish</button>
@@ -151,13 +151,13 @@
         let currentCart = {};
         let activeFilter = 'all';
         let tablesState = {};
-        let activeCalls = {}; // Mijozlardan kelgan chaqiruvlarni saqlash uchun[cite: 8]
+        let activeCalls = {}; 
         let fullMenu = [];
 
         window.onload = function() {
             loadMenuFromAdmin();
             loadOrdersFromStorage();
-            loadCallsFromStorage(); //[cite: 8]
+            loadCallsFromStorage(); 
 
             try {
                 socket = io('https://oshxonachi-server.onrender.com');
@@ -179,51 +179,73 @@
                     }
                 });
 
-                // Mijoz tomonidan kelgan chaqiruvni qabul qilish[cite: 8]
+                // Mijoz tomonidan kelgan chaqiruvni to'g'ridan-to'g'ri qabul qilish
                 socket.on('call_waiter', (data) => {
-                    if (!data) return;
-                    let tableNum = data.tableNumber || data;
-                    
-                    activeCalls[tableNum] = true;
-                    saveCallsToStorage();
+                    handleIncomingCall(data);
+                });
 
-                    playNotificationSound(); //[cite: 8]
-
-                    alert(`🔔 Diqqat! ${tableNum} ofitsiantni chaqirmoqda!`);
-                    
-                    renderTables();
+                // Ba'zi serverlar 'table_called' yoki 'call' kabi nomlar bilan ham yuborishi mumkin
+                socket.on('table_called', (data) => {
+                    handleIncomingCall(data);
                 });
             } catch (e) {}
 
             initClock();
             renderTables();
 
+            // Boshqa oynalar yoki localStorage o'zgarganda sinxronlash
             window.addEventListener('storage', function(e) {
                 if(e.key === 'admin_menu') loadMenuFromAdmin();
                 if(['waiter_orders', 'active_orders', 'admin_orders', 'orders'].includes(e.key)) {
                     loadOrdersFromStorage(); 
                     renderTables();
                 }
-                if(e.key === 'waiter_calls') { //[cite: 8]
+                if(e.key === 'waiter_calls') { 
                     loadCallsFromStorage();
                     renderTables();
                 }
             });
 
+            // Har 1 sekundda localStorage va chaqiruvlarni yangilab turish (polling backup)
             setInterval(() => {
                 loadMenuFromAdmin();
                 loadOrdersFromStorage();
+                loadCallsFromStorage();
                 renderTables();
             }, 1000);
         };
 
-        function playNotificationSound() { //[cite: 8]
+        function handleIncomingCall(data) {
+            if (!data) return;
+            // Serverdan kelgan ma'lumot obyekt yoki to'g'ridan-to'g'ri stol raqami bo'lishi mumkin
+            let tableNum = typeof data === 'object' ? (data.tableNumber || data.table || data.id) : data;
+            if (!tableNum) return;
+
+            // Agar raqam raqam shaklida kelsa (masalan: 3), uni "Stol #3" formatiga o'tkazamiz
+            if (!String(tableNum).includes('Stol') && !String(tableNum).includes('Xona')) {
+                tableNum = 'Stol #' + tableNum;
+            }
+
+            activeCalls[tableNum] = true;
+            saveCallsToStorage();
+            playNotificationSound();
+
+            renderTables();
+
+            // Agar o'sha stolning modali ochiq bo'lsa, banneri chiqarish
+            if (selectedTableNumber === tableNum) {
+                let callBanner = document.getElementById('call-alert-banner');
+                if (callBanner) callBanner.style.display = 'flex';
+            }
+        }
+
+        function playNotificationSound() { 
             try {
                 let ctx = new (window.AudioContext || window.webkitAudioContext)();
                 let osc = ctx.createOscillator();
                 let gain = ctx.createGain();
                 osc.type = 'sine';
-                osc.frequency.value = 587.33; // D5 note
+                osc.frequency.value = 587.33; 
                 gain.gain.setValueAtTime(0.5, ctx.currentTime);
                 gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.8);
                 osc.connect(gain);
@@ -233,24 +255,23 @@
             } catch(e) {}
         }
 
-        function loadCallsFromStorage() { //[cite: 8]
+        function loadCallsFromStorage() { 
             let saved = localStorage.getItem('waiter_calls');
             if(saved) {
                 try { activeCalls = JSON.parse(saved); } catch(e) { activeCalls = {}; }
             }
         }
 
-        function saveCallsToStorage() { //[cite: 8]
+        function saveCallsToStorage() { 
             localStorage.setItem('waiter_calls', JSON.stringify(activeCalls));
         }
 
-        function clearTableCall() { //[cite: 8]
+        function clearTableCall() { 
             if(!selectedTableNumber) return;
             delete activeCalls[selectedTableNumber];
             saveCallsToStorage();
             document.getElementById('call-alert-banner').style.display = 'none';
             renderTables();
-            alert(`${selectedTableNumber} chaqiruvi bajarildi deb belgilandi.`);
         }
 
         function loadMenuFromAdmin() {
@@ -295,7 +316,6 @@
 
             loadOrdersFromStorage();
             renderTables();
-            if(document.getElementById('history-modal').style.display === 'flex') renderWaiterHistory();
         }
 
         function loadOrdersFromStorage() {
@@ -307,6 +327,7 @@
             let combined = [...waiterOrders, ...activeOrders, ...adminOrders];
             let uniqueMap = new Map();
 
+            combined.items = combined.items || [];
             combined.forEach(o => {
                 let key = String(o.tableNumber || o.id);
                 if (!key || key === 'undefined') return;
@@ -331,11 +352,11 @@
             for (let i = 1; i <= count; i++) {
                 let tableKey = prefix + i;
                 let tableData = tablesState[tableKey];
-                let isCalling = activeCalls[tableKey]; //[cite: 8]
+                let isCalling = activeCalls[tableKey]; 
                 let status = tableData ? (tableData.status || 'yangi') : 'bo\'sh';
                 let cardClass = 'table-card', statusText = 'BO\'SH', badgeClass = 'status-badge status-bosh';
 
-                if (isCalling) { //[cite: 8]
+                if (isCalling) { 
                     cardClass += ' calling';
                     statusText = '🔔 CHAQIRUV';
                     badgeClass = 'status-badge status-chaqiruv';
@@ -359,7 +380,6 @@
             selectedTableNumber = tableKey;
             document.getElementById('modal-title').innerText = `${tableKey} Boshqaruvi`;
             
-            // Chaqiruv bannerini tekshirish[cite: 8]
             let callBanner = document.getElementById('call-alert-banner');
             if (activeCalls[tableKey]) {
                 callBanner.style.display = 'flex';

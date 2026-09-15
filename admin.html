@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Restoran Boshqaruv Tizimi - Admin Paneli</title>
+    <!-- Tailwind CSS (Status badge va boshqa elementlar uchun) -->
+    <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
     <style>
@@ -13,7 +15,7 @@
         .header-left { display: flex; flex-direction: column; gap: 4px; }
         h1 { color: #0d47a1; font-size: 24px; }
         .live-clock-container { font-size: 13px; color: #555; font-weight: 500; display: flex; gap: 10px; align-items: center; }
-        .live-clock-container span { background: #e1f5fe; padding: 2px 8px; border-radius: 4px; color: #0288d1; font-weight: bold; }
+        .live-clock-container span.clock-badge { background: #e1f5fe; padding: 2px 8px; border-radius: 4px; color: #0288d1; font-weight: bold; }
         .nav-tabs { display: flex; gap: 10px; flex-wrap: wrap; }
         .tab-btn { padding: 8px 16px; border: none; background: #bbdefb; color: #0d47a1; font-weight: bold; border-radius: 6px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 6px; }
         .tab-btn.active, .tab-btn:hover { background: #0288d1; color: white; }
@@ -57,17 +59,21 @@
             <div class="header-left">
                 <h1>Restoran Admin Paneli</h1>
                 <div class="live-clock-container">
-                    <span>📅 <span id="live-date">--.--.----</span></span>
-                    <span>⏰ <span id="live-time">--:--:--</span></span>
+                    <span>📅 <span class="clock-badge" id="live-date">--.--.----</span></span>
+                    <span>⏰ <span class="clock-badge" id="live-time">--:--:--</span></span>
                 </div>
             </div>
-            <div class="nav-tabs">
-                <button class="tab-btn active" onclick="switchTab('orders', event)">Buyurtmalar</button>
-                <button class="tab-btn" onclick="switchTab('menu', event)">Menyu Boshqaruvi</button>
-                <button class="tab-btn" onclick="switchTab('warehouse', event)">Ombor</button>
-                <button class="tab-btn" onclick="switchTab('income', event)">Daromad</button>
-                <button class="tab-btn" onclick="switchTab('history', event)">Tarix</button>
-                <button class="tab-btn" onclick="switchTab('stats', event)">Statistika</button>
+            <div class="flex items-center gap-4">
+                <!-- Socket Ulanish Holati Badji (Sanbergan taklifidan qo'shildi) -->
+                <span id="connection-status" class="px-3 py-1 text-sm rounded-full bg-red-100 text-red-600 font-medium">Ulanmoqda...</span>
+                <div class="nav-tabs">
+                    <button class="tab-btn active" onclick="switchTab('orders', event)">Buyurtmalar</button>
+                    <button class="tab-btn" onclick="switchTab('menu', event)">Menyu Boshqaruvi</button>
+                    <button class="tab-btn" onclick="switchTab('warehouse', event)">Ombor</button>
+                    <button class="tab-btn" onclick="switchTab('income', event)">Daromad</button>
+                    <button class="tab-btn" onclick="switchTab('history', event)">Tarix</button>
+                    <button class="tab-btn" onclick="switchTab('stats', event)">Statistika</button>
+                </div>
             </div>
         </header>
 
@@ -233,6 +239,7 @@
         let currentPayingOrderId = null;
         let currentOrderTotalSum = 0;
         let socket = null;
+        const statusBadge = document.getElementById('connection-status');
 
         window.onload = function() {
             loadInitialData();
@@ -242,6 +249,18 @@
 
                 socket.on('connect', () => {
                     console.log("Admin serverga ulandi");
+                    if (statusBadge) {
+                        statusBadge.textContent = 'Ulangan';
+                        statusBadge.className = 'px-3 py-1 text-sm rounded-full bg-green-100 text-green-600 font-medium';
+                    }
+                });
+
+                socket.on('disconnect', () => {
+                    console.log("Server bilan aloqa uzildi");
+                    if (statusBadge) {
+                        statusBadge.textContent = 'Uzildi';
+                        statusBadge.className = 'px-3 py-1 text-sm rounded-full bg-red-100 text-red-600 font-medium';
+                    }
                 });
 
                 socket.on('new_order', (data) => {
@@ -425,7 +444,6 @@
                     warehouseDatabase = defaultWarehouse;
                     localStorage.setItem('admin_warehouse', JSON.stringify(warehouseDatabase));
                 } else {
-                    // Agar eski omborda guruh yoki boshqa elementlar yetishmasa, to'ldirib ketamiz
                     warehouseDatabase = storedWarehouse;
                 }
 
@@ -604,8 +622,18 @@
             const unit = document.getElementById('new-item-unit').value.trim();
             if (name && qty) {
                 let existing = warehouseDatabase.find(w => w.name.toLowerCase() === name.toLowerCase());
-                if (existing) { existing.quantity += qty; if(unit) existing.unit = unit; }
-                else { warehouseDatabase.push({ name, group: "Boshqa mahsulotlar", quantity: qty, unit: unit || 'dona' }); }
+                if (existing) { 
+                    existing.quantity += qty; 
+                    if(unit) existing.unit = unit; 
+                } else { 
+                    warehouseDatabase.push({ name, group: "Boshqa mahsulotlar", quantity: qty, unit: unit || 'dona' }); 
+                }
+                
+                // Agar socket ulangan bo'lsa, ma'lumotni serverga ham yuborish
+                if (socket && socket.connected) {
+                    socket.emit('add-product', { name, qty, price: 0 });
+                }
+
                 renderAll();
                 document.getElementById('new-item-name').value = '';
                 document.getElementById('new-item-qty').value = '';

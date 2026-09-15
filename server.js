@@ -26,15 +26,26 @@ const io = new Server(server, {
 app.use('/api/admin', require('./routes/admin.routes'));
 app.use('/api/waiter', require('./routes/waiter.routes'));
 
-// Xotiradagi vaqtinchalik buyurtmalar ro'yxati
+// Xotiradagi vaqtinchalik buyurtmalar va menyu ro'yxati
 let orders = [];
+let currentMenu = []; // Menyu ma'lumotlarini saqlash uchun
 
 // Socket.io real-vaqt mantiqi
 io.on('connection', (socket) => {
     console.log('Foydalanuvchi ulandi: ', socket.id);
 
-    // Barcha buyurtmalarni yangi ulangan panelga yuborish
+    // Barcha buyurtmalar va menyuni yangi ulangan panelga yuborish
     socket.emit('init_orders', orders);
+    socket.emit('init_menu', currentMenu);
+
+    // Admin menyuni o'zgartirganda yoki yangilaganda
+    socket.on('update_menu', (newMenu) => {
+        if (Array.isArray(newMenu)) {
+            currentMenu = newMenu;
+            // Barcha ulangan qurilmalarga (mijozlar va ofitsiantlarga) yangi menyuni tarqatish
+            io.emit('init_menu', currentMenu);
+        }
+    });
 
     // Yangi buyurtma kelganda yoki mavjud buyurtma yangilanganda
     socket.on('new_order', (orderData) => {

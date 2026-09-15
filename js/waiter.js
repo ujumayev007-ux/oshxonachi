@@ -1,23 +1,37 @@
 let tablesData = [];
-let ws = null;
+let socket = null;
 
-// Agar WebSocket server ishlatilsa ulanish, aks holda LocalStorage orqali sinxronizatsiya
+// Render'dagi backend manzilingiz
+const SERVER_URL = 'https://oshxonachi.onrender.com';
+
 try {
-    if (typeof SERVER_URL !== 'undefined') {
-        ws = new WebSocket(SERVER_URL);
-        ws.onmessage = (event) => {
-            const msg = JSON.parse(event.data);
-            if (msg.type === 'INIT_STATE' || msg.type === 'STATE_UPDATED') {
-                tablesData = msg.data.tables;
-                renderTables();
-            } else if (msg.type === 'WAITER_CALLED') {
-                showWaiterNotification(msg.tableNumber);
-                playAlertSound();
-            }
-        };
-    }
+    socket = io(SERVER_URL);
+
+    socket.on('connect', () => {
+        console.log("Socket.io muvaffaqiyatli ulandi:", socket.id);
+    });
+
+    socket.on('disconnect', () => {
+        console.log("Server bilan ulanish uzildi");
+    });
+
+    socket.on('INIT_STATE', (data) => {
+        tablesData = data.tables;
+        renderTables();
+    });
+
+    socket.on('STATE_UPDATED', (data) => {
+        tablesData = data.tables;
+        renderTables();
+    });
+
+    socket.on('WAITER_CALLED', (msg) => {
+        showWaiterNotification(msg.tableNumber);
+        playAlertSound();
+    });
+
 } catch (e) {
-    console.log("WebSocket ulanishda xatolik (LocalStorage rejimi ishlatilmoqda):", e);
+    console.log("Socket.io ulanishda xatolik:", e);
 }
 
 function renderTables() {

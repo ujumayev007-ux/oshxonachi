@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ofitsiant Paneli</title>
+    <title>Ofitsiant Paneli — Oshxonachi</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -85,14 +85,13 @@
             </div>
             <div style="margin-bottom: 10px;" id="menu-categories-tabs">
                 <button class="tab-btn active" onclick="filterModalMenu('all', event)">Barchasi</button>
-                <button class="tab-btn" onclick="filterModalMenu('Osh', event)">Osh</button>
-                <button class="tab-btn" onclick="filterModalMenu('Suyuq ovqatlar', event)">Suyuq ovqatlar</button>
-                <button class="tab-btn" onclick="filterModalMenu('Quyuq taomlar', event)">Quyuq taomlar</button>
-                <button class="tab-btn" onclick="filterModalMenu('Hamirli taomlar', event)">Hamirli taomlar</button>
-                <button class="tab-btn" onclick="filterModalMenu('Kaboblar', event)">Kaboblar</button>
-                <button class="tab-btn" onclick="filterModalMenu('Somsalar', event)">Somsalar</button>
-                <button class="tab-btn" onclick="filterModalMenu('Fast Food', event)">Fast Food</button>
-                <button class="tab-btn" onclick="filterModalMenu('Ichimliklar', event)">Ichimliklar</button>
+                <button class="tab-btn" onclick="filterModalMenu('osh', event)">Osh</button>
+                <button class="tab-btn" onclick="filterModalMenu('supli', event)">Sho'rvalar</button>
+                <button class="tab-btn" onclick="filterModalMenu('asosiy', event)">Asosiy taomlar</button>
+                <button class="tab-btn" onclick="filterModalMenu('hamirli', event)">Hamirli taomlar</button>
+                <button class="tab-btn" onclick="filterModalMenu('kabob', event)">Kaboblar</button>
+                <button class="tab-btn" onclick="filterModalMenu('somsa', event)">Somsalar</button>
+                <button class="tab-btn" onclick="filterModalMenu('fastfood', event)">Fast-food</button>
             </div>
             <div id="menu-selection-list" style="max-height: 250px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; border-radius: 6px;"></div>
             <div style="margin-top: 15px; background: #f9f9f9; padding: 10px; border-radius: 6px;" id="current-order-summary"></div>
@@ -178,7 +177,6 @@
                     }
                 });
 
-                // Mijoz chaqiruvini Socket orqali qabul qilish[cite: 11]
                 socket.on('call_waiter', (data) => {
                     handleIncomingCall(data);
                 });
@@ -197,9 +195,10 @@
                     loadOrdersFromStorage(); 
                     renderTables();
                 }
-                if(e.key === 'waiter_calls') { 
+                if(e.key === 'waiter_calls' || e.key === 'trigger_sync') { 
                     loadCallsFromStorage();
                     renderTables();
+                    playNotificationSound();
                 }
             });
 
@@ -223,7 +222,6 @@
             activeCalls[tableNum] = true;
             saveCallsToStorage();
             playNotificationSound();
-
             renderTables();
 
             if (selectedTableNumber === tableNum) {
@@ -257,6 +255,7 @@
 
         function saveCallsToStorage() { 
             localStorage.setItem('waiter_calls', JSON.stringify(activeCalls));
+            localStorage.setItem('trigger_sync', Date.now());
         }
 
         function clearTableCall() { 
@@ -339,7 +338,7 @@
             if (!grid) return;
             grid.innerHTML = '';
             
-            let count = activeSection === 'zal' ? 16 : 8;
+            let count = activeSection === 'zal' ? 16 : 12;
             let prefix = activeSection === 'zal' ? 'Stol #' : 'Xona #';
 
             for (let i = 1; i <= count; i++) {
@@ -600,7 +599,7 @@
             activeSection = sec;
             document.getElementById('folder-zal').classList.toggle('active', sec === 'zal');
             document.getElementById('folder-xonalar').classList.toggle('active', sec === 'xonalar');
-            document.getElementById('section-heading-title').innerText = sec === 'zal' ? 'Zal Stollari (16 ta)' : 'Alohida Xonalar (8 ta)';
+            document.getElementById('section-heading-title').innerText = sec === 'zal' ? 'Zal Stollari (16 ta)' : 'Alohida Xonalar (12 xona)';
             renderTables();
         }
 

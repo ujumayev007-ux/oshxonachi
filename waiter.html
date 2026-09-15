@@ -179,12 +179,11 @@
                     }
                 });
 
-                // Mijoz tomonidan kelgan chaqiruvni to'g'ridan-to'g'ri qabul qilish
+                // Mijoz tomonidan kelgan chaqiruvni to'g'ridan-to'g'ri qabul qilish[cite: 11]
                 socket.on('call_waiter', (data) => {
                     handleIncomingCall(data);
                 });
 
-                // Ba'zi serverlar 'table_called' yoki 'call' kabi nomlar bilan ham yuborishi mumkin
                 socket.on('table_called', (data) => {
                     handleIncomingCall(data);
                 });
@@ -193,7 +192,6 @@
             initClock();
             renderTables();
 
-            // Boshqa oynalar yoki localStorage o'zgarganda sinxronlash
             window.addEventListener('storage', function(e) {
                 if(e.key === 'admin_menu') loadMenuFromAdmin();
                 if(['waiter_orders', 'active_orders', 'admin_orders', 'orders'].includes(e.key)) {
@@ -206,7 +204,6 @@
                 }
             });
 
-            // Har 1 sekundda localStorage va chaqiruvlarni yangilab turish (polling backup)
             setInterval(() => {
                 loadMenuFromAdmin();
                 loadOrdersFromStorage();
@@ -217,11 +214,9 @@
 
         function handleIncomingCall(data) {
             if (!data) return;
-            // Serverdan kelgan ma'lumot obyekt yoki to'g'ridan-to'g'ri stol raqami bo'lishi mumkin
             let tableNum = typeof data === 'object' ? (data.tableNumber || data.table || data.id) : data;
             if (!tableNum) return;
 
-            // Agar raqam raqam shaklida kelsa (masalan: 3), uni "Stol #3" formatiga o'tkazamiz
             if (!String(tableNum).includes('Stol') && !String(tableNum).includes('Xona')) {
                 tableNum = 'Stol #' + tableNum;
             }
@@ -232,7 +227,6 @@
 
             renderTables();
 
-            // Agar o'sha stolning modali ochiq bo'lsa, banneri chiqarish
             if (selectedTableNumber === tableNum) {
                 let callBanner = document.getElementById('call-alert-banner');
                 if (callBanner) callBanner.style.display = 'flex';
@@ -584,7 +578,7 @@
             localStorage.setItem('admin_orders', JSON.stringify(updatedOrders));
 
             if (tablesState[selectedTableNumber]) {
-                tablesState[selectedTableNumber].isPrinted = true;
+                tablesState[selectedTablenumber].isPrinted = true;
             }
 
             if (socket) {

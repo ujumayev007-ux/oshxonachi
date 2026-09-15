@@ -81,7 +81,7 @@ class AdminPanel {
   }
 
   changeOrderStatus(orderId, newStatus) {
-    // Serverga buyurtma holati o'zgarganini xabar qilish
+    // Serverga buyurtma holati o'zgarganini darhol xabar qilish
     if (socket && socket.connected) {
         socket.emit('change_status', { orderId: Number(orderId), status: newStatus });
     }
@@ -92,8 +92,7 @@ class AdminPanel {
         o.status = newStatus;
       }
       return o;
-    }
-);
+    });
     localStorage.setItem('admin_orders', JSON.stringify(orders));
   }
 

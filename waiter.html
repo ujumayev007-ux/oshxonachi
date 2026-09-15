@@ -72,7 +72,6 @@
                 <button onclick="closeModal()" style="border: none; background: none; font-size: 20px; cursor: pointer;">&times;</button>
             </div>
             
-            <!-- Chaqiruvni o'chirish tugmasi -->
             <div id="call-alert-banner" style="display: none; margin-top: 10px; background: #ffe0b2; padding: 10px; border-radius: 6px; justify-content: space-between; align-items: center;">
                 <span style="color: #e65100; font-weight: bold;">🔔 Bu stol ofitsiantni chaqirmoqda!</span>
                 <button onclick="clearTableCall()" style="padding: 5px 10px; background: #e65100; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">Chaqiruvni o'chirish</button>
@@ -179,7 +178,7 @@
                     }
                 });
 
-                // Mijoz tomonidan kelgan chaqiruvni to'g'ridan-to'g'ri qabul qilish[cite: 11]
+                // Mijoz chaqiruvini Socket orqali qabul qilish[cite: 11]
                 socket.on('call_waiter', (data) => {
                     handleIncomingCall(data);
                 });
@@ -578,7 +577,7 @@
             localStorage.setItem('admin_orders', JSON.stringify(updatedOrders));
 
             if (tablesState[selectedTableNumber]) {
-                tablesState[selectedTablenumber].isPrinted = true;
+                tablesState[selectedTableNumber].isPrinted = true;
             }
 
             if (socket) {

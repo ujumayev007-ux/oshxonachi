@@ -106,7 +106,7 @@
         let customerCart = {};
         let currentWaiterModalSection = 'zal';
 
-        window.onload = function() {
+     window.onload = function() {
             loadMenuFromStorage();
 
             try {
@@ -119,6 +119,15 @@
 
                 socket.on('connect', () => {
                     console.log("Mijoz serverga ulandi!");
+                });
+
+                // Serverdan kelayotgan real vaqtdagi menyuni qabul qilish
+                socket.on('init_menu', (menuData) => {
+                    if (Array.isArray(menuData) && menuData.length > 0) {
+                        fullMenu = menuData;
+                        renderMenu();
+                        localStorage.setItem('admin_menu', JSON.stringify(menuData));
+                    }
                 });
 
                 socket.on('waiter_on_the_way', (data) => {
@@ -181,6 +190,30 @@
                 return;
             }
 
+            container.innerHTML = filtered.map(item => {
+                let price = Number(item.sale_price || item.external_price || item.price || 0);
+                let inCart = customerCart[item.id] ? customerCart[item.id].qty : 0;
+                let imgUrl = item.image || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c';
+
+                return `
+                    <div class="menu-card">
+                        <img src="${imgUrl}" alt="${item.name}">
+                        <div style="padding: 15px; display: flex; flex-direction: column; flex-grow: 1; justify-content: space-between;">
+                            <div>
+                                <h4 style="margin: 0 0 5px 0; font-size: 16px;">${item.name}</h4>
+                                <p style="margin: 0; color: #1976d2; font-weight: bold; font-size: 15px;">${price.toLocaleString()} so'm</p>
+                            </div>
+                            <div style="margin-top: 15px; display: flex; align-items: center; justify-content: space-between;">
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <button onclick="changeCart(${item.id}, -1)" style="padding: 4px 10px; background: #ddd; border: none; border-radius: 4px; font-weight: bold; cursor: pointer;">-</button>
+                                    <span style="font-weight: bold;">${inCart}</span>
+                                    <button onclick="changeCart(${item.id}, 1)" style="padding: 4px 10px; background: #1976d2; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer;">+</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>`;
+            }).join('');
+        }
             container.innerHTML = filtered.map(item => {
                 let price = Number(item.sale_price || item.external_price || item.price || 0);
                 let inCart = customerCart[item.id] ? customerCart[item.id].qty : 0;

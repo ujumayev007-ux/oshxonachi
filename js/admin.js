@@ -8,7 +8,6 @@ try {
 
     socket.on('connect', () => {
         console.log("Admin Socket.io muvaffaqiyatli ulandi:", socket.id);
-        // Ulanish hosil bo'lganda qizil nuqtani yashilga o'tkazish
         const statusEl = document.getElementById('connection-status');
         if (statusEl) {
             statusEl.innerHTML = '<span style="color: green;">● Ulangan</span>';
@@ -23,7 +22,6 @@ try {
         }
     });
 
-    // Serverdan boshlang'ich buyurtmalar kelganda
     socket.on('init_orders', (orders) => {
         liveOrders = orders;
         localStorage.setItem('admin_orders', JSON.stringify(orders));
@@ -32,7 +30,6 @@ try {
         }
     });
 
-    // Buyurtmalar yangilanganda
     socket.on('update_orders', (orders) => {
         liveOrders = orders;
         localStorage.setItem('admin_orders', JSON.stringify(orders));

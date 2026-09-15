@@ -1,4 +1,3 @@
-```javascript
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
@@ -64,9 +63,13 @@ io.on('connection', (socket) => {
         io.emit('update_orders', orders);
     });
 
-    // Ofitsiantni chaqirish hodisasi
+    // Ofitsiantni chaqirish hodisalari (barcha ulangan ofitsiantlarga broadcast qilinadi)
     socket.on('call_waiter', (data) => {
         io.emit('call_waiter', data);
+    });
+
+    socket.on('table_called', (data) => {
+        io.emit('table_called', data);
     });
 
     // Ofitsiant yo'lda ekanligi haqidagi hodisa
@@ -101,5 +104,3 @@ const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
     console.log(`Server ishga tushdi: http://localhost:${PORT}`);
 });
-
-```

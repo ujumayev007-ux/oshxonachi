@@ -278,9 +278,19 @@
             document.getElementById('waiter-modal').style.display = 'none';
         }
 
-        // Ofitsiantni chaqirish funksiyasi
+        // Ofitsiantni chaqirish funksiyasi (Index va Waiter o'rtasidagi lokal va server sinxronizatsiyasi qo'shildi)
         function callWaiter(tableNum) {
+            // Serverga xabar yuborish
             socket.emit('call_waiter', { tableNumber: tableNum });
+            socket.emit('table_called', { tableNumber: tableNum });
+
+            // LocalStorage orqali ham darhol sinxronlash (tarmoq kechikishini oldini olish uchun)
+            try {
+                let savedCalls = JSON.parse(localStorage.getItem('waiter_calls')) || {};
+                savedCalls[tableNum] = true;
+                localStorage.setItem('waiter_calls', JSON.stringify(savedCalls));
+            } catch(e) {}
+
             alert(`${tableNum} uchun ofitsiant chaqirildi!`);
             closeWaiterModal();
         }

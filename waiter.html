@@ -488,7 +488,6 @@
                 isPrinted: existingOrder ? !!existingOrder.isPrinted : false
             };
 
-            // Update waiter stats
             let orderTotal = items.reduce((sum, i) => sum + Number(i.sale_price || i.price || 0) * i.qty, 0);
             waiterStats.ordersCount += 1;
             waiterStats.totalSum += orderTotal;

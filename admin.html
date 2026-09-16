@@ -64,7 +64,7 @@
                 </div>
             </div>
             <div class="flex items-center gap-4">
-                <!-- Socket Ulanish Holati Badji (Sanbergan taklifidan qo'shildi) -->
+                <!-- Socket Ulanish Holati Badji -->
                 <span id="connection-status" class="px-3 py-1 text-sm rounded-full bg-red-100 text-red-600 font-medium">Ulanmoqda...</span>
                 <div class="nav-tabs">
                     <button class="tab-btn active" onclick="switchTab('orders', event)">Buyurtmalar</button>
@@ -629,7 +629,6 @@
                     warehouseDatabase.push({ name, group: "Boshqa mahsulotlar", quantity: qty, unit: unit || 'dona' }); 
                 }
                 
-                // Agar socket ulangan bo'lsa, ma'lumotni serverga ham yuborish
                 if (socket && socket.connected) {
                     socket.emit('add-product', { name, qty, price: 0 });
                 }

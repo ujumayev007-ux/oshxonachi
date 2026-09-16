@@ -488,6 +488,7 @@
                 isPrinted: existingOrder ? !!existingOrder.isPrinted : false
             };
 
+            // Update waiter stats
             let orderTotal = items.reduce((sum, i) => sum + Number(i.sale_price || i.price || 0) * i.qty, 0);
             waiterStats.ordersCount += 1;
             waiterStats.totalSum += orderTotal;
@@ -551,9 +552,6 @@
         function printCheck() {
             let order = tablesState[selectedTableNumber];
             if (!order) { alert("Avval buyurtmani yuboring!"); return; }
-
-            // Send the complete order before applying the printed state.
-            saveAndBroadcastOrder(order);
             
             let total = 0;
             let checkHTML = `<b>${order.tableNumber}</b> | № ${order.orderNumber}<br><hr style="margin:5px 0">`;
@@ -566,6 +564,9 @@
             checkHTML += `<hr style="margin:5px 0"><b>JAMI: ${total.toLocaleString()} so'm</b>`;
             
             document.getElementById('check-content-area').innerHTML = checkHTML;
+            document.getElementById('qrcode-container').innerHTML = "";
+            new QRCode(document.getElementById('qrcode-container'), { text: `Buyurtma: ${order.orderNumber} | Jami: ${total} so'm`, width: 128, height: 128 });
+            
             order.isPrinted = true;
             let waiterOrders = JSON.parse(localStorage.getItem('waiter_orders')) || [];
             let updatedOrders = waiterOrders.map(o => { 
@@ -577,13 +578,7 @@
             localStorage.setItem('active_orders', JSON.stringify(updatedOrders));
             localStorage.setItem('admin_orders', JSON.stringify(updatedOrders));
 
-            if (socket) socket.emit('status_updated', { ...order, orderId: selectedTableNumber, tableNumber: selectedTableNumber, status: order.status, isPrinted: true });
-
-            const qrContainer = document.getElementById('qrcode-container');
-            qrContainer.innerHTML = '';
-            if (typeof QRCode === 'function') {
-                new QRCode(qrContainer, { text: `Buyurtma: ${order.orderNumber} | Jami: ${total} so'm`, width: 128, height: 128 });
-            }
+            if (socket) socket.emit('status_updated', { orderId: selectedTableNumber, tableNumber: selectedTableNumber, status: order.status, isPrinted: true });
             
             closeModal();
             loadOrdersFromStorage();

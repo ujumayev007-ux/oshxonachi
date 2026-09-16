@@ -247,7 +247,23 @@
                 console.log("Ovoz chiqarishda xatolik:", e);
             }
         }
+        // 👇 SHU YERGA QO'YASIZ:
+        let callSoundInterval = null;
 
+        function startContinuousSound() {
+            if (callSoundInterval) return;
+            playNotificationSound();
+            callSoundInterval = setInterval(() => {
+                playNotificationSound();
+            }, 3000);
+        }
+
+        function stopContinuousSound() {
+            if (callSoundInterval) {
+                clearInterval(callSoundInterval);
+                callSoundInterval = null;
+            }
+        }
         function handleIncomingCall(data) {
             if (!data) return;
             let tableNum = typeof data === 'object' ? (data.tableNumber || data.table || data.id) : data;
@@ -257,7 +273,7 @@
             }
             activeCalls[tableNum] = true;
             saveCallsToStorage();
-            playNotificationSound(); // Signal chalinishi
+            startContinuousSound(); // ✅ Takrorlanuvchi ovozni shu yerda boshlaymiz
             renderTables();
 
             if (selectedTableNumber === tableNum) {
@@ -282,8 +298,13 @@
             if(!selectedTableNumber) return;
             delete activeCalls[selectedTableNumber];
             saveCallsToStorage();
+            stopContinuousSound(); // ✅ Ovozni to'xtatish
             document.getElementById('call-alert-banner').style.display = 'none';
             renderTables();
+        // ✅ Mijoz tomoniga ofitsiant javob bergani haqida signal yuborish
+            if (typeof socket !== 'undefined' && socket) {
+                socket.emit('waiter_responded', { tableNumber: selectedTableNumber, waiter: activeWaiter });
+            }
         }
 
         function loadMenuFromAdmin() {

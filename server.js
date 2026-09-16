@@ -74,6 +74,31 @@ io.on('connection', (socket) => {
         io.emit('update_orders', orders);
     });
 
+    // Waiter chek chiqarganda buyurtmaning chop etilgan holatini tarqatish
+    socket.on('status_updated', (orderData) => {
+        if (!orderData) return;
+
+        const orderKey = orderData.orderId || orderData.id || orderData.tableNumber || orderData.table;
+        const existingIndex = orders.findIndex(order =>
+            String(order.id) === String(orderKey) ||
+            String(order.tableNumber || order.table) === String(orderKey)
+        );
+
+        if (existingIndex !== -1) {
+            orders[existingIndex] = { ...orders[existingIndex], ...orderData };
+        } else {
+            orders.push({
+                ...orderData,
+                id: orderData.id || orderKey,
+                table: orderData.table || orderData.tableNumber,
+                status: orderData.status || 'yangi'
+            });
+        }
+
+        io.emit('status_updated', orderData);
+        io.emit('update_orders', orders);
+    });
+
     // Ofitsiantni chaqirish hodisalari (barcha ulangan ofitsiantlarga broadcast qilinadi)
     socket.on('call_waiter', (data) => {
         io.emit('call_waiter', data);

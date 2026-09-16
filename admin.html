@@ -607,7 +607,7 @@
             if(tabId === 'stats' && statsChartInstance) statsChartInstance.update();
         }
 
-        function renderAll() {
+   function renderAll() {
             renderMenu();
             renderWarehouse();
             renderOrders();
@@ -615,9 +615,10 @@
             renderHistory();
             updateStatsInfo();
             saveData();
-        // 👇 MANASHU JOYIGA QO'YASIZ:
             loadAdminReviews();
+            renderAdvancedStats(); // Statistika va ofitsiantlar hisobotini yangilash
         }
+
         function loadOrdersFromStorage() {
             try {
                 let waiterOrders = JSON.parse(localStorage.getItem('waiter_orders')) || [];
@@ -661,6 +662,66 @@
                 ordersDatabase.push(incomingData);
             }
             syncOrdersToStorage();
+        }
+
+        function renderAdvancedStats() {
+            // 1. Top 5 taomlarni hisoblash
+            let itemCounts = {};
+            if (typeof ordersDatabase !== 'undefined' && Array.isArray(ordersDatabase)) {
+                ordersDatabase.forEach(order => {
+                    if (order.items && Array.isArray(order.items)) {
+                        order.items.forEach(item => {
+                            let name = item.name;
+                            let qty = Number(item.qty || 1);
+                            itemCounts[name] = (itemCounts[name] || 0) + qty;
+                        });
+                    }
+                });
+            }
+
+            let sortedItems = Object.entries(itemCounts).sort((a, b) => b[1] - a[1]).slice(0, 5);
+            let topItemsListHtml = '';
+            
+            if (sortedItems.length > 0) {
+                sortedItems.forEach(([name, count], index) => {
+                    topItemsListHtml += `<li><b>${index + 1}. ${name}</b> — ${count} ta sotilgan</li>`;
+                });
+            } else {
+                topItemsListHtml = '<li>Hozircha sotuvlar mavjud emas</li>';
+            }
+            document.getElementById('top-items-list').innerHTML = topItemsListHtml;
+
+            // 2. Ofitsiantlar tushumini hisoblash
+            let waiterStats = {};
+            if (typeof ordersDatabase !== 'undefined' && Array.isArray(ordersDatabase)) {
+                ordersDatabase.forEach(order => {
+                    let waiterName = order.waiter || order.waiterName || 'Noma\'lum';
+                    let orderTotal = Number(order.total_price || order.total || 0);
+
+                    if (!waiterStats[waiterName]) {
+                        waiterStats[waiterName] = { count: 0, revenue: 0 };
+                    }
+                    waiterStats[waiterName].count += 1;
+                    waiterStats[waiterName].revenue += orderTotal;
+                });
+            }
+
+            let waitersBodyHtml = '';
+            let waiterEntries = Object.entries(waiterStats);
+
+            if (waiterEntries.length > 0) {
+                waiterEntries.forEach(([waiter, data]) => {
+                    waitersBodyHtml += `
+                        <tr style="border-bottom: 1px solid #f1f1f1;">
+                            <td style="padding: 6px;"><b>${waiter}</b></td>
+                            <td style="padding: 6px;">${data.count} ta</td>
+                            <td style="padding: 6px; color: #2e7d32; font-weight: bold;">${data.revenue.toLocaleString()} so'm</td>
+                        </tr>`;
+                });
+            } else {
+                waitersBodyHtml = `<tr><td colspan="3" style="padding: 8px; text-align: center;">Ma'lumot mavjud emas</td></tr>`;
+            }
+            document.getElementById('waiters-stats-body').innerHTML = waitersBodyHtml;
         }
 
         function renderMenu() {

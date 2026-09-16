@@ -551,6 +551,9 @@
         function printCheck() {
             let order = tablesState[selectedTableNumber];
             if (!order) { alert("Avval buyurtmani yuboring!"); return; }
+
+            // Send the complete order before applying the printed state.
+            saveAndBroadcastOrder(order);
             
             let total = 0;
             let checkHTML = `<b>${order.tableNumber}</b> | № ${order.orderNumber}<br><hr style="margin:5px 0">`;
@@ -577,7 +580,7 @@
             localStorage.setItem('active_orders', JSON.stringify(updatedOrders));
             localStorage.setItem('admin_orders', JSON.stringify(updatedOrders));
 
-            if (socket) socket.emit('status_updated', { orderId: selectedTableNumber, tableNumber: selectedTableNumber, status: order.status, isPrinted: true });
+            if (socket) socket.emit('status_updated', { ...order, orderId: selectedTableNumber, tableNumber: selectedTableNumber, status: order.status, isPrinted: true });
             
             closeModal();
             loadOrdersFromStorage();

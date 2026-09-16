@@ -333,9 +333,31 @@
         function submitReview() {
             let text = document.getElementById('review-text').value.trim();
             if(!text) { alert("Fikr matnini kiriting!"); return; }
+            
+            let reviewType = document.getElementById('review-type').value;
+            let reviewerName = reviewType === 'named' ? (document.getElementById('reviewer-name').value.trim() || 'Mehmon') : 'Anonim';
+            
+            let newReview = {
+                id: Date.now(),
+                name: reviewerName,
+                text: text,
+                time: new Date().toLocaleTimeString(),
+                date: new Date().toLocaleDateString()
+            };
+
+            let reviews = [];
+            try {
+                reviews = JSON.parse(localStorage.getItem('admin_reviews')) || [];
+            } catch(e) {}
+            
+            reviews.unshift(newReview);
+            localStorage.setItem('admin_reviews', JSON.stringify(reviews));
+
             alert("Fikr-mulohazangiz uchun rahmat!");
             document.getElementById('review-text').value = '';
             document.getElementById('reviewer-name').value = '';
+            document.getElementById('review-type').value = 'anonim';
+            document.getElementById('reviewer-name').style.display = 'none';
         }
     </script>
 </body>

@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Restoran Boshqaruv Tizimi - Admin Paneli</title>
-    <!-- Tailwind CSS va boshqa kutubxonalar -->
+    <!-- Tailwind CSS (Status badge va boshqa elementlar uchun) -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
@@ -57,13 +57,14 @@
     <div id="admin-main-content">
         <header>
             <div class="header-left">
-                <h1>Azamatjon & Umidjon Restarani — Admin Paneli</h1>
+                <h1>Restoran Admin Paneli</h1>
                 <div class="live-clock-container">
                     <span>📅 <span class="clock-badge" id="live-date">--.--.----</span></span>
                     <span>⏰ <span class="clock-badge" id="live-time">--:--:--</span></span>
                 </div>
             </div>
             <div class="flex items-center gap-4">
+                <!-- Socket Ulanish Holati Badji -->
                 <span id="connection-status" class="px-3 py-1 text-sm rounded-full bg-red-100 text-red-600 font-medium">Ulanmoqda...</span>
                 <div class="nav-tabs">
                     <button class="tab-btn active" onclick="switchTab('orders', event)">Buyurtmalar</button>
@@ -240,6 +241,34 @@
         let socket = null;
         const statusBadge = document.getElementById('connection-status');
 
+        // Suyuq ovqatlarning 1 ta standart porsiya (1.0) va 0.7 porsiya uchun masalliqlar bazasi
+        const liquidDishesRecipes = {
+            "Qaynatma shoʻrva": {
+                unit1: { "Mol goʻshti": 150, "Qoʻy goʻshti": 150, "Kartoshka": 100, "Qizil Sabzi": 40, "Piyoz": 20, "Tuz": 2.5, "Zira": 0.5, "Tuz qalampir (aralashma)": 0.5 },
+                unit07: { "Mol goʻshti": 105, "Qoʻy goʻshti": 105, "Kartoshka": 70, "Qizil Sabzi": 28, "Piyoz": 14, "Tuz": 1.8, "Zira": 0.3, "Tuz qalampir (aralashma)": 0.3 }
+            },
+            "Mastava": {
+                unit1: { "Mol goʻshti": 100, "Qoʻy goʻshti": 100, "Guruch (Suyuq)": 40, "Kartoshka": 50, "Qizil Sabzi": 30, "Piyoz": 30, "Pomidor": 20, "Tomat": 20, "Salat Yog'i": 15, "Paxta Yogʻi": 15, "Tuz": 2.5 },
+                unit07: { "Mol goʻshti": 70, "Qoʻy goʻshti": 70, "Guruch (Suyuq)": 28, "Kartoshka": 35, "Qizil Sabzi": 21, "Piyoz": 21, "Pomidor": 14, "Tomat": 14, "Salat Yog'i": 10, "Paxta Yogʻi": 10, "Tuz": 1.8 }
+            },
+            "Noʻxat shoʻrva (Moʻxaldak)": {
+                unit1: { "Qoʻy goʻshti": 150, "Noʻxat": 80, "Qizil Sabzi": 30, "Piyoz": 20, "Tuz": 2.5, "Zira": 0.5, "Tuz qalampir (aralashma)": 0.5 },
+                unit07: { "Qoʻy goʻshti": 105, "Noʻxat": 56, "Qizil Sabzi": 21, "Piyoz": 14, "Tuz": 1.8, "Zira": 0.3, "Tuz qalampir (aralashma)": 0.3 }
+            },
+            "Moshxorda": {
+                unit1: { "Mosh": 50, "Guruch (Suyuq)": 30, "Mol goʻshti": 80, "Qoʻy goʻshti": 80, "Qizil Sabzi": 30, "Kartoshka": 40, "Piyoz": 30, "Paxta Yogʻi": 15, "Salat Yog'i": 15, "Tuz": 2.5, "Zira": 0.5, "Tuz qalampir (aralashma)": 0.5 },
+                unit07: { "Mosh": 35, "Guruch (Suyuq)": 21, "Mol goʻshti": 56, "Qoʻy goʻshti": 56, "Qizil Sabzi": 21, "Kartoshka": 28, "Piyoz": 21, "Paxta Yogʻi": 10, "Salat Yog'i": 10, "Tuz": 1.8, "Zira": 0.3, "Tuz qalampir (aralashma)": 0.3 }
+            },
+            "Kalla-pacha": {
+                unit1: { "Mol goʻshti": 250, "Qoʻy goʻshti": 250, "Sarimsoqpiyoz": 5, "Piyoz": 10, "Tuz": 3, "Tuz qalampir (aralashma)": 0.5 },
+                unit07: { "Mol goʻshti": 175, "Qoʻy goʻshti": 175, "Sarimsoqpiyoz": 3.5, "Piyoz": 7, "Tuz": 2, "Tuz qalampir (aralashma)": 0.3 }
+            },
+            "Chuchvara shoʻrva": {
+                unit1: { "Chuchvara": 150, "Kartoshka": 30, "Qizil Sabzi": 15, "Piyoz": 15, "Sariyog'": 8, "Paxta Yogʻi": 8, "Tuz": 2.5 },
+                unit07: { "Chuchvara": 105, "Kartoshka": 21, "Qizil Sabzi": 10, "Piyoz": 10, "Sariyog'": 5, "Paxta Yogʻi": 5, "Tuz": 1.8 }
+            }
+        };
+
         window.onload = function() {
             loadInitialData();
             
@@ -374,7 +403,7 @@
                     { name: "Garnir", group: "Sut va sut mahsulotlari", quantity: 0, unit: "gramm (g)" },
                     { name: "Shakar", group: "Sut va sut mahsulotlari", quantity: 0, unit: "gramm (g)" },
                     { name: "Tuxum", group: "Sut va sut mahsulotlari", quantity: 0, unit: "dona" },
-                    // Ichimliklar to'liq ro'yxati
+                    // Ichimliklar
                     { name: "Coca-Cola (klassik) — 0.33L", group: "Ichimliklar", quantity: 0, unit: "dona" },
                     { name: "Coca-Cola (klassik) — 0.5L", group: "Ichimliklar", quantity: 0, unit: "dona" },
                     { name: "Coca-Cola (klassik) — 1L", group: "Ichimliklar", quantity: 0, unit: "dona" },
@@ -642,14 +671,31 @@
             }
         }
 
+        // Yangilangan ombordan ayirish mantiqi (Suyuq ovqatlar va porsiyalar uchun)
         function deductWarehouseForOrder(order) {
             if (!order || !order.items) return;
             order.items.forEach(item => {
                 let itemName = item.name;
-                let itemQty = Number(item.qty || 1);
-                let whItem = warehouseDatabase.find(w => w.name.toLowerCase() === itemName.toLowerCase());
-                if (whItem) {
-                    whItem.quantity = Math.max(0, whItem.quantity - itemQty);
+                let itemQty = Number(item.qty || 1); // Porsiya koeffitsiyenti (masalan: 1.0 yoki 0.7)
+                
+                // Agar taom retseptlar bazasida mavjud bo'lsa
+                if (liquidDishesRecipes[itemName]) {
+                    let recipeKey = (itemQty === 0.7) ? 'unit07' : 'unit1';
+                    let recipe = liquidDishesRecipes[itemName][recipeKey];
+                    
+                    for (let ingredientName in recipe) {
+                        let requiredAmount = recipe[ingredientName] * (itemQty === 0.7 ? 1 : itemQty); 
+                        let whItem = warehouseDatabase.find(w => w.name.toLowerCase() === ingredientName.toLowerCase());
+                        if (whItem) {
+                            whItem.quantity = Math.max(0, Number((whItem.quantity - requiredAmount).toFixed(2)));
+                        }
+                    }
+                } else {
+                    // Boshqa oddiy mahsulotlar uchun eski mantiq ishlaydi
+                    let whItem = warehouseDatabase.find(w => w.name.toLowerCase() === itemName.toLowerCase());
+                    if (whItem) {
+                        whItem.quantity = Math.max(0, whItem.quantity - itemQty);
+                    }
                 }
             });
             saveData();

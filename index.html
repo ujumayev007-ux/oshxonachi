@@ -2,140 +2,71 @@
 <html lang="uz">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Restoran Menyusi — Oshxonachi</title>
-    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
     <style>
-        body {
-            background-color: #e3f2fd;
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding-bottom: 80px;
-        }
-        header {
-            background: #1976d2;
-            color: white;
-            padding: 15px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .container {
-            max-width: 1200px;
-            margin: 20px auto;
-            padding: 0 15px;
-        }
-        /* Kategoriya tugmalari dizayni */
-        .category-tabs {
-            display: flex;
-            gap: 10px;
-            overflow-x: auto;
-            padding: 10px 0;
-            margin-bottom: 20px;
-            white-space: nowrap;
-        }
-        .tab-btn {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 20px;
-            background: #fff;
-            color: #333;
-            cursor: pointer;
-            font-weight: bold;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            transition: 0.3s;
-        }
-        .tab-btn.active {
-            background: #1976d2;
-            color: white;
-        }
-        .card {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-        .cart-floating {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: #ff9800;
-            color: white;
-            padding: 15px 25px;
-            border-radius: 30px;
-            cursor: pointer;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-            font-weight: bold;
-            z-index: 99;
-        }
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.5);
-            z-index: 100;
-            justify-content: center;
-            align-items: center;
-        }
-        .modal-content {
-            background: white;
-            padding: 25px;
-            border-radius: 10px;
-            width: 90%;
-            max-width: 400px;
-            max-height: 80vh;
-            overflow-y: auto;
-        }
-        .table-btn {
-            background: #fff;
-            border: 2px solid #1976d2;
-            padding: 10px;
-            border-radius: 8px;
-            cursor: pointer;
-            text-align: center;
-            font-weight: bold;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 5px;
-        }
-        .table-btn:hover {
-            background: #e3f2fd;
-        }
+        * { box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; margin: 0; background-color: #e3f2fd; padding-bottom: 90px; }
+        header { background: #1976d2; color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
+        .container { max-width: 1200px; margin: 20px auto; padding: 0 15px; }
+        .category-tabs { display: flex; gap: 10px; overflow-x: auto; padding: 10px 0; margin-bottom: 20px; white-space: nowrap; }
+        .tab-btn { padding: 10px 20px; border: none; border-radius: 20px; background: #fff; color: #333; cursor: pointer; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: 0.3s; }
+        .tab-btn.active { background: #1976d2; color: white; }
+        .card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .menu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 20px; }
+        .menu-card { background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: flex; flex-direction: column; justify-content: space-between; }
+        .menu-card img { width: 100%; height: 160px; object-fit: cover; }
+        .cart-floating { position: fixed; bottom: 20px; right: 20px; background: #ff9800; color: white; padding: 15px 25px; border-radius: 30px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.2); font-weight: bold; z-index: 99; display: flex; align-items: center; gap: 10px; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 100; justify-content: center; align-items: center; }
+        .modal-content { background: white; padding: 25px; border-radius: 10px; width: 90%; max-width: 400px; max-height: 80vh; overflow-y: auto; }
+        .table-btn { background: #fff; border: 2px solid #1976d2; padding: 12px; border-radius: 8px; cursor: pointer; text-align: center; font-weight: bold; display: flex; flex-direction: column; align-items: center; gap: 5px; transition: 0.2s; }
+        .table-btn:hover { background: #e3f2fd; }
+        #waiter-status-banner { display: none; position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #27ae60; color: white; padding: 12px 25px; border-radius: 8px; font-weight: bold; box-shadow: 0 4px 12px rgba(0,0,0,0.2); z-index: 2000; }
     </style>
 </head>
 <body>
+
+    <div id="waiter-status-banner">Ofitsiant sizning xabaringizni oldi![cite: 9, 10]</div>
+    
     <header>
-        <h2>Restoran Menyusi</h2>
-        <button onclick="openWaiterModal()" style="background: #ff5722; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-weight: bold;">🔔 Ofitsantni chaqirish</button>
+        <h2 style="margin: 0; font-size: 20px;">Restoran Menyusi</h2>
+        <button onclick="openWaiterModal()" style="background: #ff5722; color: white; border: none; padding: 10px 15px; border-radius: 8px; cursor: pointer; font-weight: bold;">🔔 Ofitsiantni chaqirish</button>
     </header>
 
     <div class="container">
-        
-        <!-- Kategoriya tugmalari qo'shildi -->
-        <div class="category-tabs">
-            <button class="tab-btn active" onclick="filterMenu('all', event)">Barchasi</button>
-            <button class="tab-btn" onclick="filterMenu('osh', event)">Oshlar</button>
-            <button class="tab-btn" onclick="filterMenu('supli', event)">Sho'rvalar</button>
-            <button class="tab-btn" onclick="filterMenu('asosiy', event)">Asosiy taomlar</button>
-            <button class="tab-btn" onclick="filterMenu('hamirli', event)">Hamirli taomlar</button>
-            <button class="tab-btn" onclick="filterMenu('kabob', event)">Kaboblar</button>
-            <button class="tab-btn" onclick="filterMenu('somsa', event)">Somsalar</button>
-            <button class="tab-btn" onclick="filterMenu('fastfood', event)">Fast-food</button>
+        <!-- Qidiruv paneli -->
+        <div style="margin-bottom: 20px;">
+            <input type="text" id="search-input" placeholder="Taomlarni qidirish..." oninput="filterMenu()" style="width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 14px; outline: none;">
         </div>
 
-        <div id="menu-container" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px;">
-            <!-- Taomlar rasmlari va plus/minus tugmalari bilan dinamik chiqadi -->
+        <!-- Kategoriya tugmalari -->
+        <div class="category-tabs" id="category-tabs-container">
+            <button class="tab-btn active" onclick="setCategory('all', event)">Barchasi</button>
+            <button class="tab-btn" onclick="setCategory('Osh', event)">Osh</button>
+            <button class="tab-btn" onclick="setCategory('Suyuq ovqatlar', event)">Suyuq ovqatlar</button>
+            <button class="tab-btn" onclick="setCategory('Quyuq taomlar', event)">Quyuq taomlar</button>
+            <button class="tab-btn" onclick="setCategory('Hamirli taomlar', event)">Hamirli taomlar</button>
+            <button class="tab-btn" onclick="setCategory('Kaboblar', event)">Kaboblar</button>
+            <button class="tab-btn" onclick="setCategory('Somsalar', event)">Somsalar</button>
+            <button class="tab-btn" onclick="setCategory('Fast Food', event)">Fast Food</button>
+            <button class="tab-btn" onclick="setCategory('Ichimliklar', event)">Ichimliklar</button>
         </div>
 
+        <!-- Menyu kartochkalari -->
+        <div id="menu-container" class="menu-grid"></div>
+
+        <!-- Otziv qoldirish -->
         <div style="margin-top: 40px;" class="card">
-            <h3>Fikr-mulohaza (Otziv) qoldirish</h3>
-            <select id="review-type" onchange="toggleNameInput()" style="width:100%; padding: 8px; margin: 5px 0;">
+            <h3 style="margin-top: 0;">Fikr-mulohaza (Otziv) qoldirish</h3>
+            <select id="review-type" onchange="toggleNameInput()" style="width:100%; padding: 10px; margin: 8px 0; border: 1px solid #ccc; border-radius: 6px;">
                 <option value="anonim">Anonim qolsin</option>
                 <option value="named">Ism-sharifimni yozaman</option>
             </select>
-            <input type="text" id="reviewer-name" placeholder="Ismingiz" style="padding: 8px; margin: 5px 0; width: 100%; display:none; box-sizing: border-box;">
-            <textarea id="review-text" placeholder="Fikr va taklifingizni yozing..." style="width:100%; padding: 8px; margin: 5px 0; box-sizing: border-box;"></textarea>
-            <button onclick="submitReview()" style="background: #1976d2; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;">Yuborish</button>
+            <input type="text" id="reviewer-name" placeholder="Ismingiz" style="padding: 10px; margin: 8px 0; width: 100%; display:none; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box;">
+            <textarea id="review-text" placeholder="Fikr va taklifingizni yozing..." style="width:100%; padding: 10px; margin: 8px 0; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; height: 80px;"></textarea>
+            <button onclick="submitReview()" style="background: #1976d2; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold;">Yuborish</button>
         </div>
     </div>
 
@@ -147,28 +78,273 @@
     <!-- Savatcha modali -->
     <div id="cart-modal" class="modal">
         <div class="modal-content">
-            <h3>Tanlangan mahsulotlar</h3>
-            <div id="cart-items-list" style="margin: 15px 0; max-height: 200px; overflow-y: auto;">
-                <!-- Tanlangan mahsulotlar ro'yxati -->
-            </div>
+            <h3 style="margin-top: 0;">Tanlangan mahsulotlar</h3>
+            <div id="cart-items-list" style="margin: 15px 0; max-height: 220px; overflow-y: auto;"></div>
             <p><b>Umumiy summa: <span id="modal-cart-total">0</span> so'm</b></p>
             <p style="font-size: 11px; color: #666;">* Bu yerda faqat sizning shaxsiy hisob-kitobingiz ko'rsatiladi.</p>
-            <button onclick="closeCartModal()" style="background: #f44336; color: white; border: none; padding: 10px; width: 100%; border-radius: 5px; cursor: pointer; margin-top: 10px;">Yopish</button>
+            <button onclick="closeCartModal()" style="background: #f44336; color: white; border: none; padding: 10px; width: 100%; border-radius: 6px; cursor: pointer; margin-top: 10px; font-weight: bold;">Yopish</button>
         </div>
     </div>
 
-    <!-- Ofitsant chaqirish modali -->
+    <!-- Ofitsiant chaqirish modali -->
     <div id="waiter-modal" class="modal">
         <div class="modal-content">
-            <h3>Stol raqamingizni tanlang:</h3>
-            <div id="tables-list" style="display:grid; grid-template-columns: repeat(3, 1fr); gap:10px; margin-top:15px;">
-                <!-- Stol rasmlari dinamik chiqadi -->
+            <h3 style="margin-top: 0;">Stol yoki xonani tanlang:</h3>
+            <div style="display: flex; gap: 10px; margin-top: 10px;">
+                <button id="modal-tab-zal" class="tab-btn active" onclick="switchWaiterModalSection('zal')" style="flex:1; padding: 8px;">Zal (16 stol)</button>
+                <button id="modal-tab-xonalar" class="tab-btn" onclick="switchWaiterModalSection('xonalar')" style="flex:1; padding: 8px;">Xonalar (12 xona)</button>
             </div>
-            <button onclick="closeWaiterModal()" style="margin-top:15px; background:#f44336; color: white; border: none; padding: 10px; width: 100%; border-radius: 5px; cursor: pointer;">Yopish</button>
+            <div id="tables-list" style="display:grid; grid-template-columns: repeat(3, 1fr); gap:10px; margin-top:15px; max-height: 250px; overflow-y: auto;"></div>
+            <button onclick="closeWaiterModal()" style="margin-top:15px; background:#f44336; color: white; border: none; padding: 10px; width: 100%; border-radius: 6px; cursor: pointer; font-weight: bold;">Yopish</button>
         </div>
     </div>
 
-    <script src="js/config.js"></script>
-    <script src="js/customer.js"></script>
+    <script>
+        let socket = null;
+        let fullMenu = [];
+        let currentCategory = 'all';
+        let customerCart = {};
+        let currentWaiterModalSection = 'zal';
+
+        window.onload = function() {
+            loadMenuFromStorage();
+
+            try {
+                socket = io('https://oshxonachi-server.onrender.com', {
+                    reconnection: true,
+                    reconnectionAttempts: 20,
+                    reconnectionDelay: 1000,
+                    timeout: 30000
+                });
+
+                socket.on('connect', () => {
+                    console.log("Mijoz serverga ulandi!");[cite: 9, 10]
+                });
+
+                socket.on('init_menu', (menuData) => {
+                    if (Array.isArray(menuData) && menuData.length > 0) {
+                        fullMenu = menuData;
+                        renderMenu();
+                        localStorage.setItem('admin_menu', JSON.stringify(menuData));
+                    }
+                });
+
+                socket.on('waiter_on_the_way', (data) => {
+                    const banner = document.getElementById('waiter-status-banner');
+                    banner.style.display = 'block';
+                    setTimeout(() => { banner.style.display = 'none'; }, 5000);
+                });
+            } catch(e) {}
+
+            renderMenu();
+            updateCartUI();
+
+            window.addEventListener('storage', function(e) {
+                if(e.key === 'admin_menu') {
+                    loadMenuFromStorage();
+                    renderMenu();
+                }
+            });
+
+            setInterval(loadMenuFromStorage, 2000);
+        };
+
+        function loadMenuFromStorage() {
+            let saved = localStorage.getItem('admin_menu');
+            if(saved) {
+                try {
+                    let parsed = JSON.parse(saved);
+                    if(Array.isArray(parsed) && parsed.length > 0) {
+                        fullMenu = parsed;
+                        renderMenu();
+                    }
+                } catch(e) {}
+            }
+        }
+
+        function setCategory(category, evt) {
+            currentCategory = category;
+            document.querySelectorAll('.category-tabs .tab-btn').forEach(b => b.classList.remove('active'));
+            if(evt) evt.target.classList.add('active');
+            renderMenu();
+        }
+
+        function filterMenu() {
+            renderMenu();
+        }
+
+        function renderMenu() {
+            const container = document.getElementById('menu-container');
+            const query = (document.getElementById('search-input').value || "").toLowerCase();
+
+            let filtered = fullMenu.filter(m => {
+                if (m.is_visible === false || m.is_visible === "false") return false;
+                let matchesCategory = (currentCategory === 'all' || m.category === currentCategory);
+                let matchesQuery = m.name.toLowerCase().includes(query);
+                return matchesCategory && matchesQuery;
+            });
+
+            if (filtered.length === 0) {
+                container.innerHTML = "<p style='grid-column: 1/-1; text-align: center; color: #666;'>Taomlar topilmadi.</p>";
+                return;
+            }
+
+            container.innerHTML = filtered.map(item => {
+                let price = Number(item.sale_price || item.external_price || item.price || 0);
+                let inCart = customerCart[item.id] ? customerCart[item.id].qty : 0;
+                let imgUrl = item.image || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c';
+
+                return `
+                    <div class="menu-card">
+                        <img src="${imgUrl}" alt="${item.name}">
+                        <div style="padding: 15px; display: flex; flex-direction: column; flex-grow: 1; justify-content: space-between;">
+                            <div>
+                                <h4 style="margin: 0 0 5px 0; font-size: 16px;">${item.name}</h4>
+                                <p style="margin: 0; color: #1976d2; font-weight: bold; font-size: 15px;">${price.toLocaleString()} so'm</p>
+                            </div>
+                            <div style="margin-top: 15px; display: flex; align-items: center; justify-content: space-between;">
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <button onclick="changeCart(${item.id}, -1)" style="padding: 4px 10px; background: #ddd; border: none; border-radius: 4px; font-weight: bold; cursor: pointer;">-</button>
+                                    <span style="font-weight: bold;">${inCart}</span>
+                                    <button onclick="changeCart(${item.id}, 1)" style="padding: 4px 10px; background: #1976d2; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer;">+</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>`;
+            }).join('');
+        }
+
+        function changeCart(itemId, delta) {
+            let item = fullMenu.find(m => m.id === itemId);
+            if (!item) return;
+            let price = Number(item.sale_price || item.external_price || item.price || 0);
+
+            if (!customerCart[itemId]) {
+                customerCart[itemId] = { ...item, price: price, qty: 0 };
+            }
+            customerCart[itemId].qty += delta;
+            if (customerCart[itemId].qty <= 0) {
+                delete customerCart[itemId];
+            }
+
+            renderMenu();
+            updateCartUI();
+        }
+
+        function updateCartUI() {
+            let items = Object.values(customerCart);
+            let totalCount = 0;
+            let totalPrice = 0;
+
+            items.forEach(i => {
+                totalCount += i.qty;
+                totalPrice += (Number(i.price || 0) * i.qty);
+            });
+
+            document.getElementById('cart-count').innerText = totalCount;
+            document.getElementById('cart-total').innerText = totalPrice.toLocaleString();
+            document.getElementById('modal-cart-total').innerText = totalPrice.toLocaleString();
+        }
+
+        function openCartModal() {
+            const list = document.getElementById('cart-items-list');
+            let items = Object.values(customerCart);
+
+            if (items.length === 0) {
+                list.innerHTML = "<p style='color: #666;'>Savatchangiz bo'sh.</p>";
+            } else {
+                list.innerHTML = items.map(i => `
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 6px;">
+                        <span>${i.name} x ${i.qty}</span>
+                        <b>${(i.price * i.qty).toLocaleString()} so'm</b>
+                    </div>
+                `).join('');
+            }
+            document.getElementById('cart-modal').style.display = 'flex';
+        }
+
+        function closeCartModal() {
+            document.getElementById('cart-modal').style.display = 'none';
+        }
+
+        function openWaiterModal() {
+            currentWaiterModalSection = 'zal';
+            updateWaiterModalTabs();
+            renderWaiterModalItems();
+            document.getElementById('waiter-modal').style.display = 'flex';
+        }
+
+        function switchWaiterModalSection(sec) {
+            currentWaiterModalSection = sec;
+            updateWaiterModalTabs();
+            renderWaiterModalItems();
+        }
+
+        function updateWaiterModalTabs() {
+            let zalBtn = document.getElementById('modal-tab-zal');
+            let xonalarBtn = document.getElementById('modal-tab-xonalar');
+            if(currentWaiterModalSection === 'zal') {
+                zalBtn.className = 'tab-btn active'; zalBtn.style.background = '#1976d2'; zalBtn.style.color = 'white';
+                xonalarBtn.className = 'tab-btn'; xonalarBtn.style.background = '#fff'; xonalarBtn.style.color = '#333';
+            } else {
+                xonalarBtn.className = 'tab-btn active'; xonalarBtn.style.background = '#1976d2'; xonalarBtn.style.color = 'white';
+                zalBtn.className = 'tab-btn'; zalBtn.style.background = '#fff'; zalBtn.style.color = '#333';
+            }
+        }
+
+        function renderWaiterModalItems() {
+            const list = document.getElementById('tables-list');
+            list.innerHTML = '';
+            let count = currentWaiterModalSection === 'zal' ? 16 : 12;
+            let prefix = currentWaiterModalSection === 'zal' ? 'Stol #' : 'Xona #';
+            let icon = currentWaiterModalSection === 'zal' ? '🪑' : '🚪';
+
+            for(let i=1; i<=count; i++) {
+                let name = prefix + i;
+                list.innerHTML += `
+                    <button class="table-btn" onclick="callWaiter('${name}')">
+                        <span style="font-size: 20px;">${icon}</span>
+                        <span>${name}</span>
+                    </button>
+                `;
+            }
+        }
+
+        function closeWaiterModal() {
+            document.getElementById('waiter-modal').style.display = 'none';
+        }
+
+        function callWaiter(tableNum) {
+            try {
+                if(socket) {
+                    socket.emit('call_waiter', { tableNumber: tableNum });
+                    socket.emit('table_called', { tableNumber: tableNum });
+                }
+            } catch(e) {}
+
+            try {
+                let savedCalls = JSON.parse(localStorage.getItem('waiter_calls')) || {};
+                savedCalls[tableNum] = { time: new Date().toLocaleTimeString(), timestamp: Date.now() };
+                localStorage.setItem('waiter_calls', JSON.stringify(savedCalls));
+                localStorage.setItem('trigger_sync', Date.now());
+            } catch(e) {}
+
+            alert(`${tableNum} uchun ofitsiant chaqirildi!`);
+            closeWaiterModal();
+        }
+
+        function toggleNameInput() {
+            let type = document.getElementById('review-type').value;
+            document.getElementById('reviewer-name').style.display = (type === 'named') ? 'block' : 'none';
+        }
+
+        function submitReview() {
+            let text = document.getElementById('review-text').value.trim();
+            if(!text) { alert("Fikr matnini kiriting!"); return; }
+            alert("Fikr-mulohazangiz uchun rahmat!");
+            document.getElementById('review-text').value = '';
+            document.getElementById('reviewer-name').value = '';
+        }
+    </script>
 </body>
 </html>

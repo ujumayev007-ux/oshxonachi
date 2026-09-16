@@ -1,3 +1,50 @@
+// Render'dagi backend manzilingiz
+const SERVER_URL = 'https://oshxonachi.onrender.com';
+let socket = null;
+let liveOrders = [];
+
+try {
+    socket = io(SERVER_URL);
+
+    socket.on('connect', () => {
+        console.log("Admin Socket.io muvaffaqiyatli ulandi:", socket.id);
+        // Ulanish hosil bo'lganda qizil nuqtani yashilga o'tkazish
+        const statusEl = document.getElementById('connection-status');
+        if (statusEl) {
+            statusEl.innerHTML = '<span style="color: green;">● Ulangan</span>';
+        }
+    });
+
+    socket.on('disconnect', () => {
+        console.log("Admin server bilan ulanish uzildi");
+        const statusEl = document.getElementById('connection-status');
+        if (statusEl) {
+            statusEl.innerHTML = '<span style="color: red;">● Ulanmoqda...</span>';
+        }
+    });
+
+    // Serverdan boshlang'ich buyurtmalar kelganda
+    socket.on('init_orders', (orders) => {
+        liveOrders = orders;
+        localStorage.setItem('admin_orders', JSON.stringify(orders));
+        if (typeof renderOrders === 'function') {
+            renderOrders(orders);
+        }
+    });
+
+    // Buyurtmalar yangilanganda
+    socket.on('update_orders', (orders) => {
+        liveOrders = orders;
+        localStorage.setItem('admin_orders', JSON.stringify(orders));
+        if (typeof renderOrders === 'function') {
+            renderOrders(orders);
+        }
+    });
+
+} catch (e) {
+    console.log("Admin Socket.io xatoligi:", e);
+}
+
 class AdminPanel {
   constructor() {
     this.menu = JSON.parse(localStorage.getItem('admin_menu')) || [];
@@ -34,6 +81,11 @@ class AdminPanel {
   }
 
   changeOrderStatus(orderId, newStatus) {
+    // Serverga buyurtma holati o'zgarganini darhol Socket.io orqali xabar qilish
+    if (socket && socket.connected) {
+        socket.emit('change_status', { orderId: Number(orderId), status: newStatus });
+    }
+
     let orders = JSON.parse(localStorage.getItem('admin_orders')) || [];
     orders = orders.map(o => {
       if (String(o.id) === String(orderId) || String(o.tableNumber) === String(orderId)) {

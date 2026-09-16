@@ -2,88 +2,96 @@
 <html lang="uz">
 <head>
     <meta charset="UTF-8">
-    <title>Ofitsiant Paneli</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 20px; background: #f4f4f9; }
-        .container { max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .order-card { background: #fff3cd; border: 1px solid #ffeeba; padding: 15px; margin-bottom: 10px; border-radius: 5px; }
-        .status-qabul { color: #856404; font-weight: bold; }
-        .status-jarayonda { color: #0c5460; font-weight: bold; }
-        .status-tayyor { color: #155724; font-weight: bold; }
-        input, button { padding: 10px; margin: 5px 0; width: 100%; box-sizing: border-box; }
-        button { background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; }
-        button:hover { background: #218838; }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ofitsant Paneli - Menyu</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="/socket.io/socket.io.js"></script>
 </head>
-<body>
-    <div class="container">
-        <h2>Ofitsiant Paneli - Buyurtma berish</h2>
-        <div>
-            <input type="text" id="tableNum" placeholder="Stol raqami (masalan: 4-stol)">
-            <input type="text" id="orderItems" placeholder="Buyurtma nomi (masalan: Osh, Non)">
-            <button id="sendOrderBtn">Buyurtmani yuborish</button>
+<body class="bg-gray-100 min-h-screen p-4 md:p-6">
+    <div class="max-w-7xl mx-auto">
+        <header class="flex justify-between items-center mb-8 bg-white p-4 rounded-xl shadow">
+            <h1 class="text-2xl md:text-3xl font-bold text-gray-800">🍽️ Ofitsant Menyu Paneli</h1>
+            <span class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-semibold">Online (Sinxron)</span>
+        </header>
+
+        <!-- Kategoriya filterlari -->
+        <div id="category-filters" class="flex flex-wrap gap-2 mb-6">
+            <button onclick="filterCategory('Barchasi')" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium transition hover:bg-blue-700 active-filter">Barchasi</button>
+            <button onclick="filterCategory('Osh')" class="px-4 py-2 bg-white text-gray-700 rounded-lg text-sm font-medium shadow hover:bg-gray-50">Osh</button>
+            <button onclick="filterCategory('Suyuq ovqatlar')" class="px-4 py-2 bg-white text-gray-700 rounded-lg text-sm font-medium shadow hover:bg-gray-50">Suyuq ovqatlar</button>
+            <button onclick="filterCategory('Quyuq taomlar')" class="px-4 py-2 bg-white text-gray-700 rounded-lg text-sm font-medium shadow hover:bg-gray-50">Quyuq taomlar</button>
+            <button onclick="filterCategory('Hamirli taomlar')" class="px-4 py-2 bg-white text-gray-700 rounded-lg text-sm font-medium shadow hover:bg-gray-50">Hamirli taomlar</button>
+            <button onclick="filterCategory('Kaboblar')" class="px-4 py-2 bg-white text-gray-700 rounded-lg text-sm font-medium shadow hover:bg-gray-50">Kaboblar</button>
+            <button onclick="filterCategory('Somsalar')" class="px-4 py-2 bg-white text-gray-700 rounded-lg text-sm font-medium shadow hover:bg-gray-50">Somsalar</button>
+            <button onclick="filterCategory('Fast Food')" class="px-4 py-2 bg-white text-gray-700 rounded-lg text-sm font-medium shadow hover:bg-gray-50">Fast Food</button>
+            <button onclick="filterCategory('Ichimliklar')" class="px-4 py-2 bg-white text-gray-700 rounded-lg text-sm font-medium shadow hover:bg-gray-50">Ichimliklar</button>
         </div>
 
-        <h3>Mening buyurtmalarim va ularning holati</h3>
-        <div id="waiterOrdersList"></div>
+        <!-- Mahsulotlar ro'yxati -->
+        <div id="waiter-menu" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            <!-- Dinamik elementlar yuklanadi -->
+        </div>
     </div>
 
-    <!-- Socket.io kutubxonasi -->
-    <script src="/socket.io/socket.io.js"></script>
     <script>
         const socket = io();
+        let allMenuItems = [];
+        let currentCategory = 'Barchasi';
 
-        const tableNumInput = document.getElementById('tableNum');
-        const orderItemsInput = document.getElementById('orderItems');
-        const sendOrderBtn = document.getElementById('sendOrderBtn');
-        const waiterOrdersList = document.getElementById('waiterOrdersList');
+        async function fetchWaiterMenu() {
+            try {
+                const res = await fetch('/api/waiter/menu');
+                allMenuItems = await res.json();
+                renderMenu(allMenuItems);
+            } catch (err) {
+                console.error("Menyuni yuklashda xatolik:", err);
+            }
+        }
 
-        // Buyurtma yuborish tugmasi bosilganda
-        sendOrderBtn.addEventListener('click', () => {
-            const table = tableNumInput.value.trim();
-            const items = orderItemsInput.value.trim();
+        function renderMenu(items) {
+            const container = document.getElementById('waiter-menu');
+            container.innerHTML = '';
 
-            if (!table || !items) {
-                alert('Iltimos, stol raqami va buyurtmani kiriting!');
+            const filtered = currentCategory === 'Barchasi' 
+                ? items 
+                : items.filter(i => i.category === currentCategory);
+
+            if (filtered.length === 0) {
+                container.innerHTML = `<div class="col-span-full text-center py-10 text-gray-500">Bu kategoriyada hozircha taomlar yo'q</div>`;
                 return;
             }
 
-            // Serverga yangi buyurtma yuborish
-            socket.emit('new_order', { table, items });
-
-            // Maydonlarni tozalash
-            orderItemsInput.value = '';
-            tableNumInput.value = '';
-        });
-
-        // Serverdan buyurtmalar ro'yxati kelganda yangilash
-        socket.on('init_orders', renderOrders);
-        socket.on('update_orders', renderOrders);
-
-        function renderOrders(orders) {
-            waiterOrdersList.innerHTML = '';
-            if (orders.length === 0) {
-                waiterOrdersList.innerHTML = '<p>Hozircha faol buyurtmalar yo‘q.</p>';
-                return;
-            }
-
-            orders.forEach(order => {
-                let statusClass = '';
-                if (order.status === 'Qabul qilindi') statusClass = 'status-qabul';
-                else if (order.status === 'Jarayonda') statusClass = 'status-jarayonda';
-                else if (order.status === 'Tayyor') statusClass = 'status-tayyor';
-
-                const div = document.createElement('div');
-                div.className = 'order-card';
-                div.innerHTML = `
-                    <strong>Stol: ${order.table}</strong><br>
-                    Buyurtma: ${order.items}<br>
-                    Vaqti: ${order.createdAt}<br>
-                    Holati: <span class="${statusClass}">${order.status}</span>
+            filtered.forEach(item => {
+                container.innerHTML += `
+                    <div class="bg-white rounded-xl shadow-md overflow-hidden flex flex-col justify-between border border-gray-100 hover:shadow-lg transition">
+                        <div>
+                            <img src="/images/${item.image_url}" alt="${item.name}" class="w-full h-40 object-cover bg-gray-200" onerror="this.src='/images/default.jpg'">
+                            <div class="p-4">
+                                <span class="text-xs font-semibold px-2.5 py-1 bg-indigo-50 text-indigo-600 rounded-full">${item.category}</span>
+                                <h3 class="text-lg font-bold text-gray-800 mt-2">${item.name}</h3>
+                            </div>
+                        </div>
+                        <div class="p-4 pt-0 flex justify-between items-center border-t border-gray-100 mt-2 pt-3">
+                            <span class="text-lg font-extrabold text-emerald-600">${Number(item.external_price).toLocaleString()} so'm</span>
+                            <span class="text-xs font-medium px-2 py-1 bg-gray-100 text-gray-600 rounded">Omborda: ${item.stock_quantity} ta</span>
+                        </div>
+                    </div>
                 `;
-                waiterOrdersList.appendChild(div);
             });
         }
+
+        function filterCategory(cat) {
+            currentCategory = cat;
+            renderMenu(allMenuItems);
+        }
+
+        // Real-vaqtda sinxronizatsiya (Admin o'zgartirsa ofitsantda darhol ko'rinadi)
+        socket.on('menuUpdated', (serverMenu) => {
+            allMenuItems = serverMenu.filter(i => i.is_visible == 1);
+            renderMenu(allMenuItems);
+        });
+
+        fetchWaiterMenu();
     </script>
 </body>
 </html>

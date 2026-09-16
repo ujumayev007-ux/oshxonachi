@@ -857,7 +857,7 @@
                 let itemQty = Number(item.qty || 1);
                 let whItem = warehouseDatabase.find(w => w.name.toLowerCase() === itemName.toLowerCase());
                 if (whItem) {
-                    whItem.quantity = whItem.quantity - itemQty);
+                    whItem.quantity = whItem.quantity - itemQty;
                 }
             });
             saveData();

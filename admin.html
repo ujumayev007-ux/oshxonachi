@@ -515,6 +515,14 @@
             saveData();
         }
 
+        function getOrderKey(order) {
+            if (!order) return '';
+            if (order.id !== undefined && order.id !== null && order.id !== '') return String(order.id);
+            if (order.tableNumber !== undefined && order.tableNumber !== null && order.tableNumber !== '') return String(order.tableNumber);
+            if (order.table !== undefined && order.table !== null && order.table !== '') return String(order.table);
+            return `${order.time || ''}_${order.waiter || ''}_${order.tableNumber || order.table || ''}`;
+        }
+
         function loadOrdersFromStorage() {
             let waiterOrders = JSON.parse(localStorage.getItem('waiter_orders')) || [];
             let activeOrders = JSON.parse(localStorage.getItem('active_orders')) || [];
@@ -524,11 +532,16 @@
             let combined = [...waiterOrders, ...activeOrders, ...adminOrders, ...generalOrders];
             let uniqueMap = new Map();
             combined.forEach(o => {
-                let key = o.id !== undefined ? o.id : (o.tableNumber !== undefined ? o.tableNumber : (o.table !== undefined ? o.table : (o.time + (o.tableNumber || ''))));
+                if (!o || typeof o !== 'object') return;
+                let key = getOrderKey(o);
                 if (!o.paymentType) {
                     o.paymentType = 'naqd';
                 }
-                uniqueMap.set(key, o);
+                if (uniqueMap.has(key)) {
+                    uniqueMap.set(key, { ...uniqueMap.get(key), ...o });
+                } else {
+                    uniqueMap.set(key, o);
+                }
             });
             ordersDatabase = Array.from(uniqueMap.values());
         }
@@ -745,23 +758,26 @@
         function syncOrdersToStorage() {
             ['waiter_orders', 'active_orders', 'admin_orders', 'orders'].forEach(key => {
                 let data = JSON.parse(localStorage.getItem(key)) || [];
-                if (Array.isArray(data)) {
-                    data = data.map((o, index) => {
-                        let currentId = o.id !== undefined ? o.id : (o.tableNumber !== undefined ? o.tableNumber : (o.table !== undefined ? o.table : index));
-                        let match = ordersDatabase.find(item => {
-                            let itemId = item.id !== undefined ? item.id : (item.tableNumber !== undefined ? item.tableNumber : (item.table !== undefined ? item.table : ''));
-                            return String(itemId) === String(currentId);
-                        });
-                        if (match) {
-                            o.status = match.status;
-                            o.paymentType = match.paymentType;
-                            o.isPrinted = match.isPrinted;
-                            o.isPaid = match.isPaid;
-                        }
-                        return o;
-                    });
-                    localStorage.setItem(key, JSON.stringify(data));
-                }
+                if (!Array.isArray(data)) return;
+
+                const merged = data.map((o, index) => {
+                    const currentKey = getOrderKey(o) || `${index}_${o.tableNumber || o.table || ''}`;
+                    const match = ordersDatabase.find(item => getOrderKey(item) === currentKey);
+                    if (match) {
+                        return { ...o, ...match };
+                    }
+                    return o;
+                });
+
+                ordersDatabase.forEach(order => {
+                    const orderKey = getOrderKey(order);
+                    const exists = merged.some(item => getOrderKey(item) === orderKey);
+                    if (!exists) {
+                        merged.push({ ...order });
+                    }
+                });
+
+                localStorage.setItem(key, JSON.stringify(merged));
             });
             saveData();
         }
@@ -837,7 +853,7 @@
                 }
                 return o;
             });
-            
+
             syncOrdersToStorage();
             renderOrders();
             renderIncome();

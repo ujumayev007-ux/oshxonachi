@@ -656,6 +656,37 @@
             summaryContainer.innerHTML = html;
         }
 
+        function upsertOrderToStorage(storageKey, order) {
+            let orders = JSON.parse(localStorage.getItem(storageKey)) || [];
+            const index = orders.findIndex(existing => {
+                const sameId = order.id && existing.id && String(existing.id) === String(order.id);
+                const sameTable = !order.id && !existing.id && String(existing.tableNumber || existing.table) === String(order.tableNumber || order.table);
+                return sameId || sameTable;
+            });
+
+            if (index >= 0) {
+                orders[index] = { ...orders[index], ...order };
+            } else {
+                orders.push(order);
+            }
+
+            localStorage.setItem(storageKey, JSON.stringify(orders));
+        }
+
+        function syncOrderPrintState(targetOrderId, tableNumStr) {
+            ['waiter_orders', 'orders', 'active_orders', 'admin_orders'].forEach(storageKey => {
+                let orders = JSON.parse(localStorage.getItem(storageKey)) || [];
+                orders = orders.map(order => {
+                    const sameOrder = targetOrderId ? String(order.id || '') === String(targetOrderId) : String(order.tableNumber || order.table) === String(tableNumStr);
+                    if (sameOrder && String(order.status || '').toLowerCase() !== 'tolandi') {
+                        return { ...order, isPrinted: true };
+                    }
+                    return order;
+                });
+                localStorage.setItem(storageKey, JSON.stringify(orders));
+            });
+        }
+
         function sendOrderToAdmin() {
             if (!currentActiveTableId) return;
             let key = `${currentActiveTableId.section}_item_${currentActiveTableId.id}`;
@@ -702,13 +733,12 @@
                 time: new Date().toLocaleTimeString()
             };
 
-            let waiterOrders = JSON.parse(localStorage.getItem('waiter_orders')) || [];
-            waiterOrders.push(orderObj);
-            localStorage.setItem('waiter_orders', JSON.stringify(waiterOrders));
+            itemData.orderId = orderObj.id;
+            localStorage.setItem(key, JSON.stringify(itemData));
 
-            let generalOrders = JSON.parse(localStorage.getItem('orders')) || [];
-            generalOrders.push(orderObj);
-            localStorage.setItem('orders', JSON.stringify(generalOrders));
+            ['waiter_orders', 'orders', 'admin_orders'].forEach(storageKey => {
+                upsertOrderToStorage(storageKey, orderObj);
+            });
 
             alert("Buyurtma admin paneliga muvaffaqiyatli yuborildi!");
             closeModal();
@@ -726,17 +756,8 @@
             }
 
             let tableNumStr = `${currentActiveTableId.section === 'zal' ? 'Stol #' : 'Xona #'}${currentActiveTableId.id}`;
-
-            ['waiter_orders', 'orders', 'active_orders'].forEach(k => {
-                let orders = JSON.parse(localStorage.getItem(k)) || [];
-                orders = orders.map(o => {
-                    if (String(o.tableNumber || o.table) === String(tableNumStr) && o.status !== 'tolandi') {
-                        o.isPrinted = true;
-                    }
-                    return o;
-                });
-                localStorage.setItem(k, JSON.stringify(orders));
-            });
+            const targetOrderId = itemData.orderId || null;
+            syncOrderPrintState(targetOrderId, tableNumStr);
 
             let checkHtml = `<b>${tableNumStr}</b><br>Ofitsiant: ${activeWaiter}<br><hr style="margin: 5px 0;">`;
             let total = 0;

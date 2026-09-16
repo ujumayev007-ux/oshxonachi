@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Restoran Boshqaruv Tizimi - Admin Paneli</title>
-    <!-- Tailwind CSS (Status badge va boshqa elementlar uchun) -->
+    <!-- Tailwind CSS va boshqa kutubxonalar -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
@@ -57,14 +57,13 @@
     <div id="admin-main-content">
         <header>
             <div class="header-left">
-                <h1>Restoran Admin Paneli</h1>
+                <h1>Azamatjon & Umidjon Restarani — Admin Paneli</h1>
                 <div class="live-clock-container">
                     <span>📅 <span class="clock-badge" id="live-date">--.--.----</span></span>
                     <span>⏰ <span class="clock-badge" id="live-time">--:--:--</span></span>
                 </div>
             </div>
             <div class="flex items-center gap-4">
-                <!-- Socket Ulanish Holati Badji -->
                 <span id="connection-status" class="px-3 py-1 text-sm rounded-full bg-red-100 text-red-600 font-medium">Ulanmoqda...</span>
                 <div class="nav-tabs">
                     <button class="tab-btn active" onclick="switchTab('orders', event)">Buyurtmalar</button>
@@ -375,7 +374,7 @@
                     { name: "Garnir", group: "Sut va sut mahsulotlari", quantity: 0, unit: "gramm (g)" },
                     { name: "Shakar", group: "Sut va sut mahsulotlari", quantity: 0, unit: "gramm (g)" },
                     { name: "Tuxum", group: "Sut va sut mahsulotlari", quantity: 0, unit: "dona" },
-                    // Ichimliklar
+                    // Ichimliklar to'liq ro'yxati
                     { name: "Coca-Cola (klassik) — 0.33L", group: "Ichimliklar", quantity: 0, unit: "dona" },
                     { name: "Coca-Cola (klassik) — 0.5L", group: "Ichimliklar", quantity: 0, unit: "dona" },
                     { name: "Coca-Cola (klassik) — 1L", group: "Ichimliklar", quantity: 0, unit: "dona" },

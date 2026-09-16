@@ -45,7 +45,7 @@
         .tab-btn.active { background: #2a5298; color: white; }
     </style>
 </head>
-<body>
+<body onclick="unlockAudioContext()"> <!-- Brauzer ovoz bloklashini oldini olish uchun -->
 
     <div id="main-panel">
         <div class="header">
@@ -152,6 +152,7 @@
         let fullMenu = [];
         let sessionStartTime = Date.now();
         let waiterStats = { ordersCount: 0, totalSum: 0, tablesWorked: new Set() };
+        let audioCtx = null;
 
         window.onload = function() {
             loadMenuFromAdmin();
@@ -190,7 +191,7 @@
                 if(e.key === 'waiter_calls' || e.key === 'trigger_sync') { 
                     loadCallsFromStorage();
                     renderTables();
-                    playNotificationSound();
+                    playNotificationSound(); // Ovoz chiqarish
                 }
             });
 
@@ -203,6 +204,50 @@
             }, 1000);
         };
 
+        // Brauzer avtomatik ovozni bloklamasligi uchun biror joyga bosilganda audio kontekstni yoqish
+        function unlockAudioContext() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        // Qattiqroq va eshitiladigan signal ovozi
+        function playNotificationSound() { 
+            try {
+                if (!audioCtx) {
+                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+
+                // Ikkita qo'ng'iroq ovozi ketma-ket (Beep-Beep)
+                let playBeep = (timeOffset, freq) => {
+                    let osc = audioCtx.createOscillator();
+                    let gain = audioCtx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.value = freq; 
+                    
+                    gain.gain.setValueAtTime(0.7, audioCtx.currentTime + timeOffset);
+                    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + timeOffset + 0.3);
+                    
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    
+                    osc.start(audioCtx.currentTime + timeOffset);
+                    osc.stop(audioCtx.currentTime + timeOffset + 0.3);
+                };
+
+                playBeep(0, 659.25);   // E5
+                playBeep(0.35, 880);   // A5
+            } catch(e) {
+                console.log("Ovoz chiqarishda xatolik:", e);
+            }
+        }
+
         function handleIncomingCall(data) {
             if (!data) return;
             let tableNum = typeof data === 'object' ? (data.tableNumber || data.table || data.id) : data;
@@ -212,29 +257,13 @@
             }
             activeCalls[tableNum] = true;
             saveCallsToStorage();
-            playNotificationSound();
+            playNotificationSound(); // Signal chalinishi
             renderTables();
 
             if (selectedTableNumber === tableNum) {
                 let callBanner = document.getElementById('call-alert-banner');
                 if (callBanner) callBanner.style.display = 'flex';
             }
-        }
-
-        function playNotificationSound() { 
-            try {
-                let ctx = new (window.AudioContext || window.webkitAudioContext)();
-                let osc = ctx.createOscillator();
-                let gain = ctx.createGain();
-                osc.type = 'sine';
-                osc.frequency.value = 587.33; 
-                gain.gain.setValueAtTime(0.5, ctx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.8);
-                osc.connect(gain);
-                gain.connect(ctx.destination);
-                osc.start();
-                osc.stop(ctx.currentTime + 0.8);
-            } catch(e) {}
         }
 
         function loadCallsFromStorage() { 
@@ -488,7 +517,6 @@
                 isPrinted: existingOrder ? !!existingOrder.isPrinted : false
             };
 
-            // Update waiter stats
             let orderTotal = items.reduce((sum, i) => sum + Number(i.sale_price || i.price || 0) * i.qty, 0);
             waiterStats.ordersCount += 1;
             waiterStats.totalSum += orderTotal;
@@ -641,11 +669,10 @@
 
         function loadWaiterStats() {
             let savedStats = JSON.parse(localStorage.getItem('waiter_stats_summary')) || {};
-            if (savedStats[activeWaiter]) {
-                waiterStats.ordersCount = savedStats[activeWaiter].ordersCount || 0;
-                waiterStats.totalSum = savedStats[activeWaiter].totalSum || 0;
-                waiterStats.tablesWorked = new Set(savedStats[activeWaiter].tablesWorked || []);
-            }
+            let currentStats = savedStats[activeWaiter] || {};
+            waiterStats.ordersCount = currentStats.ordersCount || 0;
+            waiterStats.totalSum = currentStats.totalSum || 0;
+            waiterStats.tablesWorked = new Set(currentStats.tablesWorked || []);
         }
 
         function updateWaiterStatsStorage() {

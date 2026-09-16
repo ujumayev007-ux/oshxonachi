@@ -222,7 +222,7 @@ let currentCategory = 'all';
 let cart = JSON.parse(localStorage.getItem('customer_cart')) || {};
 
 // WebSocket orqali Render serveriga ulanish
-const WS_URL = 'wss://oshxonachi-server.onrender.com'; 
+const WS_URL = 'wss://oshxonachi.onrender.com'; 
 let ws = new WebSocket(WS_URL);
 
 ws.onopen = function() {

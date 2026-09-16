@@ -161,7 +161,7 @@
             loadWaiterStats();
 
             try {
-                socket = io('https://oshxonachi-server.onrender.com');
+                socket = io('https://oshxonachi.onrender.com');
 
                 socket.on('connect', () => console.log("Ofitsiant serverga ulandi"));
                 socket.on('status_updated', (data) => {

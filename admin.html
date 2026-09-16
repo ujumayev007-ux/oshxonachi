@@ -703,6 +703,14 @@
             if (name && intPrice && salePrice) {
                 const newId = menuDatabase.length > 0 ? Math.max(...menuDatabase.map(m => m.id)) + 1 : 1;
                 menuDatabase.push({ id: newId, name, category, internal_price: intPrice, sale_price: salePrice, external_price: salePrice, is_visible: true });
+                // Ma'lumotlarni saqlash va socket orqali barchaga yuborish
+                if (typeof saveData === 'function') {
+                    saveData();
+                }
+                
+                if (socket && socket.connected) {
+                    socket.emit('menu_updated', { menu: menuDatabase });
+                }
                 renderAll();
                 document.getElementById('new-menu-name').value = '';
                 document.getElementById('new-menu-internal').value = '';
@@ -766,7 +774,7 @@
                 } else { 
                     warehouseDatabase.push({ name, group: "Boshqa mahsulotlar", quantity: qty, unit: unit || 'dona' }); 
                 }
-                
+                saveData();
                 if (socket && socket.connected) {
                     socket.emit('add-product', { name, qty, price: 0 });
                 }
@@ -788,7 +796,7 @@
                 let itemQty = Number(item.qty || 1);
                 let whItem = warehouseDatabase.find(w => w.name.toLowerCase() === itemName.toLowerCase());
                 if (whItem) {
-                    whItem.quantity = Math.max(0, whItem.quantity - itemQty);
+                    whItem.quantity = whItem.quantity - itemQty);
                 }
             });
             saveData();

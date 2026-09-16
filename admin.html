@@ -618,7 +618,33 @@
             loadAdminReviews();
             renderAdvancedStats(); // Statistika va ofitsiantlar hisobotini yangilash
         }
-
+// Mana bu yerga funksiyaning o'zini qo'shib qo'yasiz:
+  function loadAdminReviews() {
+    // 1. LocalStorage yoki serverdan sharhlarni olish
+    const reviews = JSON.parse(localStorage.getItem('customer_reviews')) || [];
+    
+    // 2. Admin panelidagi sharhlar chiqadigan HTML elementni topish
+    const container = document.getElementById('admin-reviews-container');
+    if (!container) return;
+    
+    // Agar sharhlar bo'lmasa
+    if (reviews.length === 0) {
+        container.innerHTML = '<p class="text-gray-500">Hozircha mijozlardan izohlar mavjud emas.</p>';
+        return;
+    }
+    
+    // 3. Sharhlarni ekranga chiqarish (HTML yasash)
+    container.innerHTML = reviews.map(review => `
+        <div class="bg-white p-4 rounded-lg shadow mb-3 border">
+            <div class="flex justify-between items-center mb-2">
+                <span class="font-bold text-gray-800">Stol #${review.tableNumber || 'Noma\'lum'}</span>
+                <span class="text-yellow-500 font-semibold">${'★'.repeat(review.rating || 5)}</span>
+            </div>
+            <p class="text-gray-600">${review.comment}</p>
+            <span class="text-xs text-gray-400 mt-2 block">${review.date || ''}</span>
+        </div>
+    `).join('');
+}
         function loadOrdersFromStorage() {
             try {
                 let waiterOrders = JSON.parse(localStorage.getItem('waiter_orders')) || [];

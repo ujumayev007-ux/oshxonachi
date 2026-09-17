@@ -665,7 +665,46 @@
             document.getElementById('check-modal').style.display = 'flex';
         }
 
+       // Chek oynasi yopilganda yoki stol tozlanganda ishlaydigan yangi funksiya
+        function clearTableOrder(tableNumber) {
+            // 1. tablesState dan o'chirish
+            if (tablesState[tableNumber]) {
+                delete tablesState[tableNumber];
+            }
+
+            // 2. LocalStorage dagi faol buyurtmalardan olib tashlash
+            let waiterOrders = JSON.parse(localStorage.getItem('waiter_orders')) || [];
+            waiterOrders = waiterOrders.filter(o => String(o.tableNumber || o.id) !== String(tableNumber));
+            localStorage.setItem('waiter_orders', JSON.stringify(waiterOrders));
+            localStorage.setItem('active_orders', JSON.stringify(waiterOrders));
+            localStorage.setItem('admin_orders', JSON.stringify(waiterOrders));
+
+            // 3. Stol qulfini (lock) tozalash - "band" yozuvini yo'qotuvchi asosiy qism
+            try {
+                let tableLocks = JSON.parse(localStorage.getItem('waiter_table_locks')) || {};
+                if (tableLocks[tableNumber]) {
+                    delete tableLocks[tableNumber];
+                    localStorage.setItem('waiter_table_locks', JSON.stringify(tableLocks));
+                }
+            } catch (e) {}
+
+            // 4. Serverga o'chirilganligini xabar qilish
+            if (socket) {
+                socket.emit('status_updated', { orderId: tableNumber, tableNumber: tableNumber, status: 'closed', isCleared: true });
+            }
+
+            // 5. Sinxronizatsiya va ekranni yangilash
+            localStorage.setItem('trigger_sync', Date.now());
+            loadOrdersFromStorage();
+            renderTables();
+        }
+
         function closeCheckModal() { 
+            // Chek yopilishi bilan stolni butunlay bo'shatish uchun clearTableOrder ni chaqiramiz
+            if (selectedTableNumber) {
+                clearTableOrder(selectedTableNumber);
+            }
+            
             document.getElementById('check-modal').style.display = 'none'; 
             loadOrdersFromStorage();
             renderTables(); 

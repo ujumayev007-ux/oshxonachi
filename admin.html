@@ -216,7 +216,53 @@
         <!-- STATISTIKA -->
 <div id="stats" class="section-content">
     <h2>Kunlik, haftalik va oylik statistika</h2>
-    
+    <!-- 🛑 OFITSIANTLAR BO'LIMINI SHU YERGA QO'YASIZ 🛑 -->
+        <div id="waiters" class="section-content">
+            <h2>Ofitsiantlarni Boshqarish va Nazorat</h2>
+            <div class="bg-white p-6 rounded-xl shadow-md mb-6">
+                <h3 class="text-lg font-bold text-gray-800 mb-4">👨‍🍳 Ofitsiantlarni Boshqarish</h3>
+                
+                <!-- Yangi ofitsiant qo'shish formasi -->
+                <form id="add-waiter-form" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 bg-gray-50 p-4 rounded-lg border">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1">Ofitsiant ismi</label>
+                        <input type="text" id="waiter-name" required placeholder="Masalan: Anvar" class="w-full text-sm border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1">Login</label>
+                        <input type="text" id="waiter-login" required placeholder="Masalan: anvar_ofitsiant" class="w-full text-sm border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1">Parol</label>
+                        <input type="password" id="waiter-password" required placeholder="******" class="w-full text-sm border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none">
+                    </div>
+                    <div class="md:col-span-3 flex justify-end">
+                        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-5 py-2 rounded-lg transition">
+                            + Ofitsiant qo'shish
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Ofitsiantlar ro'yxati jadvali -->
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-gray-100 text-gray-700 text-xs uppercase">
+                                <th class="p-3 border-b">Ismi</th>
+                                <th class="p-3 border-b">Login</th>
+                                <th class="p-3 border-b">Parol</th>
+                                <th class="p-3 border-b text-center">Amallar</th>
+                            </tr>
+                        </thead>
+                        <tbody id="waiters-table-body" class="text-sm text-gray-700">
+                            <tr>
+                                <td colspan="4" class="p-4 text-center text-gray-500 italic">Hozircha ofitsiantlar qo'shilmagan...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
     <!-- 1. Kunlik, haftalik va oylik savdolar uchun 3 ta quti -->
     <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-top: 15px; margin-bottom: 20px;">
         <div style="background: #e3f2fd; padding: 15px; border-radius: 8px; border: 1px solid #bbdefb;">

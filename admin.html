@@ -408,9 +408,11 @@
         // 1. Sahifa ochilganda ofitsiantlarni yuklash uchun, 
         // agar mavjud load/init funksiyalaringiz bo'lsa shugacha qo'shib qo'yasiz:
         document.addEventListener('DOMContentLoaded', () => {
-            loadWaiters();
-        });
-
+    loadOrdersFromStorage();
+    renderOrders();
+    renderMenu();
+    renderWarehouse();
+});
         // 2. Ofitsiantlarni yuklash va jadvalga chiqarish funksiyasi
         function loadWaiters() {
             let waiters = JSON.parse(localStorage.getItem('restaurant_waiters')) || [];

@@ -314,7 +314,7 @@
         let socket = null;
         const statusBadge = document.getElementById('connection-status');
 
-        window.onload = function() {
+      window.onload = function() {
     loadInitialData();
     
     if (typeof io !== 'undefined') {
@@ -342,7 +342,6 @@
             renderAll();
         });
 
-        // 🟢 SHU QISMNI QO'SHDIK (Serverdan barcha buyurtmalar ro'yxati kelganda darhol yangilash uchun)
         socket.on('update_orders', (ordersList) => {
             if (!ordersList) return;
             if (typeof ordersDatabase !== 'undefined') {
@@ -374,20 +373,6 @@
         renderAll();
     }, 1000);
 };
-
-            window.addEventListener('storage', function(e) {
-                if(['waiter_orders', 'active_orders', 'admin_orders', 'orders'].includes(e.key)) {
-                    loadOrdersFromStorage();
-                    renderAll();
-                }
-            });
-
-            setInterval(() => {
-                loadOrdersFromStorage();
-                renderAll();
-            }, 1000);
-        };
-
         function loadInitialData() {
             try {
                 let defaultMenu = [

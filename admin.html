@@ -50,7 +50,7 @@
         .modal-content p { margin-bottom: 10px; font-size: 14px; }
         .modal-content input { margin-bottom: 12px; }
         .modal-buttons { display: flex; gap: 10px; margin-top: 15px; }
-    </style>
+</style>
 </head>
 <body>
 
@@ -66,17 +66,18 @@
             <div class="flex items-center gap-4">
                 <!-- Socket Ulanish Holati Badji -->
                 <span id="connection-status" class="px-3 py-1 text-sm rounded-full bg-red-100 text-red-600 font-medium">Ulanmoqda...</span>
-               <!-- 👇 MANASHU JOYIGA QO'YASIZ (Izohlar oynasi) -->
+                
+                <!-- Mijozlar Izohlari oynasi -->
                 <div style="background: #f8f9fa; border: 1px solid #90caf9; border-radius: 6px; padding: 8px; width: 260px; height: 110px; overflow-y: auto; font-size: 13px;" id="admin-reviews-box">
                     <div style="font-weight: bold; color: #0d47a1; margin-bottom: 4px; font-size: 12px; display: flex; justify-content: space-between; align-items: center;">
                         <span>💬 Mijozlar Izohlari</span>
                         <span id="reviews-count-badge" style="background: #0288d1; color: white; padding: 0 5px; border-radius: 10px; font-size: 10px;">0</span>
                     </div>
-                    <div id="admin-reviews-list" style="display: flex; flex-direction: column; gap: 4px;">
+                    <div id="admin-reviews-container" style="display: flex; flex-direction: column; gap: 4px;">
                         <span style="color: #666; font-style: italic; font-size: 12px;">Hozircha izohlar yo'q...</span>
                     </div>
                 </div>
-                <!-- 👆 TUGAGAN JOYI -->
+
                 <div class="nav-tabs">
                     <button class="tab-btn active" onclick="switchTab('orders', event)">Buyurtmalar</button>
                     <button class="tab-btn" onclick="switchTab('menu', event)">Menyu Boshqaruvi</button>

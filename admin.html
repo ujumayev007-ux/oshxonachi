@@ -984,7 +984,7 @@ let container = document.getElementById('admin-reviews-list');
         const badge = document.getElementById('reviews-count-badge');
         if (badge) badge.innerText = '0';
         return;
-    
+    }
     // 3. Sharhlarni ekranga chiqarish (HTML yasash)
     container.innerHTML = reviews.map(review => `
         <div class="bg-white p-4 rounded-lg shadow mb-3 border">

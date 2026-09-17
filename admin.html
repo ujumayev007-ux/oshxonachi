@@ -315,43 +315,65 @@
         const statusBadge = document.getElementById('connection-status');
 
         window.onload = function() {
-            loadInitialData();
-            
-            if (typeof io !== 'undefined') {
-                socket = io('https://oshxonachi.onrender.com');
+    loadInitialData();
+    
+    if (typeof io !== 'undefined') {
+        socket = io('https://oshxonachi.onrender.com');
 
-                socket.on('connect', () => {
-                    console.log("Admin serverga ulandi");
-                    if (statusBadge) {
-                        statusBadge.textContent = 'Ulangan';
-                        statusBadge.className = 'px-3 py-1 text-sm rounded-full bg-green-100 text-green-600 font-medium';
-                    }
-                });
-
-                socket.on('disconnect', () => {
-                    console.log("Server bilan aloqa uzildi");
-                    if (statusBadge) {
-                        statusBadge.textContent = 'Uzildi';
-                        statusBadge.className = 'px-3 py-1 text-sm rounded-full bg-red-100 text-red-600 font-medium';
-                    }
-                });
-
-                socket.on('new_order', (data) => {
-                    if (!data) return;
-                    upsertOrder(data);
-                    renderAll();
-                });
-
-                socket.on('status_updated', (data) => {
-                    if (!data) return;
-                    upsertOrder(data);
-                    renderAll();
-                });
+        socket.on('connect', () => {
+            console.log("Admin serverga ulandi");
+            if (statusBadge) {
+                statusBadge.textContent = 'Ulangan';
+                statusBadge.className = 'px-3 py-1 text-sm rounded-full bg-green-100 text-green-600 font-medium';
             }
+        });
 
+        socket.on('disconnect', () => {
+            console.log("Server bilan aloqa uzildi");
+            if (statusBadge) {
+                statusBadge.textContent = 'Uzildi';
+                statusBadge.className = 'px-3 py-1 text-sm rounded-full bg-red-100 text-red-600 font-medium';
+            }
+        });
+
+        socket.on('new_order', (data) => {
+            if (!data) return;
+            upsertOrder(data);
             renderAll();
-            initChart();
-            initLiveClock();
+        });
+
+        // 🟢 SHU QISMNI QO'SHDIK (Serverdan barcha buyurtmalar ro'yxati kelganda darhol yangilash uchun)
+        socket.on('update_orders', (ordersList) => {
+            if (!ordersList) return;
+            if (typeof ordersDatabase !== 'undefined') {
+                ordersDatabase = ordersList;
+            }
+            renderAll();
+        });
+
+        socket.on('status_updated', (data) => {
+            if (!data) return;
+            upsertOrder(data);
+            renderAll();
+        });
+    }
+
+    renderAll();
+    initChart();
+    initLiveClock();
+
+    window.addEventListener('storage', function(e) {
+        if(['waiter_orders', 'active_orders', 'admin_orders', 'orders'].includes(e.key)) {
+            loadOrdersFromStorage();
+            renderAll();
+        }
+    });
+
+    setInterval(() => {
+        loadOrdersFromStorage();
+        renderAll();
+    }, 1000);
+};
 
             window.addEventListener('storage', function(e) {
                 if(['waiter_orders', 'active_orders', 'admin_orders', 'orders'].includes(e.key)) {

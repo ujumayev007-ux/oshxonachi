@@ -57,9 +57,22 @@
         <!-- Menyu kartochkalari -->
         <div id="menu-container" class="menu-grid"></div>
 
-        <!-- Otziv qoldirish -->
+       <!-- 👇 MANASHU JOYIGA (Menyularning ostiga) YOZASIZ -->
         <div style="margin-top: 40px;" class="card">
             <h3 style="margin-top: 0;">Fikr-mulohaza (Otziv) qoldirish</h3>
+            
+            <!-- Baho berish (Admin panel ko'rishi uchun muhim) -->
+            <div style="margin-bottom: 12px;">
+                <label style="font-size: 14px; font-weight: bold; color: #333; display: block; margin-bottom: 5px;">Xizmat sifatiga bahoingiz:</label>
+                <select id="review-rating" style="width:100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; background: white;">
+                    <option value="5">★★★★★ (5 - Ajoyib)</option>
+                    <option value="4">★★★★☆ (4 - Yaxshi)</option>
+                    <option value="3">★★★☆☆ (3 - Qoniqarli)</option>
+                    <option value="2">★★☆☆☆ (2 - Yomon)</option>
+                    <option value="1">★☆☆☆☆ (1 - Juda yomon)</option>
+                </select>
+            </div>
+
             <select id="review-type" onchange="toggleNameInput()" style="width:100%; padding: 10px; margin: 8px 0; border: 1px solid #ccc; border-radius: 6px;">
                 <option value="anonim">Anonim qolsin</option>
                 <option value="named">Ism-sharifimni yozaman</option>
@@ -68,7 +81,9 @@
             <textarea id="review-text" placeholder="Fikr va taklifingizni yozing..." style="width:100%; padding: 10px; margin: 8px 0; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; height: 80px;"></textarea>
             <button onclick="submitReview()" style="background: #1976d2; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold;">Yuborish</button>
         </div>
-    </div>
+        <!-- 👆 TUGAGAN JOYI -->
+
+    </div> <!-- .container yopilishi -->
 
     <!-- Savatcha floating tugmasi -->
     <div class="cart-floating" onclick="openCartModal()">

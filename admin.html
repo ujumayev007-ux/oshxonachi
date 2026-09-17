@@ -523,9 +523,15 @@
                 loadWaiters();
             }
         }
-      window.onload = function() {
-    loadInitialData();
-    
+        // Boshlang'ich ma'lumotlarni yuklash funksiyasi
+function loadInitialData() {
+    // Bu yerda sahifa ochilganda bajarilishi kerak bo'lgan ishlar yoziladi
+    // Masalan:
+    // loadWaiters();
+    // loadOrders();
+    console.log("Boshlang'ich ma'lumotlar yuklandi");
+}
+      window.onload = function() {  
     if (typeof io !== 'undefined') {
         socket = io('https://oshxonachi.onrender.com');
 

@@ -581,9 +581,11 @@
         }
 
         function returnItem(id) {
-            if(currentCart[id] && currentCart[id].qty > 0) {
+            if (currentCart[id] && currentCart[id].qty > 0) {
                 currentCart[id].qty -= 1;
-                if(currentCart[id].qty === 0) delete currentCart[id];
+                if (currentCart[id].qty === 0) {
+                    delete currentCart[id];
+                }
                 openReturnModal(); 
                 updateOrderSummary(); 
                 renderModalMenu();
@@ -591,13 +593,41 @@
         }
 
         function confirmReturn() {
-            sendOrderToAdmin(); 
+            let items = Object.values(currentCart);
+            let existingOrder = tablesState[selectedTableNumber];
+
+            // Agar barcha taomlar o'chirilib savat bo'shatilsa — buyurtma bekor qilinadi
+            if (items.length === 0) {
+                if (existingOrder) {
+                    existingOrder.status = 'bekor_qilindi';
+                    existingOrder.items = [];
+                    saveAndBroadcastOrder(existingOrder);
+                }
+                
+                // Stol qulfini olib tashlash
+                try {
+                    let tableLocks = JSON.parse(localStorage.getItem('waiter_table_locks')) || {};
+                    if (selectedTableNumber && tableLocks[selectedTableNumber]) {
+                        delete tableLocks[selectedTableNumber];
+                        localStorage.setItem('waiter_table_locks', JSON.stringify(tableLocks));
+                    }
+                } catch (e) {}
+
+            } else {
+                // ✅ Agar ayrim taomlar o'chirilgan bo'lsa ham, qolgan taomlar bilan buyurtmani darhol adminga yuboramiz va yangilaymiz!
+                if (existingOrder) {
+                    existingOrder.items = items;
+                    // Jami summani ham yangilab ketamiz
+                    existingOrder.totalSum = items.reduce((sum, i) => sum + Number(i.sale_price || i.price || 0) * i.qty, 0);
+                    saveAndBroadcastOrder(existingOrder);
+                }
+            }
+
             document.getElementById('return-modal').style.display = 'none';
-            alert("Vozvrat muvaffaqiyatli amalga oshirildi!");
+            closeModal(); 
+            renderTables();
+            alert("Buyurtma muvaffaqiyatli yangilandi va adminga yuborildi!");
         }
-
-        function closeReturnModal() { document.getElementById('return-modal').style.display = 'none'; }
-
         function printCheck() {
             let order = tablesState[selectedTableNumber];
             if (!order) { alert("Avval buyurtmani yuboring!"); return; }

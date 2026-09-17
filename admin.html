@@ -651,16 +651,25 @@
         }
 
         function initLiveClock() {
-            updateClock();
-            setInterval(updateClock, 1000);
-        }
+    updateClock();
+    setInterval(updateClock, 1000);
+}
 
-        function updateClock() {
-            const now = new Date();
-            document.getElementById('live-date').innerText = String(now.getDate()).padStart(2, '0') + '.' + String(now.getMonth() + 1).padStart(2, '0') + '.' + now.getFullYear();
-            document.getElementById('live-time').innerText = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0') + ':' + String(now.getSeconds()).padStart(2, '0');
-        }
-
+function updateClock() {
+    const now = new Date();
+    
+    // Sana elementi borligini tekshiramiz
+    const dateEl = document.getElementById('live-date');
+    if (dateEl) {
+        dateEl.innerText = String(now.getDate()).padStart(2, '0') + '.' + String(now.getMonth() + 1).padStart(2, '0') + '.' + now.getFullYear();
+    }
+    
+    // Vaqt elementi borligini tekshiramiz
+    const timeEl = document.getElementById('live-time');
+    if (timeEl) {
+        timeEl.innerText = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0') + ':' + String(now.getSeconds()).padStart(2, '0');
+    }
+}
         function switchTab(tabId, event) {
             document.querySelectorAll('.section-content').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
@@ -1187,12 +1196,23 @@
         }
 
         function initChart() {
-            const ctx = document.getElementById('statsChart').getContext('2d');
-            statsChartInstance = new Chart(ctx, {
-                type: 'doughnut',
-                data: { labels: ['Milliy taomlar', 'Kaboblar', 'Ichimliklar'], datasets: [{ data: [1, 1, 1], backgroundColor: ['#0288d1', '#ffb74d', '#66bb6a'] }] }
-            });
+    // Agar oldindan grafik chizilgan bo'lsa, uni yo'q qilamiz (xatolikni oldini oladi)
+    if (statsChartInstance) {
+        statsChartInstance.destroy();
+    }
+
+    const ctx = document.getElementById('statsChart').getContext('2d');
+    statsChartInstance = new Chart(ctx, {
+        type: 'doughnut',
+        data: { 
+            labels: ['Milliy taomlar', 'Kaboblar', 'Ichimliklar'], 
+            datasets: [{ 
+                data: [1, 1, 1], 
+                backgroundColor: ['#0288d1', '#ffb74d', '#66bb6a'] 
+            }] 
         }
+    });
+}
 
         function saveData() {
             localStorage.setItem('admin_menu', JSON.stringify(menuDatabase));

@@ -698,14 +698,20 @@ function updateClock() {
     const reviews = JSON.parse(localStorage.getItem('customer_reviews')) || [];
     
     // 2. Admin panelidagi sharhlar chiqadigan HTML elementni topish
-    const container = document.getElementById('admin-reviews-container');
+let container = document.getElementById('admin-reviews-list');
+    if (!container) {
+        container = document.getElementById('admin-reviews-container');
+    }
     if (!container) return;
     
     // Agar sharhlar bo'lmasa
     if (reviews.length === 0) {
-        container.innerHTML = '<p class="text-gray-500">Hozircha mijozlardan izohlar mavjud emas.</p>';
+        container.innerHTML = '<span class="text-gray-500 italic text-xs">Hozircha mijozlardan izohlar mavjud emas...</span>';
+        
+        // Badge ni 0 qilish
+        const badge = document.getElementById('reviews-count-badge');
+        if (badge) badge.innerText = '0';
         return;
-    }
     
     // 3. Sharhlarni ekranga chiqarish (HTML yasash)
     container.innerHTML = reviews.map(review => `
@@ -718,6 +724,11 @@ function updateClock() {
             <span class="text-xs text-gray-400 mt-2 block">${review.date || ''}</span>
         </div>
     `).join('');
+        // 5. Sharhlar sonini ko'rsatuvchi badgeni yangilash
+    const badge = document.getElementById('reviews-count-badge');
+    if (badge) {
+        badge.innerText = reviews.length;
+    }
 }
         function loadOrdersFromStorage() {
             try {

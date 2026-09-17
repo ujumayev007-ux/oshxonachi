@@ -49,6 +49,40 @@ function renderTables() {
     });
 }
 
+/**
+ * OFITSIANT "BUYURTMANI YUBORISH" TUGMASINI BOSGANDA ISHLaydigan FUNKSIYA
+ * (Buni ofitsiant panelidagi tugma bosiladigan joyga ulab qo'yasiz)
+ */
+function sendOrderToServer(tableNumber, cartItems) {
+    if (!cartItems || cartItems.length === 0) {
+        alert("Savat bo'sh!");
+        return;
+    }
+
+    const orderData = {
+        id: Date.now(),
+        table: tableNumber,
+        items: cartItems,
+        status: 'Yangi',
+        createdAt: new Date().toLocaleTimeString()
+    };
+
+    // 1. Serverga Socket.io orqali real vaqtda yuborish (Admin darhol ko'radi)
+    if (socket && socket.connected) {
+        socket.emit('new_order', orderData);
+        console.log("Buyurtma serverga yuborildi:", orderData);
+    } else {
+        console.warn("Socket ulanmagan, buyurtma serverga ketmadi!");
+    }
+
+    // 2. Mahalliy xotiraga ham zaxira uchun saqlash
+    let localOrders = JSON.parse(localStorage.getItem('restaurant_orders')) || [];
+    localOrders.push(orderData);
+    localStorage.setItem('restaurant_orders', JSON.stringify(localOrders));
+
+    alert("Buyurtma oshxonaga va adminga muvaffaqiyatli yuborildi!");
+}
+
 function showWaiterNotification(tableNumber) {
     let container = document.getElementById('waiter-notifications-container');
     if (!container) {

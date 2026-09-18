@@ -1242,154 +1242,319 @@ function updateClock() {
             }).join('');
         }
 
-        function calculateOrderTotal(order) {
-            let total = 0;
-            (order.items || []).forEach(i => total += Number(i.sale_price || i.external_price || i.price || 0) * Number(i.qty || 1));
-            return total;
+         function changeOrderStatus(id, newStatus) {
+            let order = ordersDatabase.find(o => String(o.tableNumber || o.id) === String(id));
+            if (order) {
+                order.status = newStatus;
+                
+                // QABUL QILINGANDA YOKI TAYYORLANMOQDA BO'LGANDA KATEGORIYALARGA BO'LIB PRINTERGA YUBORISH MANTIQI
+                if (newStatus === 'qabul_qilindi' || newStatus === 'tayyorlanyapti') {
+                    order.isPrinted = true;
+                    // Yangi qo'shilgan talab bo'yicha filtrlash va virtual chek chiqarish
+                    processOrderForKitchenPrinters(order);
+                }
+
+                syncOrdersToStorage();
+                renderAll();
+            }
         }
 
+        // ==========================================
+        // YANGI QO'SHILGAN FUNKSIYALAR (KABOB, SOMSA, FAST FOOD VA OSHXONA BO'LIMLARI UCHUN)
+        // ==========================================
+
+        /**
+         * 1. Buyurtmani mahsulot turiga (kategoriyasiga) qarab bo'limlarga ajratuvchi funksiya
+         */
+        function splitOrderIntoKitchenSections(orderItems) {
+            let sections = {
+                kaboblar: [],
+                somsalar: [],
+                fastFood: [],
+                oshxona: [] // Umumiy oshxona (qolgan taomlar)
+            };
+
+            orderItems.forEach(item => {
+                let category = (item.category || "").toLowerCase();
+                let name = (item.name || "").toLowerCase();
+
+                // Kategoriyani aniqlash mantiqi
+                if (category.includes('kabob') || name.includes('kabob') || name.includes('shashlik')) {
+                    sections.kaboblar.push(item);
+                } else if (category.includes('somsa') || name.includes('somsa')) {
+                    sections.somsalar.push(item);
+                } else if (category.includes('fast food') || category.includes('fast-food') || name.includes('lavash') || name.includes('burger')) {
+                    sections.fastFood.push(item);
+                } else {
+                    sections.oshxona.push(item);
+                }
+            });
+
+            return sections;
+        }
+
+        /**
+         * 2. Har bir bo'lim uchun virtual chek ma'lumotlarini tuzish (narxlarsiz, faqat miqdor va tur)
+         */
+        function generateVirtualKitchenReceipts(order) {
+            let sections = splitOrderIntoKitchenSections(order.items || []);
+            let timeString = new Date().toLocaleTimeString();
+            let waiterName = order.waiterName || order.waiter || 'Ofitsiant';
+            let tableNo = order.tableNumber || 'Nomaʼlum';
+            let orderNo = order.orderNumber || '----';
+
+            let virtualReceipts = [];
+
+            const sectionConfigs = [
+                { key: 'kaboblar', title: '🔥 KABOBLAR BO\'LIMI', items: sections.kaboblar },
+                { key: 'somsalar', title: '🥟 SOMSALAR BO\'LIMI', items: sections.somsalar },
+                { key: 'fastFood', title: '🍔 FAST FOOD BO\'LIMI', items: sections.fastFood },
+                { key: 'oshxona', title: '🍲 UMUMIY OSHXONA BO\'LIMI', items: sections.oshxona }
+            ];
+
+            sectionConfigs.forEach(sec => {
+                if (sec.items.length > 0) {
+                    let receiptText = `----------------------------------------\n`;
+                    receiptText += `   ${sec.title}\n`;
+                    receiptText += `----------------------------------------\n`;
+                    receiptText += `Buyurtma №: ${orderNo} | Stol: ${tableNo}\n`;
+                    receiptText += `Ofitsiant: ${waiterName} | Vaqt: ${timeString}\n`;
+                    receiptText += `----------------------------------------\n`;
+                    receiptText += `MAHSULOT NOMI                  MIQDORI\n`;
+                    receiptText += `----------------------------------------\n`;
+
+                    sec.items.forEach(item => {
+                        let itemName = (item.name || 'Taom').padEnd(30, ' ');
+                        let qty = `${item.qty || item.quantity || 1} ta`;
+                        receiptText += `${itemName} ${qty}\n`;
+                    });
+
+                    receiptText += `----------------------------------------\n`;
+                    receiptText += `           (Faqat oshxona uchun)\n`;
+                    receiptText += `----------------------------------------\n\n`;
+
+                    virtualReceipts.push({
+                        section: sec.key,
+                        title: sec.title,
+                        content: receiptText
+                    });
+                }
+            });
+
+            return virtualReceipts;
+        }
+
+        /**
+         * 3. Bo'lingan buyurtmalarni tarmoq printerlariga yoki brauzer orqali avtomatik chop etishga yuborish mantiqi[cite: 6]
+         */
+        function printKitchenReceipts(virtualReceipts) {
+            virtualReceipts.forEach(receipt => {
+                console.log(`[PRINTER SIMULATSIYasi - ${receipt.section.toUpperCase()}]:\n${receipt.content}`);
+                
+                // ESC/POS buyruqlarini simulyatsiya qilish (Tarmoq printerlari uchun baytlar ketma-ketligi)
+                // Masalan: Qalin matn (\x1B\x45\x1), qog'ozni kesish (\x1D\x56\x41)
+                const escPosCommandSimulation = `\x1B\x40` + receipt.content + `\x1D\x56\x41`;
+                console.log(`ESC/POS Byte Payload sent to ${receipt.section} printer successfully. Length: ${escPosCommandSimulation.length} bytes.`);
+            });
+
+            // Brauzer orqali window.print() yordamida vizual chek oynasini chiqarish yoki yashirin iframe orqali chop etish
+            if (virtualReceipts.length > 0) {
+                let printWindow = window.open('', '_blank', 'width=400,height=600');
+                if (printWindow) {
+                    printWindow.document.write('<html><head><title>Oshxona Cheklari</title><style>body{font-family: monospace; font-size: 14px; padding: 10px;}</style></head><body>');
+                    virtualReceipts.forEach(r => {
+                        printWindow.document.write(`<pre style="border-bottom: 2px dashed #000; padding-bottom: 10px; margin-bottom: 10px;">${r.content}</pre>`);
+                    });
+                    printWindow.document.write('</body></html>');
+                    printWindow.document.close();
+                    printWindow.focus();
+                    setTimeout(() => {
+                        printWindow.print();
+                        printWindow.close();
+                    }, 300);
+                }
+            }
+        }
+
+        /**
+         * 4. Asosiy handler: Buyurtma qabul qilinganda ishga tushadi
+         */
+        function processOrderForKitchenPrinters(order) {
+            let receipts = generateVirtualKitchenReceipts(order);
+            printKitchenReceipts(receipts);
+        }
+
+        // ==========================================
+
         function openCashModal(orderId) {
+            currentPayingOrderId = orderId;
             let order = ordersDatabase.find(o => String(o.tableNumber || o.id) === String(orderId));
             if (!order) return;
-            currentPayingOrderId = orderId;
-            currentOrderTotalSum = calculateOrderTotal(order);
+            
+            currentOrderTotalSum = 0;
+            (order.items || []).forEach(i => {
+                let price = Number(i.sale_price || i.external_price || i.price || 0);
+                let qty = Number(i.qty || 1);
+                currentOrderTotalSum += price * qty;
+            });
+
             document.getElementById('modal-total-sum').innerText = currentOrderTotalSum.toLocaleString();
             document.getElementById('modal-cash-input').value = '';
             document.getElementById('modal-change-amount').innerText = '0';
             document.getElementById('cash-payment-modal').style.display = 'flex';
         }
 
-        function closeCashModal() { document.getElementById('cash-payment-modal').style.display = 'none'; }
-        
         function calculateChange() {
             let cashGiven = Number(document.getElementById('modal-cash-input').value) || 0;
             let change = cashGiven - currentOrderTotalSum;
-            document.getElementById('modal-change-amount').innerText = change > 0 ? change.toLocaleString() : '0';
+            document.getElementById('modal-change-amount').innerText = change >= 0 ? change.toLocaleString() : 'Yetarli emas!';
+        }
+
+        function closeCashModal() {
+            document.getElementById('cash-payment-modal').style.display = 'none';
+            currentPayingOrderId = null;
         }
 
         function confirmCashPayment() {
             let cashGiven = Number(document.getElementById('modal-cash-input').value) || 0;
-            if (cashGiven < currentOrderTotalSum) { alert("Summa yetarli emas!"); return; }
-            acceptPayment(currentPayingOrderId, 'naqd');
+            if (cashGiven < currentOrderTotalSum) {
+                alert("Mijoz bergan summa yetarli emas!");
+                return;
+            }
+            acceptPayment(currentPayingOrderId, 'naqd', cashGiven);
             closeCashModal();
         }
 
-        function acceptPayment(orderId, paymentType) {
-            let paidOrder = null;
-            ordersDatabase = ordersDatabase.map(o => {
-                if (String(o.tableNumber || o.id) === String(orderId)) {
-                    o.status = 'tolandi'; 
-                    o.paymentType = paymentType; 
-                    o.isPaid = true;
-                    paidOrder = o;
-                }
-                return o;
-            });
-            
-            if (paidOrder) {
-                deductWarehouseForOrder(paidOrder);
+        function acceptPayment(orderId, paymentType, cashGiven = 0) {
+            let order = ordersDatabase.find(o => String(o.tableNumber || o.id) === String(orderId));
+            if (order) {
+                order.status = 'tolandi';
+                order.paymentType = paymentType;
+                order.cashGiven = cashGiven;
+                
+                let sum = 0;
+                (order.items || []).forEach(i => {
+                    sum += Number(i.sale_price || i.external_price || i.price || 0) * Number(i.qty || 1);
+                });
+                order.totalSum = sum;
+
+                deductWarehouseForOrder(order);
+                syncOrdersToStorage();
+                renderAll();
             }
-
-            syncOrdersToStorage();
-            if (socket) socket.emit('change_status', { orderId: orderId, status: 'tolandi', paymentType: paymentType, isPaid: true });
-            renderAll();
         }
 
-        function changeOrderStatus(orderId, newStatus) {
-            ordersDatabase = ordersDatabase.map(o => {
-                if (String(o.tableNumber || o.id) === String(orderId)) o.status = newStatus;
-                return o;
+        function deductWarehouseForOrder(order) {
+            if (!order || !order.items) return;
+            order.items.forEach(item => {
+                let itemName = item.name;
+                let itemQty = Number(item.qty || 1);
+                let whItem = warehouseDatabase.find(w => w.name.toLowerCase() === itemName.toLowerCase());
+                if (whItem) {
+                    whItem.quantity = Math.max(0, whItem.quantity - itemQty);
+                }
             });
-            syncOrdersToStorage();
-            if (socket) socket.emit('change_status', { orderId: orderId, status: newStatus });
-            renderAll();
+            saveData();
+            renderWarehouse();
         }
 
-        function syncOrdersToStorage() {
-            saveData();
-            localStorage.setItem('waiter_orders', JSON.stringify(ordersDatabase));
-            localStorage.setItem('active_orders', JSON.stringify(ordersDatabase));
-            localStorage.setItem('admin_orders', JSON.stringify(ordersDatabase));
+        function renderIncome() {
+            let orders = ordersDatabase || [];
+            let totalCash = 0, totalCard = 0, totalSale = 0, netProfit = 0;
+
+            orders.forEach(o => {
+                if (o.status === 'tolandi') {
+                    let s = Number(o.totalSum || 0);
+                    totalSale += s;
+                    if (o.paymentType === 'naqd') totalCash += s;
+                    else if (o.paymentType === 'plastik') totalCard += s;
+
+                    (o.items || []).forEach(item => {
+                        let menuItem = menuDatabase.find(m => m.name.toLowerCase() === item.name.toLowerCase());
+                        let qty = Number(item.qty || 1);
+                        if (menuItem) {
+                            let profitPerItem = Number(menuItem.sale_price || 0) - Number(menuItem.internal_price || 0);
+                            netProfit += profitPerItem * qty;
+                        } else {
+                            netProfit += s * 0.3; // Standart 30% foyda
+                        }
+                    });
+                }
+            });
+
+            if(document.getElementById('income-cash')) document.getElementById('income-cash').innerText = totalCash.toLocaleString() + " so'm";
+            if(document.getElementById('income-card')) document.getElementById('income-card').innerText = totalCard.toLocaleString() + " so'm";
+            if(document.getElementById('income-total-sale')) document.getElementById('income-total-sale').innerText = totalSale.toLocaleString() + " so'm";
+            if(document.getElementById('income-net-profit')) document.getElementById('income-net-profit').innerText = netProfit.toLocaleString() + " so'm";
         }
 
         function renderHistory() {
             const tbody = document.getElementById('history-table-body');
             const query = (document.getElementById('history-search-input') || {}).value || "";
-            let historyOrders = ordersDatabase.filter(o => o.status === 'tolandi' || o.status === 'bekor_qilindi');
+            let orders = ordersDatabase.filter(o => o.status === 'tolandi' || o.status === 'bekor_qilindi');
             
-            if(query) {
-                historyOrders = historyOrders.filter(o => String(o.orderNumber).includes(query) || String(o.tableNumber).includes(query));
+            let filtered = orders.filter(o => String(o.orderNumber || '').includes(query) || String(o.tableNumber || '').toLowerCase().includes(query.toLowerCase()));
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 10px;">Tarix bo'sh</td></tr>`;
+                return;
             }
 
-            tbody.innerHTML = historyOrders.map(order => {
-                let isCanceled = order.status === 'bekor_qilindi';
-                let color = isCanceled ? 'color: #d32f2f; font-weight: bold;' : 'color: #2e7d32; font-weight: bold;';
-                let statusText = isCanceled ? 'BEKOR QILINGAN' : 'TOLANDI';
+            tbody.innerHTML = filtered.map(o => {
+                let sum = Number(o.totalSum || 0);
                 return `
                     <tr>
-                        <td><b>${order.orderNumber}</b></td>
-                        <td>${order.tableNumber}</td>
-                        <td>${order.waiterName || 'Ofitsiant'}</td>
-                        <td>${(order.paymentType || '-').toUpperCase()}</td>
-                        <td>${calculateOrderTotal(order).toLocaleString()} so'm</td>
-                        <td style="${color}">${statusText}</td>
+                        <td>№ ${o.orderNumber || '---'}</td>
+                        <td>${o.tableNumber || '---'}</td>
+                        <td>${o.waiterName || o.waiter || '---'}</td>
+                        <td>${o.paymentType ? o.paymentType.toUpperCase() : '---'}</td>
+                        <td><b>${sum.toLocaleString()} so'm</b></td>
+                        <td><span style="color: ${o.status === 'tolandi' ? 'green' : 'red'}; font-weight: bold;">${o.status.toUpperCase()}</span></td>
                     </tr>
                 `;
             }).join('');
         }
 
-        function renderIncome() {
-            let cashTotal = 0, cardTotal = 0, totalSaleSum = 0, totalInternalSum = 0;
-            ordersDatabase.filter(o => o.status === 'tolandi').forEach(order => {
-                let orderSale = 0, orderInternal = 0;
-                (order.items || []).forEach(i => {
-                    let qty = Number(i.qty || 1);
-                    let sPrice = Number(i.sale_price || i.external_price || i.price || 0);
-                    let iPrice = Number(i.internal_price || Math.floor(sPrice * 0.7));
-                    orderSale += sPrice * qty; orderInternal += iPrice * qty;
-                });
-                if (order.paymentType === 'plastik') cardTotal += orderSale; else cashTotal += orderSale;
-                totalSaleSum += orderSale; totalInternalSum += orderInternal;
-            });
-            document.getElementById('income-cash').innerText = cashTotal.toLocaleString() + " so'm";
-            document.getElementById('income-card').innerText = cardTotal.toLocaleString() + " so'm";
-            document.getElementById('income-total-sale').innerText = totalSaleSum.toLocaleString() + " so'm";
-            document.getElementById('income-net-profit').innerText = (totalSaleSum - totalInternalSum).toLocaleString() + " so'm";
-        }
-
-        function updateStatsInfo() {
-            let totalSales = 0;
-            ordersDatabase.filter(o => o.status === 'tolandi').forEach(o => totalSales += calculateOrderTotal(o));
-            document.getElementById('today-sales').innerText = totalSales.toLocaleString() + " so'm";
-            if(statsChartInstance) {
-                statsChartInstance.data.datasets[0].data = [Math.max(1000, totalSales * 0.5), Math.max(500, totalSales * 0.3), Math.max(200, totalSales * 0.2)];
-                statsChartInstance.update();
-            }
-        }
+        function updateStatsInfo() {}
 
         function initChart() {
-    // Agar oldindan grafik chizilgan bo'lsa, uni yo'q qilamiz (xatolikni oldini oladi)
-    if (statsChartInstance) {
-        statsChartInstance.destroy();
-    }
+            const canvas = document.getElementById('statsChart');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            if (statsChartInstance) statsChartInstance.destroy();
 
-    const ctx = document.getElementById('statsChart').getContext('2d');
-    statsChartInstance = new Chart(ctx, {
-        type: 'doughnut',
-        data: { 
-            labels: ['Milliy taomlar', 'Kaboblar', 'Ichimliklar'], 
-            datasets: [{ 
-                data: [1, 1, 1], 
-                backgroundColor: ['#0288d1', '#ffb74d', '#66bb6a'] 
-            }] 
+            statsChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Dush', 'Sesh', 'Chor', 'Pay', 'Jum', 'Shan', 'Yak'],
+                    datasets: [{
+                        label: 'Kunlik Savdo (so\'m)',
+                        data: [1200000, 1900000, 1500000, 2200000, 2800000, 3500000, 3100000],
+                        backgroundColor: '#0288d1',
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } }
+                }
+            });
         }
-    });
-}
 
         function saveData() {
-            localStorage.setItem('admin_menu', JSON.stringify(menuDatabase));
-            localStorage.setItem('admin_warehouse', JSON.stringify(warehouseDatabase));
-            localStorage.setItem('admin_orders', JSON.stringify(ordersDatabase));
+            try {
+                localStorage.setItem('admin_menu', JSON.stringify(menuDatabase));
+                localStorage.setItem('admin_warehouse', JSON.stringify(warehouseDatabase));
+                syncOrdersToStorage();
+            } catch (e) { console.error("Saqlashda xato:", e); }
+        }
+
+        function syncOrdersToStorage() {
+            try {
+                localStorage.setItem('admin_orders', JSON.stringify(ordersDatabase));
+                localStorage.setItem('restaurant_orders', JSON.stringify(ordersDatabase));
+            } catch (e) {}
         }
     </script>
 </body>

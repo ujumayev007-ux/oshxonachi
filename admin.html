@@ -44,6 +44,25 @@
         .modal-content p { margin-bottom: 10px; font-size: 14px; }
         .modal-content input { margin-bottom: 12px; }
         .modal-buttons { display: flex; gap: 10px; margin-top: 15px; }
+        /* --- RESPONSIVE DESIGN --- */
+@media screen and (max-width: 1024px) {
+    body { padding: 10px; }
+    header { flex-direction: column; align-items: flex-start; }
+    .nav-tabs { width: 100%; overflow-x: auto; padding-bottom: 5px; }
+}
+
+@media screen and (max-width: 768px) {
+    body { padding: 5px; }
+    header { padding: 10px; }
+    h1 { font-size: 20px; }
+    #menu div[style*="display: grid"] { grid-template-columns: 1fr !important; }
+    #stats div[style*="grid-template-columns"] { grid-template-columns: 1fr !important; }
+    table, th, td { font-size: 12px; padding: 6px; }
+    .btn { padding: 8px 10px; font-size: 12px; }
+    #warehouse div[style*="display: flex"] { flex-direction: column; }
+    #warehouse div[style*="display: flex"] input,
+    #warehouse div[style*="display: flex"] button { width: 100% !important; }
+}
     </style>
 </head>
 <body>

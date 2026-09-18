@@ -84,7 +84,8 @@
                     <button class="tab-btn" onclick="switchTab('income', event)">Daromad</button>
                     <button class="tab-btn" onclick="switchTab('history', event)">Tarix</button>
                     <button class="tab-btn" onclick="switchTab('stats', event)">Statistika</button>
-                     <button class="tab-btn" onclick="switchTab('waiters', event)">Ofitsiantlar</button>
+                    <button class="tab-btn" onclick="switchTab('waiters', event)">Ofitsiantlar</button>
+                    <button class="tab-btn" onclick="switchTab('printers', event)">🖨️ Printerlar IP</button>
                 </div>
             </div>
         </header>
@@ -350,6 +351,34 @@
         </div>
 
     </div>
+      <!-- PRINTERLAR SOZLAMASI (YANGI QO'SHILGAN TAB) -->
+        <div id="printers" class="section-content">
+            <h2>Oshxona Printerlari IP Adreslari</h2>
+            <div style="background: #f9f9f9; padding: 15px; border-radius: 8px; margin-top: 15px; border: 1px solid #e0e0e0;">
+                <div style="display: grid; grid-template-columns: 1fr 2fr auto; gap: 10px; align-items: center; margin-bottom: 10px;">
+                    <label><b>Kaboblar bo'limi printeri IP:</b></label>
+                    <input type="text" id="ip-kabob" placeholder="Masalan: 192.168.1.51">
+                    <button class="btn btn-blue" onclick="savePrinterIP('kabob')">Saqlash</button>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 2fr auto; gap: 10px; align-items: center; margin-bottom: 10px;">
+                    <label><b>Somsalar bo'limi printeri IP:</b></label>
+                    <input type="text" id="ip-somsa" placeholder="Masalan: 192.168.1.52">
+                    <button class="btn btn-blue" onclick="savePrinterIP('somsa')">Saqlash</button>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 2fr auto; gap: 10px; align-items: center; margin-bottom: 10px;">
+                    <label><b>Fast Food printeri IP:</b></label>
+                    <input type="text" id="ip-fastfood" placeholder="Masalan: 192.168.1.53">
+                    <button class="btn btn-blue" onclick="savePrinterIP('fastfood')">Saqlash</button>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 2fr auto; gap: 10px; align-items: center;">
+                    <label><b>Umumiy Oshxona printeri IP:</b></label>
+                    <input type="text" id="ip-oshxona" placeholder="Masalan: 192.168.1.54">
+                    <button class="btn btn-blue" onclick="savePrinterIP('oshxona')">Saqlash</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
      
     <!-- Naqd to'lov uchun modal oynasi -->
     <div id="cash-payment-modal" class="modal-overlay" style="display: none;">
@@ -378,7 +407,12 @@
 
       window.onload = function() {
     loadInitialData();
-    
+     // Sahifa yuklanganda saqlangan printer IP larini inputlarga chiqarish
+            let savedIPs = JSON.parse(localStorage.getItem('kitchen_printer_ips')) || {};
+            if(document.getElementById('ip-kabob')) document.getElementById('ip-kabob').value = savedIPs.kabob || '';
+            if(document.getElementById('ip-somsa')) document.getElementById('ip-somsa').value = savedIPs.somsa || '';
+            if(document.getElementById('ip-fastfood')) document.getElementById('ip-fastfood').value = savedIPs.fastfood || '';
+            if(document.getElementById('ip-oshxona')) document.getElementById('ip-oshxona').value = savedIPs.oshxona || '';
     if (typeof io !== 'undefined') {
         socket = io('https://oshxonachi.onrender.com');
 
@@ -430,6 +464,49 @@
         }
     });
     };
+         // Printer IP manzilini saqlash funksiyasi
+        function savePrinterIP(section) {
+            let ipValue = document.getElementById(`ip-${section}`).value.trim();
+            let savedIPs = JSON.parse(localStorage.getItem('kitchen_printer_ips')) || {};
+            savedIPs[section] = ipValue;
+            localStorage.setItem('kitchen_printer_ips', JSON.stringify(savedIPs));
+            alert(`${section.toUpperCase()} bo'limi printeri IP manzili saqlandi: ${ipValue}`);
+        }
+
+        // Printerlar orqali cheklarni chiqarish/tarqatish funksiyasi
+        function printKitchenReceipts(virtualReceipts) {
+            let savedIPs = JSON.parse(localStorage.getItem('kitchen_printer_ips')) || {};
+
+            virtualReceipts.forEach(receipt => {
+                let printerIP = savedIPs[receipt.section];
+                
+                if (printerIP) {
+                    console.log(`[TARMOQ PRINTERI] ${receipt.title} -> IP: ${printerIP} ga yuborilmoqda...`);
+                } else {
+                    console.warn(`[DIQQAT] ${receipt.section} uchun IP manzil kiritilmagan! Brauzer oynasi ochiladi.`);
+                }
+            });
+
+            if (virtualReceipts.length > 0) {
+                let printWindow = window.open('', '_blank', 'width=400,height=600');
+                if (printWindow) {
+                    printWindow.document.write('<html><head><title>Oshxona Cheklari</title><style>body{font-family: monospace; font-size: 13px; padding: 10px;}</style></head><body>');
+                    virtualReceipts.forEach(r => {
+                        let ipInfo = savedIPs[r.section] ? `(IP: ${savedIPs[r.section]})` : '(IP belgilanmagan)';
+                        printWindow.document.write(`<div style="border-bottom: 2px dashed #000; padding-bottom: 10px; margin-bottom: 10px;">`);
+                        printWindow.document.write(`<b style="color:blue;">Printer IP: ${ipInfo}</b><pre>${r.content}</pre>`);
+                        printWindow.document.write(`</div>`);
+                    });
+                    printWindow.document.write('</body></html>');
+                    printWindow.document.close();
+                    printWindow.focus();
+                    setTimeout(() => {
+                        printWindow.print();
+                        printWindow.close();
+                    }, 300);
+                }
+            }
+        }
          // Ofitsiantlarni yuklash va boshqarish
         function loadWaiters() {
             let waiters = JSON.parse(localStorage.getItem('restaurant_waiters')) || [];

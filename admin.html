@@ -1132,7 +1132,7 @@
             renderWarehouse();
         }
 
-        function renderOrders() {
+      function renderOrders() {
             const container = document.getElementById('orders-container');
             loadOrdersFromStorage();
             let activeOrders = ordersDatabase.filter(o => o.status !== 'tolandi' && o.status !== 'bekor_qilindi');
@@ -1146,33 +1146,54 @@
                 let orderTotalSum = 0;
                 let itemsListHTML = `<ul style="list-style: none; padding: 0; margin: 8px 0; background: #ffffff; border: 1px solid #b3d7ff; border-radius: 6px; padding: 8px;">` + 
                     (order.items || []).map(i => {
-                        let price = Number(i.sale_price || i.price || 0);
+                        let price = Number(i.sale_price || i.external_price || i.price || 0);
                         let qty = Number(i.qty || 1);
                         orderTotalSum += price * qty;
-                        return `<li style="padding: 6px 0; border-bottom: 1px dashed #e1f5fe; display: flex; justify-content: space-between; align-items: center;"><span>${i.name} (${qty} ta)</span> <b>${(price * qty).toLocaleString()} so'm</b></li>`;
+                        return `<li style="padding: 6px 0; border-bottom: 1px dashed #e1f5fe; display: flex; justify-content: space-between; font-size: 14px;">
+                            <span><b>${i.name || "Taom"}</b> — ${qty} ta × ${price.toLocaleString()}</span>
+                            <b style="color: #2e7d32;">${(price * qty).toLocaleString()} so'm</b>
+                        </li>`;
                     }).join('') + `</ul>`;
+
+                const orderId = String(order.tableNumber || order.id);
+                let paymentHTML = "";
                 
+                if (order.isPrinted && order.status !== 'tolandi') {
+                    paymentHTML = `
+                        <div style="margin-top: 8px; background: #fffde7; padding: 10px; border: 1px solid #ffd54f; border-radius: 6px;">
+                            <span style="font-size: 13px; color: #f57f17; font-weight: bold;">To'lov turini tanlang:</span>
+                            <div class="payment-options-container">
+                                <button class="pay-option-btn pay-cash-btn" onclick="openCashModal('${orderId}')">Naqd</button>
+                                <button class="pay-option-btn pay-card-btn" onclick="acceptPayment('${orderId}', 'plastik')">Plastik</button>
+                            </div>
+                        </div>`;
+                }
+
                 return `
                     <div class="order-card">
-                        <div>
-                            <p><b>Stol №:</b> ${order.tableNumber || order.id}</p>
-                            <p><b>Ofitsiant:</b> ${order.waiter || order.waiterName || 'Nomaʼlum'}</p>
-                            <p><b>Buyurtma №:</b> ${order.orderNumber || '---'}</p>
-                            <p><b>Status:</b> <span class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded text-xs font-bold">${order.status || 'Yangi'}</span></p>
-                        </div>
-                        <div style="flex: 2;">
-                            <p style="font-weight: bold; margin-bottom: 4px;">Buyurtma tarkibi:</p>
+                        <div style="flex: 1; min-width: 280px;">
+                            <p style="font-size: 16px; margin-bottom: 6px;">🪑 <b style="color: #0d47a1; font-size: 18px;">${order.tableNumber}</b> | № <b>${order.orderNumber}</b> | Ofitsant: <b>${order.waiterName || 'Ofitsiant'}</b></p>
+                            <p style="font-size: 14px;">Holat: <b style="color: #d32f2f;">${(order.status || 'yangi').toUpperCase()}</b></p>
                             ${itemsListHTML}
-                            <p style="font-weight: bold; text-align: right; color: #0d47a1;">Jami: ${orderTotalSum.toLocaleString()} so'm</p>
+                            <div style="margin-top: 6px; font-size: 15px; font-weight: bold; color: #0d47a1; background: #e1f5fe; padding: 6px 10px; border-radius: 5px; display: inline-block;">
+                                Jami: ${orderTotalSum.toLocaleString()} so'm
+                            </div>
+                            ${paymentHTML}
                         </div>
-                        <div style="display: flex; flex-direction: column; gap: 6px; justify-content: center;">
-                            <button class="btn btn-blue" onclick="openCashModal('${order.tableNumber || order.id}', ${orderTotalSum})">Naqd To'lov</button>
-                            <button class="btn btn-blue" style="background-color: #0288d1;" onclick="payCard('${order.tableNumber || order.id}', ${orderTotalSum})">Plastik To'lov</button>
-                            <button class="btn btn-red" onclick="cancelOrder('${order.tableNumber || order.id}')">Bekor qilish</button>
+                        <div style="display: flex; gap: 5px; flex-direction: column;">
+                            <button class="btn" style="background: #ffb74d;" onclick="changeOrderStatus('${orderId}', 'qabul_qilindi')">Qabul</button>
+                            <button class="btn" style="background: #4fc3f7;" onclick="changeOrderStatus('${orderId}', 'tayyorlanyapti')">Jarayonda</button>
+                            <button class="btn btn-blue" onclick="changeOrderStatus('${orderId}', 'tayyor')">Tayyor</button>
+                            <button class="btn btn-red" style="margin-top: 10px;" onclick="changeOrderStatus('${orderId}', 'bekor_qilindi')">Bekor qilish</button>
                         </div>
-                    </div>
-                `;
+                    </div>`;
             }).join('');
+        }
+
+        function calculateOrderTotal(order) {
+            let total = 0;
+            (order.items || []).forEach(i => total += Number(i.sale_price || i.external_price || i.price || 0) * Number(i.qty || 1));
+            return total;
         }
 
         function openCashModal(orderId, totalSum) {

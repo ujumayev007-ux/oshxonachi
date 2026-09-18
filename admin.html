@@ -84,6 +84,7 @@
                     <button class="tab-btn" onclick="switchTab('income', event)">Daromad</button>
                     <button class="tab-btn" onclick="switchTab('history', event)">Tarix</button>
                     <button class="tab-btn" onclick="switchTab('stats', event)">Statistika</button>
+                     <button class="tab-btn" onclick="switchTab('waiters', event)">Ofitsiantlar</button>
                 </div>
             </div>
         </header>
@@ -127,7 +128,7 @@
                         <th>Kategoriya</th>
                         <th>Ichki Narx (so'm)</th>
                         <th>Sotish Narxi (so'm)</th>
-                        <th>Ofitsant uchun ko'rinishi</th>
+                        <th>Ofitsiant uchun ko'rinishi</th>
                         <th>Amal</th>
                     </tr>
                 </thead>
@@ -202,7 +203,7 @@
                     <tr>
                         <th>Buyurtma №</th>
                         <th>Stol</th>
-                        <th>Ofitsant</th>
+                        <th>Ofitsiant</th>
                         <th>To'lov turi</th>
                         <th>Summa</th>
                         <th>Status</th>
@@ -268,27 +269,54 @@
         </table>
     </div>
 </div>
+  <!-- OFITSIANTLARNI BOSHQARISH -->
+        <div id="waiters" class="section-content">
+            <h2>Ofitsiantlarni Boshqarish va Nazorat</h2>
+            <div class="bg-white p-6 rounded-xl shadow-md mb-6">
+                <h3 class="text-lg font-bold text-gray-800 mb-4">👨‍🍳 Ofitsiant Qo'shish</h3>
+                
+                <form id="add-waiter-form" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 bg-gray-50 p-4 rounded-lg border">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1">Ofitsiant ismi</label>
+                        <input type="text" id="waiter-name" required placeholder="Masalan: Anvar" class="w-full text-sm border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1">Login</label>
+                        <input type="text" id="waiter-login" required placeholder="Masalan: anvar_ofitsiant" class="w-full text-sm border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 mb-1">Parol</label>
+                        <input type="password" id="waiter-password" required placeholder="******" class="w-full text-sm border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none">
+                    </div>
+                    <div class="md:col-span-3 flex justify-end">
+                        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-5 py-2 rounded-lg transition">
+                            + Ofitsiant qo'shish
+                        </button>
+                    </div>
+                </form>
 
-        <!-- O'ng tomon: Ofitsiantlar faoliyati -->
-        <div style="background: #f9f9f9; padding: 15px; border-radius: 8px; border: 1px solid #e0e0e0;">
-            <h3 style="font-size: 16px; margin-bottom: 10px; color: #333;">👥 Ofitsiantlar faoliyati</h3>
-            <table style="width: 100%; font-size: 13px; border-collapse: collapse;">
-                <thead>
-                    <tr style="border-bottom: 2px solid #ddd; text-align: left;">
-                        <th style="padding: 6px;">Ofitsiant</th>
-                        <th style="padding: 6px;">Buyurtma</th>
-                        <th style="padding: 6px;">Ishlagan vaqti</th>
-                        <th style="padding: 6px;">Tushum</th>
-                    </tr>
-                </thead>
-                <tbody id="waiters-stats-body">
-                    <tr><td colspan="4" style="text-align: center; padding: 10px;">Ma'lumot yo'q</td></tr>
-                </tbody>
-            </table>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-gray-100 text-gray-700 text-xs uppercase">
+                                <th class="p-3 border-b">Ismi</th>
+                                <th class="p-3 border-b">Login</th>
+                                <th class="p-3 border-b">Parol</th>
+                                <th class="p-3 border-b text-center">Amallar</th>
+                            </tr>
+                        </thead>
+                        <tbody id="waiters-table-body" class="text-sm text-gray-700">
+                            <tr>
+                                <td colspan="4" class="p-4 text-center text-gray-500 italic">Hozircha ofitsiantlar qo'shilmagan...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
 
     </div>
-</div>
+     
     <!-- Naqd to'lov uchun modal oynasi -->
     <div id="cash-payment-modal" class="modal-overlay" style="display: none;">
         <div class="modal-content">
@@ -368,6 +396,114 @@
         }
     });
     };
+         // Ofitsiantlarni yuklash va boshqarish
+        function loadWaiters() {
+            let waiters = JSON.parse(localStorage.getItem('restaurant_waiters')) || [];
+            let tbody = document.getElementById('waiters-table-body');
+            if (!tbody) return;
+
+            if (waiters.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-gray-500 italic">Hozircha ofitsiantlar qo'shilmagan...</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = '';
+            waiters.forEach((w, index) => {
+                tbody.innerHTML += `
+                    <tr class="border-b hover:bg-gray-50">
+                        <td class="p-3 font-medium">${w.name}</td>
+                        <td class="p-3">${w.login}</td>
+                        <td class="p-3">••••••</td>
+                        <td class="p-3 text-center">
+                            <button onclick="deleteWaiter(${index})" class="bg-red-500 hover:bg-red-600 text-white text-xs px-3 py-1 rounded transition">O'chirish</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        document.addEventListener('submit', function(e) {
+            if (e.target && e.target.id === 'add-waiter-form') {
+                e.preventDefault();
+                
+                let name = document.getElementById('waiter-name').value.trim();
+                let login = document.getElementById('waiter-login').value.trim();
+                let password = document.getElementById('waiter-password').value.trim();
+
+                let waiters = JSON.parse(localStorage.getItem('restaurant_waiters')) || [];
+
+                let exists = waiters.some(w => w.login === login);
+                if (exists) {
+                    alert('Bu login allaqachon band qilingan! Boshqa login kiriting.');
+                    return;
+                }
+
+                waiters.push({ name, login, password });
+                localStorage.setItem('restaurant_waiters', JSON.stringify(waiters));
+
+                e.target.reset();
+                loadWaiters();
+                renderAll();
+                alert("Ofitsiant muvaffaqiyatli qo'shildi!");
+            }
+        });
+
+        function deleteWaiter(index) {
+            if (confirm("Rostdan ham bu ofitsiantni o'chirmoqchimisiz?")) {
+                let waiters = JSON.parse(localStorage.getItem('restaurant_waiters')) || [];
+                waiters.splice(index, 1);
+                localStorage.setItem('restaurant_waiters', JSON.stringify(waiters));
+                loadWaiters();
+                renderAll();
+            }
+        }
+
+        // Ofitsiantlar foizli oyligini hisoblash funksiyasi (Admin 39 dan)
+        function calculateWaiterCommissions() {
+            let orders = ordersDatabase || [];
+            let waiters = JSON.parse(localStorage.getItem('restaurant_waiters')) || [];
+            let globalPercent = parseFloat(document.getElementById('global-waiter-percentage')?.value) || 10;
+            
+            let tbody = document.getElementById('waiter-commission-table-body');
+            if (!tbody) return;
+
+            if (waiters.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-500 italic">Hozircha ro'yxatda ofitsiantlar mavjud emas.</td></tr>`;
+                return;
+            }
+
+            let waiterStats = {};
+            waiters.forEach(w => {
+                waiterStats[w.name] = { count: 0, totalSales: 0 };
+            });
+
+            orders.forEach(order => {
+                let waiterName = order.waiter || order.waiterName || 'Nomaʼlum';
+                let orderTotal = parseFloat(order.totalSum || order.total_price || order.total || 0);
+
+                if (!waiterStats[waiterName]) {
+                    waiterStats[waiterName] = { count: 0, totalSales: 0 };
+                }
+                waiterStats[waiterName].count += 1;
+                waiterStats[waiterName].totalSales += orderTotal;
+            });
+
+            tbody.innerHTML = '';
+            Object.keys(waiterStats).forEach(name => {
+                let data = waiterStats[name];
+                let commission = (data.totalSales * globalPercent) / 100;
+
+                tbody.innerHTML += `
+                    <tr class="border-b hover:bg-gray-50">
+                        <td class="p-3 font-medium text-gray-800">${name}</td>
+                        <td class="p-3 text-center">${data.count} ta</td>
+                        <td class="p-3 text-right font-semibold text-blue-600">${data.totalSales.toLocaleString()} so'm</td>
+                        <td class="p-3 text-center"><span class="bg-blue-50 text-blue-700 px-2 py-1 rounded text-xs font-bold">${globalPercent}%</span></td>
+                        <td class="p-3 text-right font-bold text-green-600">${commission.toLocaleString()} so'm</td>
+                    </tr>
+                `;
+            });
+        }
         function loadInitialData() {
             try {
                 let defaultMenu = [
@@ -1054,7 +1190,7 @@ function updateClock() {
                 return `
                     <div class="order-card">
                         <div style="flex: 1; min-width: 280px;">
-                            <p style="font-size: 16px; margin-bottom: 6px;">🪑 <b style="color: #0d47a1; font-size: 18px;">${order.tableNumber}</b> | № <b>${order.orderNumber}</b> | Ofitsant: <b>${order.waiterName || 'Ofitsiant'}</b></p>
+                            <p style="font-size: 16px; margin-bottom: 6px;">🪑 <b style="color: #0d47a1; font-size: 18px;">${order.tableNumber}</b> | № <b>${order.orderNumber}</b> | Ofitsiant: <b>${order.waiterName || 'Ofitsiant'}</b></p>
                             <p style="font-size: 14px;">Holat: <b style="color: #d32f2f;">${(order.status || 'yangi').toUpperCase()}</b></p>
                             ${itemsListHTML}
                             <div style="margin-top: 6px; font-size: 15px; font-weight: bold; color: #0d47a1; background: #e1f5fe; padding: 6px 10px; border-radius: 5px; display: inline-block;">

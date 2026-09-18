@@ -1357,6 +1357,53 @@
                 return `${parts[2]}.${parts[1]}`;
             });
             let dataValues = Object.values(daysMap);
+  function renderIncome() {
+            let cashTotal = 0, cardTotal = 0, totalSaleSum = 0, totalInternalSum = 0;
+            ordersDatabase.filter(o => o.status === 'tolandi').forEach(order => {
+                let orderSale = 0, orderInternal = 0;
+                (order.items || []).forEach(i => {
+                    let qty = Number(i.qty || 1);
+                    let sPrice = Number(i.sale_price || i.external_price || i.price || 0);
+                    let iPrice = Number(i.internal_price || Math.floor(sPrice * 0.7));
+                    orderSale += sPrice * qty; orderInternal += iPrice * qty;
+                });
+                if (order.paymentType === 'plastik') cardTotal += orderSale; else cashTotal += orderSale;
+                totalSaleSum += orderSale; totalInternalSum += orderInternal;
+            });
+            document.getElementById('income-cash').innerText = cashTotal.toLocaleString() + " so'm";
+            document.getElementById('income-card').innerText = cardTotal.toLocaleString() + " so'm";
+            document.getElementById('income-total-sale').innerText = totalSaleSum.toLocaleString() + " so'm";
+            document.getElementById('income-net-profit').innerText = (totalSaleSum - totalInternalSum).toLocaleString() + " so'm";
+        }
+
+        function updateStatsInfo() {
+            let totalSales = 0;
+            ordersDatabase.filter(o => o.status === 'tolandi').forEach(o => totalSales += calculateOrderTotal(o));
+            document.getElementById('today-sales').innerText = totalSales.toLocaleString() + " so'm";
+            if(statsChartInstance) {
+                statsChartInstance.data.datasets[0].data = [Math.max(1000, totalSales * 0.5), Math.max(500, totalSales * 0.3), Math.max(200, totalSales * 0.2)];
+                statsChartInstance.update();
+            }
+        }
+
+        function initChart() {
+    // Agar oldindan grafik chizilgan bo'lsa, uni yo'q qilamiz (xatolikni oldini oladi)
+    if (statsChartInstance) {
+        statsChartInstance.destroy();
+    }
+
+    const ctx = document.getElementById('statsChart').getContext('2d');
+    statsChartInstance = new Chart(ctx, {
+        type: 'doughnut',
+        data: { 
+            labels: ['Milliy taomlar', 'Kaboblar', 'Ichimliklar'], 
+            datasets: [{ 
+                data: [1, 1, 1], 
+                backgroundColor: ['#0288d1', '#ffb74d', '#66bb6a'] 
+            }] 
+        }
+    });
+}
 
             if (statsChartInstance) {
                 statsChartInstance.destroy();
@@ -1386,6 +1433,7 @@
         function saveData() {
             localStorage.setItem('admin_menu', JSON.stringify(menuDatabase));
             localStorage.setItem('admin_warehouse', JSON.stringify(warehouseDatabase));
+            localStorage.setItem('admin_orders', JSON.stringify(ordersDatabase));
         }
     </script>
 </body>

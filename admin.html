@@ -216,7 +216,41 @@
         <!-- STATISTIKA -->
 <div id="stats" class="section-content">
     <h2>Kunlik, haftalik va oylik statistika</h2>
-    
+      <!-- OFITSIANTLAR FOIZLI OYLIK HISOBOTI (Admin 39 dan qo'shilgan) -->
+            <div class="bg-white p-6 rounded-xl shadow-md mb-6 border border-gray-100">
+                <div class="flex flex-col md:flex-row justify-between items-center mb-4 gap-4">
+                    <h3 class="text-lg font-bold text-gray-800">💰 Ofitsiantlar Oyligi va Foiz Hisoblagichi</h3>
+                    
+                    <div class="flex items-center gap-2">
+                        <label class="text-sm font-medium text-gray-600">Standart foiz:</label>
+                        <select id="global-waiter-percentage" onchange="calculateWaiterCommissions()" class="text-sm border rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-blue-500 outline-none bg-gray-50">
+                            <option value="5">5%</option>
+                            <option value="7">7%</option>
+                            <option value="10" selected>10%</option>
+                            <option value="12">12%</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-gray-100 text-gray-700 text-xs uppercase">
+                                <th class="p-3 border-b">Ofitsiant Ismi</th>
+                                <th class="p-3 border-b text-center">Buyurtmalar Soni</th>
+                                <th class="p-3 border-b text-right">Jami Tushum (Savdo)</th>
+                                <th class="p-3 border-b text-center">Foiz (%)</th>
+                                <th class="p-3 border-b text-right">Hisoblangan Oylik (Mukofot)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="waiter-commission-table-body" class="text-sm text-gray-700">
+                            <tr>
+                                <td colspan="5" class="p-4 text-center text-gray-500 italic">Ma'lumotlar yuklanmoqda...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
     <!-- 1. Kunlik, haftalik va oylik savdolar uchun 3 ta quti -->
     <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-top: 15px; margin-bottom: 20px;">
         <div style="background: #e3f2fd; padding: 15px; border-radius: 8px; border: 1px solid #bbdefb;">

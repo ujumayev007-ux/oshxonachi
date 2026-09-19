@@ -104,8 +104,34 @@
         </header>
 
         <!-- BUYURTMALAR -->
-        <div id="orders" class="section-content active">
-            <h2>Kelib tushgan buyurtmalar</h2>
+         <div id="orders" class="section-content active">
+            <h2>Kelib tushgan buyurtmalar va Kiloli Osh Buyurtma Qilish</h2>
+            
+            <!-- Kiloli osh uchun maxsus tezkor buyurtma paneli -->
+            <div style="margin-top: 15px; margin-bottom: 20px; background: #e8f5e9; padding: 15px; border-radius: 8px; border: 1px solid #c8e6c9;">
+                <h3 style="font-size: 16px; color: #2e7d32; margin-bottom: 10px;">⚖️ Kiloli Oshni Grammlab Buyurtma Berish (100g qadam bilan)</h3>
+                <div style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr auto; gap: 10px; align-items: center;" class="flex-wrap">
+                    <select id="pos-kiloli-osh-type">
+                        <option value="Toshkent to'y oshi">Toshkent to'y oshi (1kg = 90,000 so'm)</option>
+                        <option value="Buxorocha so'fi oshi">Buxorocha so'fi oshi (1kg = 95,000 so'm)</option>
+                        <option value="Samarqand oshi">Samarqand oshi (1kg = 88,000 so'm)</option>
+                    </select>
+                    <div>
+                        <label style="font-size: 11px; display: block; color: #555;">Gramm (Masalan: 300, 1000):</label>
+                        <input type="number" id="pos-osh-grams" value="500" step="100" min="100" placeholder="Gramm">
+                    </div>
+                    <div>
+                        <label style="font-size: 11px; display: block; color: #555;">Stol Raqami:</label>
+                        <input type="text" id="pos-table-num" value="1" placeholder="Stol №">
+                    </div>
+                    <div>
+                        <label style="font-size: 11px; display: block; color: #555;">Ofitsiant Ismi:</label>
+                        <input type="text" id="pos-waiter-name" value="Anvar" placeholder="Ofitsiant">
+                    </div>
+                    <button class="btn btn-blue" onclick="createGramBasedOshOrder()" style="white-space: nowrap; background: #2e7d32;">Kiloli Osh Qo'shish</button>
+                </div>
+            </div>
+
             <div id="orders-container" style="margin-top: 15px;"></div>
         </div>
         <!-- OSH TV EKRAN SIMULYATSIYASI (YANGI QO'SHILGAN BO'LIM) -->
@@ -223,6 +249,7 @@
                     <input type="text" id="new-menu-name" placeholder="Nomi (masalan: Lag'mon)">
                     <select id="new-menu-category">
                         <option value="Osh">Osh</option>
+                        <option value="Kiloli osh">Kiloli osh</option>
                         <option value="Suyuq ovqatlar">Suyuq ovqatlar</option>
                         <option value="Quyuq taomlar">Quyuq taomlar</option>
                         <option value="Hamirli taomlar">Hamirli taomlar</option>
@@ -524,23 +551,75 @@
         const statusBadge = document.getElementById('connection-status');
 // 1. Avval yordamchi funksiyalarni tashqarida e'lon qilamiz
 function loadInitialMenuData() {
-    let savedMenu = localStorage.getItem('restaurant_menu_items');
-    if (savedMenu) {
-        menuDatabase = JSON.parse(savedMenu);
-    } else {
-        menuDatabase = [
-            { id: 1, name: "0.5 kg To'y oshi", category: "Osh", internalPrice: 35000, salePrice: 45000 },
-            { id: 2, name: "1 kg To'y oshi", category: "Osh", internalPrice: 70000, salePrice: 90000 },
-            { id: 3, name: "2 kg To'y oshi", category: "Osh", internalPrice: 140000, salePrice: 180000 },
-            { id: 4, name: "3 kg To'y oshi", category: "Osh", internalPrice: 210000, salePrice: 270000 },
-            { id: 5, name: "Mastava", category: "Suyuq ovqatlar", internalPrice: 15000, salePrice: 25000 },
-            { id: 6, name: "Qo'y go'shti kabobi", category: "Kaboblar", internalPrice: 25000, salePrice: 38000 }
-        ];
-        localStorage.setItem('restaurant_menu_items', JSON.stringify(menuDatabase));
-    }
-    if (typeof renderMenu === 'function') {
-        renderMenu();
-    }
+            let savedMenu = localStorage.getItem('restaurant_menu_items') || localStorage.getItem('admin_menu');
+            if (savedMenu) {
+                try { menuDatabase = JSON.parse(savedMenu); } catch(e) { menuDatabase = []; }
+            }
+            if (menuDatabase.length === 0) {
+                menuDatabase = [
+                    { id: 1, name: "Toshkent to'y oshi", category: "Kiloli osh", internalPrice: 70000, salePrice: 90000 },
+                    { id: 2, name: "Buxorocha so'fi oshi", category: "Kiloli osh", internalPrice: 75000, salePrice: 95000 },
+                    { id: 3, name: "Samarqand oshi", category: "Kiloli osh", internalPrice: 68000, salePrice: 88000 },
+                    { id: 4, name: "Mastava", category: "Suyuq ovqatlar", internalPrice: 15000, salePrice: 25000 },
+                    { id: 5, name: "Qo'y go'shti kabobi", category: "Kaboblar", internalPrice: 25000, salePrice: 38000 }
+                ];
+                localStorage.setItem('restaurant_menu_items', JSON.stringify(menuDatabase));
+            }
+            renderMenu();
+            updateKiloliOshDropdown();
+        }
+
+        function updateKiloliOshDropdown() {
+            const selectEl = document.getElementById('pos-kiloli-osh-type');
+            if (!selectEl) return;
+            let kiloliItems = menuDatabase.filter(m => m.category === 'Kiloli osh');
+            if (kiloliItems.length > 0) {
+                selectEl.innerHTML = '';
+                kiloliItems.forEach(item => {
+                    let opt = document.createElement('option');
+                    opt.value = item.name;
+                    opt.textContent = `${item.name} (1kg = ${item.salePrice.toLocaleString()} so'm)`;
+                    opt.dataset.price = item.salePrice;
+                    selectEl.appendChild(opt);
+                });
+            }
+        }
+
+        // Dinamik gramm asosida kiloli osh buyurtmasini yaratish
+        function createGramBasedOshOrder() {
+            let oshTypeSelect = document.getElementById('pos-kiloli-osh-type');
+            let gramsInput = document.getElementById('pos-osh-grams');
+            let tableNumInput = document.getElementById('pos-table-num');
+            let waiterNameInput = document.getElementById('pos-waiter-name');
+
+            let oshName = oshTypeSelect.value;
+            let grams = parseFloat(gramsInput.value) || 500;
+            let tableNum = tableNumInput.value.trim() || '1';
+            let waiter = waiterNameInput.value.trim() || 'Anvar';
+
+            // Narxni 1 kg (1000g) narxiga qarab gramm bo'yicha hisoblash
+            let menuItem = menuDatabase.find(m => m.name === oshName);
+            let pricePerKg = menuItem ? menuItem.salePrice : 90000;
+            let calculatedPrice = (pricePerKg * grams) / 1000;
+
+            let newItemName = `${grams}g ${oshName}`;
+            let newOrder = {
+                id: 'ORD-' + Date.now(),
+                tableNumber: tableNum,
+                waiter: waiter,
+                items: [
+                    { name: newItemName, quantity: 1, grams: grams, price: calculatedPrice }
+                ],
+                totalSum: calculatedPrice,
+                status: 'pending',
+                createdAt: new Date().toISOString()
+            };
+
+            ordersDatabase.push(newOrder);
+            saveOrdersToStorage();
+            renderAll();
+            alert(`Stol #${tableNum} uchun ${newItemName} buyurtmasi muvaffaqiyatli qo'shildi!`);
+        }
 }
       window.onload = function() {
           loadInitialMenuData();

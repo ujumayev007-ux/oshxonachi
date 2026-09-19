@@ -104,34 +104,8 @@
         </header>
 
         <!-- BUYURTMALAR -->
-         <div id="orders" class="section-content active">
-            <h2>Kelib tushgan buyurtmalar va Kiloli Osh Buyurtma Qilish</h2>
-            
-            <!-- Kiloli osh uchun maxsus tezkor buyurtma paneli -->
-            <div style="margin-top: 15px; margin-bottom: 20px; background: #e8f5e9; padding: 15px; border-radius: 8px; border: 1px solid #c8e6c9;">
-                <h3 style="font-size: 16px; color: #2e7d32; margin-bottom: 10px;">⚖️ Kiloli Oshni Grammlab Buyurtma Berish (100g qadam bilan)</h3>
-                <div style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr auto; gap: 10px; align-items: center;" class="flex-wrap">
-                    <select id="pos-kiloli-osh-type">
-                        <option value="Toshkent to'y oshi">Toshkent to'y oshi (1kg = 90,000 so'm)</option>
-                        <option value="Buxorocha so'fi oshi">Buxorocha so'fi oshi (1kg = 95,000 so'm)</option>
-                        <option value="Samarqand oshi">Samarqand oshi (1kg = 88,000 so'm)</option>
-                    </select>
-                    <div>
-                        <label style="font-size: 11px; display: block; color: #555;">Gramm (Masalan: 300, 1000):</label>
-                        <input type="number" id="pos-osh-grams" value="500" step="100" min="100" placeholder="Gramm">
-                    </div>
-                    <div>
-                        <label style="font-size: 11px; display: block; color: #555;">Stol Raqami:</label>
-                        <input type="text" id="pos-table-num" value="1" placeholder="Stol №">
-                    </div>
-                    <div>
-                        <label style="font-size: 11px; display: block; color: #555;">Ofitsiant Ismi:</label>
-                        <input type="text" id="pos-waiter-name" value="Anvar" placeholder="Ofitsiant">
-                    </div>
-                    <button class="btn btn-blue" onclick="createGramBasedOshOrder()" style="white-space: nowrap; background: #2e7d32;">Kiloli Osh Qo'shish</button>
-                </div>
-            </div>
-
+        <div id="orders" class="section-content active">
+            <h2>Kelib tushgan buyurtmalar</h2>
             <div id="orders-container" style="margin-top: 15px;"></div>
         </div>
         <!-- OSH TV EKRAN SIMULYATSIYASI (YANGI QO'SHILGAN BO'LIM) -->
@@ -249,7 +223,6 @@
                     <input type="text" id="new-menu-name" placeholder="Nomi (masalan: Lag'mon)">
                     <select id="new-menu-category">
                         <option value="Osh">Osh</option>
-                        <option value="Kiloli osh">Kiloli osh</option>
                         <option value="Suyuq ovqatlar">Suyuq ovqatlar</option>
                         <option value="Quyuq taomlar">Quyuq taomlar</option>
                         <option value="Hamirli taomlar">Hamirli taomlar</option>
@@ -549,123 +522,10 @@
         let currentOrderTotalSum = 0;
         let socket = null;
         const statusBadge = document.getElementById('connection-status');
-// 1. Avval yordamchi funksiyalarni tashqarida e'lon qilamiz
-function loadInitialMenuData() {
-           let savedMenu = localStorage.getItem('restaurant_menu_items') || localStorage.getItem('admin_menu');
-            if (savedMenu) {
-                try { 
-                    menuDatabase = JSON.parse(savedMenu).map(m => ({
-                        ...m,
-                        internal_price: Number(m.internal_price || 0),
-                        sale_price: Number(m.sale_price || m.external_price || 0)
-                    }));
-                } catch(e) { menuDatabase = []; }
-            }
-            if (menuDatabase.length === 0) {
-                menuDatabase = [
-                    { id: 1, name: "Toshkent to'y oshi", category: "Kiloli osh", internal_price: 70000, sale_price: 90000 },
-                    { id: 2, name: "Buxorocha so'fi oshi", category: "Kiloli osh", internal_price: 75000, sale_price: 95000 },
-                    { id: 3, name: "Samarqand oshi", category: "Kiloli osh", internal_price: 68000, sale_price: 88000 },
-                    { id: 4, name: "Mastava", category: "Suyuq ovqatlar", internal_price: 15000, sale_price: 25000 },
-                    { id: 5, name: "Qo'y go'shti kabobi", category: "Kaboblar", internal_price: 25000, sale_price: 38000 }
-                ];
-                localStorage.setItem('restaurant_menu_items', JSON.stringify(menuDatabase));
-            }
-            renderMenu();
-            updateKiloliOshDropdown();
-        }
 
-        function updateKiloliOshDropdown() {
-            const selectEl = document.getElementById('pos-kiloli-osh-type');
-            if (!selectEl) return;
-            let kiloliItems = menuDatabase.filter(m => m.category === 'Kiloli osh');
-            if (kiloliItems.length > 0) {
-                selectEl.innerHTML = '';
-                kiloliItems.forEach(item => {
-                    let opt = document.createElement('option');
-                    opt.value = item.name;
-                    opt.textContent = `${item.name} (1kg = ${item.sale_price.toLocaleString()} so'm)`;
-                    opt.dataset.price = item.sale_price;
-                    selectEl.appendChild(opt);
-                });
-            }
-        }
-
-        // Dinamik gramm asosida kiloli osh buyurtmasini yaratish
-function createGramBasedOshOrder() {
-    let oshTypeSelect = document.getElementById('pos-kiloli-osh-type');
-    let gramsInput = document.getElementById('pos-osh-grams');
-    let tableNumInput = document.getElementById('pos-table-num');
-    let waiterNameInput = document.getElementById('pos-waiter-name');
-    
-    if (!oshTypeSelect || !gramsInput) return;
-    
-    let grams = parseFloat(gramsInput.value);
-    
-    if (isNaN(grams) || grams <= 0) {
-        alert('Iltimos, grammni to‘g‘ri kiriting!');
-        return;
-    }
-    
-    let oshName = oshTypeSelect.value;
-    let tableNum = tableNumInput.value.trim() || '1';
-    let waiter = waiterNameInput.value.trim() || 'Anvar';
-
-    // Narxni 1 kg (1000g) narxiga qarab gramm bo'yicha hisoblash
-    let menuItem = menuDatabase.find(m => m.name === oshName);
-    let pricePerKg = menuItem ? menuItem.sale_price : 90000;
-    let calculatedPrice = (pricePerKg * grams) / 1000;
-
-    let newItemName = `${grams}g ${oshName}`;
-    let newOrder = {
-        id: 'ORD-' + Date.now(),
-        tableNumber: tableNum,
-        waiter: waiter,
-        items: [
-            { name: newItemName, quantity: 1, grams: grams, price: calculatedPrice }
-        ],
-        totalSum: calculatedPrice,
-        status: 'pending',
-        createdAt: new Date().toISOString()
-    };
-
-    ordersDatabase.push(newOrder);
-    saveOrdersToStorage();
-    renderAll();
-    alert(`Stol #${tableNum} uchun ${newItemName} buyurtmasi muvaffaqiyatli qo'shildi!`);
-}
-// Tablarni (bo'limlarni) boshqarish funksiyasi
-function switchTab(tabId, event) {
-    // 1. Barcha bo'limlardan 'active' klassini olib tashlab yashiramiz
-    let sections = document.querySelectorAll('.section-content');
-    sections.forEach(section => {
-        section.classList.remove('active');
-    });
-
-    // 2. Barcha tab tugmalaridan 'active' klassini olib tashlaymiz
-    let tabButtons = document.querySelectorAll('.tab-btn');
-    tabButtons.forEach(btn => {
-        btn.classList.remove('active');
-    });
-
-    // 3. Tanlangan bo'limni topib ekranga chiqaramiz ('active' klassini qo'shamiz)
-    let targetSection = document.getElementById(tabId);
-    if (targetSection) {
-        targetSection.classList.add('active');
-    }
-
-    // 4. Bosilgan tugmani faollashtiramiz
-    if (event && event.currentTarget) {
-        event.currentTarget.classList.add('active');
-    }
-}
-        window.onload = function() {
-          loadInitialMenuData();
-          loadWarehouseData();
-          loadInitialData();
-          
-
-               // Sahifa yuklanganda saqlangan printer IP larini inputlarga chiqarish
+      window.onload = function() {
+    loadInitialData();
+     // Sahifa yuklanganda saqlangan printer IP larini inputlarga chiqarish
             let savedIPs = JSON.parse(localStorage.getItem('kitchen_printer_ips')) || {};
             if(document.getElementById('ip-kabob')) document.getElementById('ip-kabob').value = savedIPs.kabob || '';
             if(document.getElementById('ip-somsa')) document.getElementById('ip-somsa').value = savedIPs.somsa || '';
@@ -730,52 +590,68 @@ function switchTab(tabId, event) {
     };
          // OSH TV EKRAN SIMULYATSIYA LOGIKASI
      function startOshSimulationByWeight(weightInKg) {
-            if (oshSimTimer) clearInterval(oshSimTimer);
-            let totalMinutes = Math.max(20, Math.round(weightInKg * 30));
-            oshTotalSeconds = totalMinutes * 60;
-            oshCurrentSecondsLeft = oshTotalSeconds;
-            
-            const timerDisplay = document.getElementById('tv-timer-display');
-            const timerStatus = document.getElementById('tv-timer-status');
-            const progressBar = document.getElementById('tv-progress-bar');
-            
-            if(timerStatus) timerStatus.innerText = `${weightInKg} kg To'y oshi tayyorlanishi boshlandi...`;
+    if (oshSimTimer) clearInterval(oshSimTimer);
+    
+    // Vaznga qarab vaqtni belgilash (Masalan: 1 kg = 35 min, 2 kg = 60 min, 3 kg = 90 min)
+    // 0.5 kg dan 3 kg gacha proporsional hisoblaymiz (minimum 20 minut, har 1 kg uchun +20 minut)
+    let totalMinutes = Math.max(20, Math.round(weightInKg * 30));
+    oshTotalSeconds = totalMinutes * 60;
+    oshCurrentSecondsLeft = oshTotalSeconds;
+    
+    const timerDisplay = document.getElementById('tv-timer-display');
+    const timerStatus = document.getElementById('tv-timer-status');
+    const progressBar = document.getElementById('tv-progress-bar');
+    
+    if(timerStatus) timerStatus.innerText = `${weightInKg} kg To'y oshi tayyorlanishi boshlandi...`;
 
-            oshSimTimer = setInterval(() => {
-                if (oshCurrentSecondsLeft > 0) {
-                    oshCurrentSecondsLeft--;
-                    let hrs = Math.floor(oshCurrentSecondsLeft / 3600);
-                    let mins = Math.floor((oshCurrentSecondsLeft % 3600) / 60);
-                    let secs = oshCurrentSecondsLeft % 60;
-                    if(timerDisplay) timerDisplay.innerText = `${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
-                    let percent = ((oshTotalSeconds - oshCurrentSecondsLeft) / oshTotalSeconds) * 100;
-                    if(progressBar) progressBar.style.width = percent + '%';
-                    updateOshStepsDynamic(oshTotalSeconds - oshCurrentSecondsLeft, oshTotalSeconds);
-                } else {
-                    clearInterval(oshSimTimer);
-                    if(timerStatus) timerStatus.innerText = "Kiloli osh tayyor! Stolga tortish mumkin 🍛";
-                }
-            }, 1000);
-        }
+    oshSimTimer = setInterval(() => {
+        if (oshCurrentSecondsLeft > 0) {
+            oshCurrentSecondsLeft--;
+            
+            let hrs = Math.floor(oshCurrentSecondsLeft / 3600);
+            let mins = Math.floor((oshCurrentSecondsLeft % 3600) / 60);
+            let secs = oshCurrentSecondsLeft % 60;
+            if(timerDisplay) timerDisplay.innerText = `${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+            
+            let percent = ((oshTotalSeconds - oshCurrentSecondsLeft) / oshTotalSeconds) * 100;
+            if(progressBar) progressBar.style.width = percent + '%';
 
-        function updateOshStepsDynamic(elapsedSec, totalSec) {
-            let elapsedPercent = (elapsedSec / totalSec) * 100;
-            let thresholds = [15, 30, 50, 70, 90, 100];
-            for (let i = 1; i <= 6; i++) {
-                let stepEl = document.getElementById(`step-${i}`);
-                if(!stepEl) continue;
-                let badge = stepEl.querySelector('.step-status-badge');
-                let startPct = i === 1 ? 0 : thresholds[i-2];
-                let endPct = thresholds[i-1];
-                if (elapsedPercent >= endPct) {
-                    stepEl.className = "step-done p-4 rounded-xl border transition-all duration-300 flex items-center justify-between";
-                    if(badge) badge.innerText = "Bajarildi ✓";
-                } else if (elapsedPercent >= startPct && elapsedPercent < endPct) {
-                    stepEl.className = "step-active p-4 rounded-xl border transition-all duration-300 flex items-center justify-between";
-                    if(badge) badge.innerText = "Jarayonda...";
-                }
-            }
+            updateOshStepsDynamic(oshTotalSeconds - oshCurrentSecondsLeft, oshTotalSeconds);
+        } else {
+            clearInterval(oshSimTimer);
+            if(timerStatus) timerStatus.innerText = "Kiloli osh tayyor! Stolga tortish mumkin 🍛";
+            if(timerDisplay) timerDisplay.innerText = "00:00:00";
+            if(progressBar) progressBar.style.width = '100%';
         }
+    }, 1000);
+}
+
+// 6 ta bosqichni umumiy vaqtga nisbatan taqsimlash
+function updateOshStepsDynamic(elapsedSec, totalSec) {
+    let elapsedPercent = (elapsedSec / totalSec) * 100;
+    // 6 ta bosqich foiz oralig'i (masalan: 15%, 30%, 50%, 70%, 90%, 100%)
+    let thresholds = [15, 30, 50, 70, 90, 100];
+    
+    for (let i = 1; i <= 6; i++) {
+        let stepEl = document.getElementById(`step-${i}`);
+        if(!stepEl) continue;
+        let badge = stepEl.querySelector('.step-status-badge');
+        
+        let startPct = i === 1 ? 0 : thresholds[i-2];
+        let endPct = thresholds[i-1];
+
+        if (elapsedPercent >= endPct) {
+            stepEl.className = "step-done p-4 rounded-xl border transition-all duration-300 flex items-center justify-between";
+            if(badge) { badge.innerText = "Bajarildi ✓"; badge.className = "step-status-badge text-xs font-bold px-3 py-1 rounded-full bg-green-500/20 text-green-400 border border-green-500/40"; }
+        } else if (elapsedPercent >= startPct && elapsedPercent < endPct) {
+            stepEl.className = "step-active p-4 rounded-xl border transition-all duration-300 flex items-center justify-between";
+            if(badge) { badge.innerText = "Jarayonda..."; badge.className = "step-status-badge text-xs font-bold px-3 py-1 rounded-full bg-yellow-500/20 text-yellow-300 border border-yellow-500/40 animate-pulse"; }
+        } else {
+            stepEl.className = "step-pending p-4 rounded-xl border transition-all duration-300 flex items-center justify-between";
+            if(badge) { badge.innerText = "Kutilmoqda"; badge.className = "step-status-badge text-xs font-bold px-3 py-1 rounded-full border border-gray-600 text-gray-400"; }
+        }
+    }
+}
          // Printer IP manzilini saqlash funksiyasi
         function savePrinterIP(section) {
             let ipValue = document.getElementById(`ip-${section}`).value.trim();
@@ -927,14 +803,13 @@ function switchTab(tabId, event) {
                 `;
             });
         }
- // 1. Kiloli osh uchun vaznga qarab simulyatsiya vaqtini hisoblash funksiyasi
-                   let oshTotalSeconds = 3600; // Standart 2 kg uchun 1 soat
-                   let oshCurrentSecondsLeft = 3600;
-                   let oshSimTimer = null;
         function loadInitialData() {
             try {
                 let defaultMenu = [
-                   
+                    // 1. Kiloli osh uchun vaznga qarab simulyatsiya vaqtini hisoblash funksiyasi
+                   let oshTotalSeconds = 3600; // Standart 2 kg uchun 1 soat
+                   let oshCurrentSecondsLeft = 3600;
+                   let oshSimTimer = null;
                     // Osh
                     { id: 1, category: "Osh", name: "Toshkent oshi (Toʻy oshi)", internal_price: 35000, sale_price: 50000, is_visible: true },
                     { id: 2, category: "Osh", name: "Samarqand oshi", internal_price: 38000, sale_price: 55000, is_visible: true },
@@ -1135,6 +1010,7 @@ function switchTab(tabId, event) {
                     { id: 183, category: "Ichimliklar", name: "Kofe (Americano)", internal_price: 8000, sale_price: 15000, is_visible: true },
                     { id: 184, category: "Ichimliklar", name: "Kofe (Cappuccino)", internal_price: 10000, sale_price: 18000, is_visible: true }
                 ];
+                
                 let storedMenu = JSON.parse(localStorage.getItem('admin_menu'));
                 if (!storedMenu || storedMenu.length === 0) {
                     menuDatabase = defaultMenu;
@@ -1203,73 +1079,73 @@ function switchTab(tabId, event) {
                     { name: "Tuxum", group: "Sut va sut mahsulotlari", quantity: 0, unit: "dona" }
                 ];
 
-               // --- O'NBOR VA DASTUR BOSHLANISHI ---
-    { name: "Garnir", group: "Sut va sut mahsulotlari", quantity: 0, unit: "gramm (g)" },
-    { name: "Shakar", group: "Sut va sut mahsulotlari", quantity: 0, unit: "gramm (g)" },
-    { name: "Tuxum", group: "Sut va sut mahsulotlari", quantity: 0, unit: "dona" }
-];
+                let storedWarehouse = JSON.parse(localStorage.getItem('admin_warehouse'));
+                if (!storedWarehouse || storedWarehouse.length === 0) {
+                    warehouseDatabase = defaultWarehouse;
+                    localStorage.setItem('admin_warehouse', JSON.stringify(warehouseDatabase));
+                } else {
+                    warehouseDatabase = storedWarehouse;
+                }
 
-let storedWarehouse = JSON.parse(localStorage.getItem('admin_warehouse'));
-if (!storedWarehouse || storedWarehouse.length === 0) {
-    warehouseDatabase = defaultWarehouse;
-    localStorage.setItem('admin_warehouse', JSON.stringify(warehouseDatabase));
-} else {
-    warehouseDatabase = storedWarehouse;
-}
+                loadOrdersFromStorage();
+            } catch (err) { console.error("Yuklashda xato:", err); }
+        }
 
-loadOrdersFromStorage();
-} catch (err) { console.error("Yuklashda xato:", err); }
-
-// --- SOAT VA TABS ---
-function initLiveClock() {
+        function initLiveClock() {
     updateClock();
     setInterval(updateClock, 1000);
 }
 
 function updateClock() {
     const now = new Date();
+    
+    // Sana elementi borligini tekshiramiz
     const dateEl = document.getElementById('live-date');
     if (dateEl) {
         dateEl.innerText = String(now.getDate()).padStart(2, '0') + '.' + String(now.getMonth() + 1).padStart(2, '0') + '.' + now.getFullYear();
     }
+    
+    // Vaqt elementi borligini tekshiramiz
     const timeEl = document.getElementById('live-time');
     if (timeEl) {
         timeEl.innerText = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0') + ':' + String(now.getSeconds()).padStart(2, '0');
     }
 }
+        function switchTab(tabId, event) {
+            document.querySelectorAll('.section-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            if(event) event.currentTarget.classList.add('active');
+            if(tabId === 'stats' && statsChartInstance) statsChartInstance.update();
+        }
 
-function switchTab(tabId, event) {
-    document.querySelectorAll('.section-content').forEach(el => el.classList.remove('active'));
-    document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-    let target = document.getElementById(tabId);
-    if (target) target.classList.add('active');
-    if (event && event.currentTarget) event.currentTarget.classList.add('active');
-    if (tabId === 'stats' && typeof statsChartInstance !== 'undefined' && statsChartInstance) statsChartInstance.update();
-}
-
-function renderAll() {
-    renderMenu();
-    renderWarehouse();
-    renderOrders();
-    renderIncome();
-    renderHistory();
-    updateStatsInfo();
-    saveData();
-    loadAdminReviews();
-    renderAdvancedStats();
-}
-
-// --- SHARHLAR ---
-function loadAdminReviews() {
+   function renderAll() {
+            renderMenu();
+            renderWarehouse();
+            renderOrders();
+            renderIncome();
+            renderHistory();
+            updateStatsInfo();
+            saveData();
+            loadAdminReviews();
+            renderAdvancedStats(); // Statistika va ofitsiantlar hisobotini yangilash
+        }
+// Mana bu yerga funksiyaning o'zini qo'shib qo'yasiz:
+  function loadAdminReviews() {
+    // 1. LocalStorage yoki serverdan sharhlarni olish
     const reviews = JSON.parse(localStorage.getItem('customer_reviews')) || [];
+    
+    // 2. Admin panelidagi sharhlar chiqadigan HTML elementni topish
     const container = document.getElementById('admin-reviews-container');
     if (!container) return;
     
+    // Agar sharhlar bo'lmasa
     if (reviews.length === 0) {
         container.innerHTML = '<p class="text-gray-500">Hozircha mijozlardan izohlar mavjud emas.</p>';
         return;
     }
     
+    // 3. Sharhlarni ekranga chiqarish (HTML yasash)
     container.innerHTML = reviews.map(review => `
         <div class="bg-white p-4 rounded-lg shadow mb-3 border">
             <div class="flex justify-between items-center mb-2">
@@ -1281,54 +1157,52 @@ function loadAdminReviews() {
         </div>
     `).join('');
 }
-
-// --- BUYURTMALAR VA STATISTIKA ---
-function loadOrdersFromStorage() {
-    try {
-        let waiterOrders = JSON.parse(localStorage.getItem('waiter_orders')) || [];
-        let activeOrders = JSON.parse(localStorage.getItem('active_orders')) || [];
-        let adminOrders = JSON.parse(localStorage.getItem('admin_orders')) || [];
-        let combined = [...waiterOrders, ...activeOrders, ...adminOrders];
-        let uniqueMap = new Map();
-        
-        combined.forEach(o => {
-            let key = String(o.tableNumber || o.id);
-            if (!key || key === 'undefined') return;
-            if (!o.orderNumber) o.orderNumber = Math.floor(10000 + Math.random() * 90000).toString();
-            
-            if (uniqueMap.has(key)) {
-                let existing = uniqueMap.get(key);
-                uniqueMap.set(key, { 
-                    ...existing, 
-                    ...o, 
-                    items: o.items && o.items.length > 0 ? o.items : existing.items,
-                    isPrinted: o.isPrinted !== undefined ? o.isPrinted : existing.isPrinted
+        function loadOrdersFromStorage() {
+            try {
+                let waiterOrders = JSON.parse(localStorage.getItem('waiter_orders')) || [];
+                let activeOrders = JSON.parse(localStorage.getItem('active_orders')) || [];
+                let adminOrders = JSON.parse(localStorage.getItem('admin_orders')) || [];
+                let combined = [...waiterOrders, ...activeOrders, ...adminOrders];
+                let uniqueMap = new Map();
+                
+                combined.forEach(o => {
+                    let key = String(o.tableNumber || o.id);
+                    if (!key || key === 'undefined') return;
+                    if (!o.orderNumber) o.orderNumber = Math.floor(10000 + Math.random() * 90000).toString();
+                    
+                    if (uniqueMap.has(key)) {
+                        let existing = uniqueMap.get(key);
+                        uniqueMap.set(key, { 
+                            ...existing, 
+                            ...o, 
+                            items: o.items && o.items.length > 0 ? o.items : existing.items,
+                            isPrinted: o.isPrinted !== undefined ? o.isPrinted : existing.isPrinted
+                        });
+                    } else {
+                        uniqueMap.set(key, o);
+                    }
                 });
+                ordersDatabase = Array.from(uniqueMap.values());
+            } catch (e) { ordersDatabase = []; }
+        }
+
+        function upsertOrder(incomingData) {
+            let targetKey = String(incomingData.tableNumber || incomingData.id || incomingData.orderId);
+            let index = ordersDatabase.findIndex(o => String(o.tableNumber || o.id) === targetKey);
+            if (index !== -1) {
+                ordersDatabase[index] = { 
+                    ...ordersDatabase[index], 
+                    ...incomingData, 
+                    items: incomingData.items && incomingData.items.length > 0 ? incomingData.items : ordersDatabase[index].items,
+                    isPrinted: incomingData.isPrinted !== undefined ? incomingData.isPrinted : ordersDatabase[index].isPrinted
+                };
             } else {
-                uniqueMap.set(key, o);
+                ordersDatabase.push(incomingData);
             }
-        });
-        ordersDatabase = Array.from(uniqueMap.values());
-    } catch (e) { ordersDatabase = []; }
-}
+            syncOrdersToStorage();
+        }
 
-function upsertOrder(incomingData) {
-    let targetKey = String(incomingData.tableNumber || incomingData.id || incomingData.orderId);
-    let index = ordersDatabase.findIndex(o => String(o.tableNumber || o.id) === targetKey);
-    if (index !== -1) {
-        ordersDatabase[index] = { 
-            ...ordersDatabase[index], 
-            ...incomingData, 
-            items: incomingData.items && incomingData.items.length > 0 ? incomingData.items : ordersDatabase[index].items,
-            isPrinted: incomingData.isPrinted !== undefined ? incomingData.isPrinted : ordersDatabase[index].isPrinted
-        };
-    } else {
-        ordersDatabase.push(incomingData);
-    }
-    syncOrdersToStorage();
-}
-
-function renderAdvancedStats() {
+   function renderAdvancedStats() {
     let orders = [];
     if (typeof ordersDatabase !== 'undefined' && Array.isArray(ordersDatabase)) {
         orders = ordersDatabase;
@@ -1336,8 +1210,13 @@ function renderAdvancedStats() {
         orders = JSON.parse(localStorage.getItem('restaurant_orders')) || [];
     }
 
-    let totalTodaySales = 0, totalWeeklySales = 0, totalMonthlySales = 0;
-    let itemCounts = {}, waiterStats = {};
+    let totalTodaySales = 0;
+    let totalWeeklySales = 0;
+    let totalMonthlySales = 0;
+    
+    let itemCounts = {};
+    let waiterStats = {};
+
     const now = new Date();
     const todayStr = now.toISOString().split('T')[0];
 
@@ -1350,6 +1229,7 @@ function renderAdvancedStats() {
                 let name = item.name;
                 let qty = Number(item.qty || item.quantity || 1);
                 let price = Number(item.price || 0);
+
                 itemCounts[name] = (itemCounts[name] || 0) + qty;
                 calculatedOrderTotal += price * qty;
             });
@@ -1359,501 +1239,592 @@ function renderAdvancedStats() {
         let orderDateStr = order.date || order.timestamp || todayStr;
         let orderDate = new Date(orderDateStr);
 
-        if (orderDateStr.startsWith(todayStr)) totalTodaySales += finalOrderTotal;
+        // Kunlik
+        if (orderDateStr.startsWith(todayStr)) {
+            totalTodaySales += finalOrderTotal;
+        }
 
+        // Haftalik
         const diffTime = now - orderDate;
         const diffDays = diffTime / (1000 * 60 * 60 * 24);
-        if (diffDays <= 7 && diffDays >= 0) totalWeeklySales += finalOrderTotal;
+        if (diffDays <= 7 && diffDays >= 0) {
+            totalWeeklySales += finalOrderTotal;
+        }
 
+        // Oylik
         if (orderDate.getMonth() === now.getMonth() && orderDate.getFullYear() === now.getFullYear()) {
             totalMonthlySales += finalOrderTotal;
         }
 
+        // Ofitsiantlar
         let waiterName = order.waiter || order.waiterName || "Noma'lum";
-        if (!waiterStats[waiterName]) waiterStats[waiterName] = { count: 0, revenue: 0 };
+        if (!waiterStats[waiterName]) {
+            waiterStats[waiterName] = { count: 0, revenue: 0 };
+        }
         waiterStats[waiterName].count += 1;
         waiterStats[waiterName].revenue += finalOrderTotal;
     });
 
-    if (document.getElementById('today-sales')) document.getElementById('today-sales').innerText = totalTodaySales.toLocaleString() + " so'm";
-    if (document.getElementById('weekly-sales')) document.getElementById('weekly-sales').innerText = totalWeeklySales.toLocaleString() + " so'm";
-    if (document.getElementById('monthly-sales')) document.getElementById('monthly-sales').innerText = totalMonthlySales.toLocaleString() + " so'm";
+    // Ekranga yozish (Savdolar)
+    const todaySalesEl = document.getElementById('today-sales');
+    if (todaySalesEl) todaySalesEl.innerText = totalTodaySales.toLocaleString() + " so'm";
 
+    const weeklySalesEl = document.getElementById('weekly-sales');
+    if (weeklySalesEl) weeklySalesEl.innerText = totalWeeklySales.toLocaleString() + " so'm";
+
+    const monthlySalesEl = document.getElementById('monthly-sales');
+    if (monthlySalesEl) monthlySalesEl.innerText = totalMonthlySales.toLocaleString() + " so'm";
+
+    // Top 5 taomlar
     let sortedItems = Object.entries(itemCounts).sort((a, b) => b[1] - a[1]).slice(0, 5);
-    let topItemsListHtml = sortedItems.length > 0 ? sortedItems.map(([name, count], index) => `<li><b>${index + 1}. ${name}</b> — ${count} ta sotilgan</li>`).join('') : '<li>Hozircha sotuvlar mavjud emas</li>';
-    if (document.getElementById('top-items-list')) document.getElementById('top-items-list').innerHTML = topItemsListHtml;
-
-    let waiterEntries = Object.entries(waiterStats);
-    let waitersBodyHtml = waiterEntries.length > 0 ? waiterEntries.map(([waiter, data]) => `
-        <tr style="border-bottom: 1px solid #f1f1f1;">
-            <td style="padding: 6px;"><b>${waiter}</b></td>
-            <td style="padding: 6px;">${data.count} ta</td>
-            <td style="padding: 6px;">Aktiv</td>
-            <td style="padding: 6px; color: #2e7d32; font-weight: bold;">${data.revenue.toLocaleString()} so'm</td>
-        </tr>`).join('') : `<tr><td colspan="4" style="padding: 8px; text-align: center;">Ma'lumot mavjud emas</td></tr>`;
-    if (document.getElementById('waiters-stats-body')) document.getElementById('waiters-stats-body').innerHTML = waitersBodyHtml;
-
-    if (typeof initChart === 'function') initChart();
-}
-
-// --- MENYU VA OMBOR ---
-function renderMenu() {
-    const tbody = document.getElementById('menu-table-body');
-    if (!tbody) return;
-    const query = (document.getElementById('menu-search-input') || {}).value || "";
-    const filteredMenu = menuDatabase.filter(item => item.name.toLowerCase().includes(query.toLowerCase()) || item.category.toLowerCase().includes(query.toLowerCase()));
-    
-    tbody.innerHTML = filteredMenu.map(item => `
-        <tr>
-            <td>${item.id}</td>
-            <td><input type="text" value="${item.name}" onchange="updateMenuField(${item.id}, 'name', this.value)"></td>
-            <td>${item.category}</td>
-            <td><input type="number" value="${item.internal_price}" onchange="updateMenuField(${item.id}, 'internal_price', Number(this.value))"></td>
-            <td><input type="number" value="${item.sale_price}" onchange="updateMenuField(${item.id}, 'sale_price', Number(this.value))"></td>
-            <td>
-                <select onchange="updateMenuField(${item.id}, 'is_visible', this.value === 'true')">
-                    <option value="true" ${item.is_visible !== false ? 'selected' : ''}>Ko'rinadi</option>
-                    <option value="false" ${item.is_visible === false ? 'selected' : ''}>Yashiringan</option>
-                </select>
-            </td>
-            <td><button class="btn btn-blue" onclick="renderAll()">Saqlash</button></td>
-        </tr>
-    `).join('');
-}
-
-function updateMenuField(id, field, value) {
-    const item = menuDatabase.find(m => m.id === id);
-    if (item) { 
-        item[field] = value; 
-        if (field === 'sale_price') item.external_price = value;
-        saveData(); 
-    }
-}
-
-function addNewMenuItem() {
-    const name = document.getElementById('new-menu-name').value.trim();
-    const category = document.getElementById('new-menu-category').value;
-    const intPrice = Number(document.getElementById('new-menu-internal').value);
-    const sale_price = Number(document.getElementById('new-menu-sale').value);
-    if (name && intPrice && sale_price) {
-        const newId = menuDatabase.length > 0 ? Math.max(...menuDatabase.map(m => m.id)) + 1 : 1;
-        menuDatabase.push({ id: newId, name, category, internal_price: intPrice, sale_price: sale_price, external_price: sale_price, is_visible: true });
-        saveData();
-        if (typeof socket !== 'undefined' && socket && socket.connected) {
-            socket.emit('menu_updated', { menu: menuDatabase });
-        }
-        renderAll();
-        document.getElementById('new-menu-name').value = '';
-        document.getElementById('new-menu-internal').value = '';
-        document.getElementById('new-menu-sale').value = '';
-    } else { alert("Barcha maydonlarni to'ldiring!"); }
-}
-
-function handleAutocomplete(val) {
-    const listContainer = document.getElementById('autocomplete-list');
-    if (!listContainer) return;
-    listContainer.innerHTML = '';
-    if (!val || val.trim() === '') return;
-    
-    const matches = warehouseDatabase.filter(w => w.name.toLowerCase().includes(val.toLowerCase()));
-    matches.forEach(m => {
-        const div = document.createElement('div');
-        div.innerHTML = `<b>${m.name}</b> (${m.quantity} ${m.unit})`;
-        div.onclick = function() {
-            document.getElementById('new-item-name').value = m.name;
-            document.getElementById('new-item-unit').value = m.unit;
-            document.getElementById('new-item-qty').value = '';
-            listContainer.innerHTML = '';
-        };
-        listContainer.appendChild(div);
-    });
-}
-
-function renderWarehouse() {
-    const tbody = document.getElementById('warehouse-table-body');
-    if (!tbody) return;
-    const query = (document.getElementById('warehouse-search-input') || {}).value || "";
-    const filteredWarehouse = warehouseDatabase.filter(w => w.name.toLowerCase().includes(query.toLowerCase()) || (w.group && w.group.toLowerCase().includes(query.toLowerCase())));
-
-    tbody.innerHTML = filteredWarehouse.map((w) => {
-        let originalIndex = warehouseDatabase.findIndex(item => item.name === w.name);
-        return `
-            <tr>
-                <td>${originalIndex + 1}</td>
-                <td><b>${w.name}</b></td>
-                <td><span style="background: #e1f5fe; padding: 3px 8px; border-radius: 4px; font-size: 12px; color: #0288d1;">${w.group || 'Umumiy'}</span></td>
-                <td><input type="number" value="${w.quantity}" id="wh-qty-${originalIndex}" style="width: 120px;"></td>
-                <td>${w.unit}</td>
-                <td><button class="btn btn-blue" onclick="updateWarehouseQty(${originalIndex})">Yangilash</button></td>
-            </tr>
-        `;
-    }).join('');
-}
-
-function updateWarehouseQty(index) {
-    const val = Number(document.getElementById(`wh-qty-${index}`).value);
-    if (!isNaN(val)) { warehouseDatabase[index].quantity = val; renderAll(); }
-}
-
-function addWarehouseItem() {
-    const name = document.getElementById('new-item-name').value.trim();
-    const qty = Number(document.getElementById('new-item-qty').value);
-    const unit = document.getElementById('new-item-unit').value.trim();
-    if (name && qty) {
-        let existing = warehouseDatabase.find(w => w.name.toLowerCase() === name.toLowerCase());
-        if (existing) { 
-            existing.quantity += qty; 
-            if(unit) existing.unit = unit; 
-        } else { 
-            warehouseDatabase.push({ name, group: "Boshqa mahsulotlar", quantity: qty, unit: unit || 'dona' }); 
-        }
-        saveData();
-        if (typeof socket !== 'undefined' && socket && socket.connected) {
-            socket.emit('add-product', { name, qty, price: 0 });
-        }
-        renderAll();
-        document.getElementById('new-item-name').value = '';
-        document.getElementById('new-item-qty').value = '';
-        document.getElementById('new-item-unit').value = '';
-        if(document.getElementById('autocomplete-list')) document.getElementById('autocomplete-list').innerHTML = '';
+    let topItemsListHtml = '';
+    if (sortedItems.length > 0) {
+        sortedItems.forEach(([name, count], index) => {
+            topItemsListHtml += `<li><b>${index + 1}. ${name}</b> — ${count} ta sotilgan</li>`;
+        });
     } else {
-        alert("Mahsulot nomi va miqdorini kiriting!");
+        topItemsListHtml = '<li>Hozircha sotuvlar mavjud emas</li>';
+    }
+    const topItemsEl = document.getElementById('top-items-list');
+    if (topItemsEl) topItemsEl.innerHTML = topItemsListHtml;
+
+    // Ofitsiantlar jadvali
+    let waitersBodyHtml = '';
+    let waiterEntries = Object.entries(waiterStats);
+    if (waiterEntries.length > 0) {
+        waiterEntries.forEach(([waiter, data]) => {
+            waitersBodyHtml += `
+                <tr style="border-bottom: 1px solid #f1f1f1;">
+                    <td style="padding: 6px;"><b>${waiter}</b></td>
+                    <td style="padding: 6px;">${data.count} ta</td>
+                    <td style="padding: 6px;">Aktiv</td>
+                    <td style="padding: 6px; color: #2e7d32; font-weight: bold;">${data.revenue.toLocaleString()} so'm</td>
+                </tr>`;
+        });
+    } else {
+        waitersBodyHtml = `<tr><td colspan="4" style="padding: 8px; text-align: center;">Ma'lumot mavjud emas</td></tr>`;
+    }
+    const waitersBodyEl = document.getElementById('waiters-stats-body');
+    if (waitersBodyEl) waitersBodyEl.innerHTML = waitersBodyHtml;
+
+    // Grafikni yangilash funksiyasini ham chaqirib yuboramiz (agar mavjud bo'lsa)
+    if (typeof initChart === 'function') {
+        initChart();
     }
 }
 
-// --- OSHXONA VA PRINTERLAR ---
-function renderOrders() {
-    const container = document.getElementById('orders-container');
-    if (!container) return;
-    loadOrdersFromStorage();
-    let activeOrders = ordersDatabase.filter(o => o.status !== 'tolandi' && o.status !== 'bekor_qilindi');
-    
-    if (activeOrders.length === 0) {
-        container.innerHTML = "<p>Hozircha faol buyurtmalar mavjud emas.</p>";
-        return;
-    }
+        function renderMenu() {
+            const tbody = document.getElementById('menu-table-body');
+            const query = (document.getElementById('menu-search-input') || {}).value || "";
+            const filteredMenu = menuDatabase.filter(item => item.name.toLowerCase().includes(query.toLowerCase()) || item.category.toLowerCase().includes(query.toLowerCase()));
+            
+            tbody.innerHTML = filteredMenu.map(item => `
+                <tr>
+                    <td>${item.id}</td>
+                    <td><input type="text" value="${item.name}" onchange="updateMenuField(${item.id}, 'name', this.value)"></td>
+                    <td>${item.category}</td>
+                    <td><input type="number" value="${item.internal_price}" onchange="updateMenuField(${item.id}, 'internal_price', Number(this.value))"></td>
+                    <td><input type="number" value="${item.sale_price}" onchange="updateMenuField(${item.id}, 'sale_price', Number(this.value))"></td>
+                    <td>
+                        <select onchange="updateMenuField(${item.id}, 'is_visible', this.value === 'true')">
+                            <option value="true" ${item.is_visible !== false ? 'selected' : ''}>Ko'rinadi</option>
+                            <option value="false" ${item.is_visible === false ? 'selected' : ''}>Yashiringan</option>
+                        </select>
+                    </td>
+                    <td><button class="btn btn-blue" onclick="renderAll()">Saqlash</button></td>
+                </tr>
+            `).join('');
+        }
 
-    container.innerHTML = activeOrders.map((order) => {
-        let orderTotalSum = 0;
-        let itemsListHTML = `<ul style="list-style: none; padding: 0; margin: 8px 0; background: #ffffff; border: 1px solid #b3d7ff; border-radius: 6px; padding: 8px;">` + 
-            (order.items || []).map(i => {
+        function updateMenuField(id, field, value) {
+            const item = menuDatabase.find(m => m.id === id);
+            if (item) { 
+                item[field] = value; 
+                if (field === 'sale_price') item.external_price = value;
+                saveData(); 
+            }
+        }
+
+        function addNewMenuItem() {
+            const name = document.getElementById('new-menu-name').value.trim();
+            const category = document.getElementById('new-menu-category').value;
+            const intPrice = Number(document.getElementById('new-menu-internal').value);
+            const salePrice = Number(document.getElementById('new-menu-sale').value);
+            if (name && intPrice && salePrice) {
+                const newId = menuDatabase.length > 0 ? Math.max(...menuDatabase.map(m => m.id)) + 1 : 1;
+                menuDatabase.push({ id: newId, name, category, internal_price: intPrice, sale_price: salePrice, external_price: salePrice, is_visible: true });
+                // Ma'lumotlarni saqlash va socket orqali barchaga yuborish
+                if (typeof saveData === 'function') {
+                    saveData();
+                }
+                
+                if (socket && socket.connected) {
+                    socket.emit('menu_updated', { menu: menuDatabase });
+                }
+                renderAll();
+                document.getElementById('new-menu-name').value = '';
+                document.getElementById('new-menu-internal').value = '';
+                document.getElementById('new-menu-sale').value = '';
+            } else { alert("Barcha maydonlarni to'ldiring!"); }
+        }
+
+        function handleAutocomplete(val) {
+            const listContainer = document.getElementById('autocomplete-list');
+            listContainer.innerHTML = '';
+            if (!val || val.trim() === '') return;
+            
+            const matches = warehouseDatabase.filter(w => w.name.toLowerCase().includes(val.toLowerCase()));
+            matches.forEach(m => {
+                const div = document.createElement('div');
+                div.innerHTML = `<b>${m.name}</b> (${m.quantity} ${m.unit})`;
+                div.onclick = function() {
+                    document.getElementById('new-item-name').value = m.name;
+                    document.getElementById('new-item-unit').value = m.unit;
+                    document.getElementById('new-item-qty').value = '';
+                    listContainer.innerHTML = '';
+                };
+                listContainer.appendChild(div);
+            });
+        }
+
+        function renderWarehouse() {
+            const tbody = document.getElementById('warehouse-table-body');
+            const query = (document.getElementById('warehouse-search-input') || {}).value || "";
+            const filteredWarehouse = warehouseDatabase.filter(w => w.name.toLowerCase().includes(query.toLowerCase()) || (w.group && w.group.toLowerCase().includes(query.toLowerCase())));
+
+            tbody.innerHTML = filteredWarehouse.map((w, index) => {
+                let originalIndex = warehouseDatabase.findIndex(item => item.name === w.name);
+                return `
+                    <tr>
+                        <td>${originalIndex + 1}</td>
+                        <td><b>${w.name}</b></td>
+                        <td><span style="background: #e1f5fe; padding: 3px 8px; border-radius: 4px; font-size: 12px; color: #0288d1;">${w.group || 'Umumiy'}</span></td>
+                        <td><input type="number" value="${w.quantity}" id="wh-qty-${originalIndex}" style="width: 120px;"></td>
+                        <td>${w.unit}</td>
+                        <td><button class="btn btn-blue" onclick="updateWarehouseQty(${originalIndex})">Yangilash</button></td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function updateWarehouseQty(index) {
+            const val = Number(document.getElementById(`wh-qty-${index}`).value);
+            if (!isNaN(val)) { warehouseDatabase[index].quantity = val; renderAll(); }
+        }
+
+        function addWarehouseItem() {
+            const name = document.getElementById('new-item-name').value.trim();
+            const qty = Number(document.getElementById('new-item-qty').value);
+            const unit = document.getElementById('new-item-unit').value.trim();
+            if (name && qty) {
+                let existing = warehouseDatabase.find(w => w.name.toLowerCase() === name.toLowerCase());
+                if (existing) { 
+                    existing.quantity += qty; 
+                    if(unit) existing.unit = unit; 
+                } else { 
+                    warehouseDatabase.push({ name, group: "Boshqa mahsulotlar", quantity: qty, unit: unit || 'dona' }); 
+                }
+                saveData();
+                if (socket && socket.connected) {
+                    socket.emit('add-product', { name, qty, price: 0 });
+                }
+
+                renderAll();
+                document.getElementById('new-item-name').value = '';
+                document.getElementById('new-item-qty').value = '';
+                document.getElementById('new-item-unit').value = '';
+                document.getElementById('autocomplete-list').innerHTML = '';
+            } else {
+                alert("Mahsulot nomi va miqdorini kiriting!");
+            }
+        }
+
+        function deductWarehouseForOrder(order) {
+            if (!order || !order.items) return;
+            order.items.forEach(item => {
+                let itemName = item.name;
+                let itemQty = Number(item.qty || 1);
+                let whItem = warehouseDatabase.find(w => w.name.toLowerCase() === itemName.toLowerCase());
+                if (whItem) {
+                    whItem.quantity = whItem.quantity - itemQty;
+                }
+            });
+            saveData();
+            renderWarehouse();
+        }
+
+        function renderOrders() {
+            const container = document.getElementById('orders-container');
+            loadOrdersFromStorage();
+            let activeOrders = ordersDatabase.filter(o => o.status !== 'tolandi' && o.status !== 'bekor_qilindi');
+            
+            if (activeOrders.length === 0) {
+                container.innerHTML = "<p>Hozircha faol buyurtmalar mavjud emas.</p>";
+                return;
+            }
+
+            container.innerHTML = activeOrders.map((order) => {
+                let orderTotalSum = 0;
+                let itemsListHTML = `<ul style="list-style: none; padding: 0; margin: 8px 0; background: #ffffff; border: 1px solid #b3d7ff; border-radius: 6px; padding: 8px;">` + 
+                    (order.items || []).map(i => {
+                        let price = Number(i.sale_price || i.external_price || i.price || 0);
+                        let qty = Number(i.qty || 1);
+                        orderTotalSum += price * qty;
+                        return `<li style="padding: 6px 0; border-bottom: 1px dashed #e1f5fe; display: flex; justify-content: space-between; font-size: 14px;">
+                            <span><b>${i.name || "Taom"}</b> — ${qty} ta × ${price.toLocaleString()}</span>
+                            <b style="color: #2e7d32;">${(price * qty).toLocaleString()} so'm</b>
+                        </li>`;
+                    }).join('') + `</ul>`;
+
+                const orderId = String(order.tableNumber || order.id);
+                let paymentHTML = "";
+                
+                if (order.isPrinted && order.status !== 'tolandi') {
+                    paymentHTML = `
+                        <div style="margin-top: 8px; background: #fffde7; padding: 10px; border: 1px solid #ffd54f; border-radius: 6px;">
+                            <span style="font-size: 13px; color: #f57f17; font-weight: bold;">To'lov turini tanlang:</span>
+                            <div class="payment-options-container">
+                                <button class="pay-option-btn pay-cash-btn" onclick="openCashModal('${orderId}')">Naqd</button>
+                                <button class="pay-option-btn pay-card-btn" onclick="acceptPayment('${orderId}', 'plastik')">Plastik</button>
+                            </div>
+                        </div>`;
+                }
+
+                return `
+                    <div class="order-card">
+                        <div style="flex: 1; min-width: 280px;">
+                            <p style="font-size: 16px; margin-bottom: 6px;">🪑 <b style="color: #0d47a1; font-size: 18px;">${order.tableNumber}</b> | № <b>${order.orderNumber}</b> | Ofitsiant: <b>${order.waiterName || 'Ofitsiant'}</b></p>
+                            <p style="font-size: 14px;">Holat: <b style="color: #d32f2f;">${(order.status || 'yangi').toUpperCase()}</b></p>
+                            ${itemsListHTML}
+                            <div style="margin-top: 6px; font-size: 15px; font-weight: bold; color: #0d47a1; background: #e1f5fe; padding: 6px 10px; border-radius: 5px; display: inline-block;">
+                                Jami: ${orderTotalSum.toLocaleString()} so'm
+                            </div>
+                            ${paymentHTML}
+                        </div>
+                        <div style="display: flex; gap: 5px; flex-direction: column;">
+                            <button class="btn" style="background: #ffb74d;" onclick="changeOrderStatus('${orderId}', 'qabul_qilindi')">Qabul</button>
+                            <button class="btn" style="background: #4fc3f7;" onclick="changeOrderStatus('${orderId}', 'tayyorlanyapti')">Jarayonda</button>
+                            <button class="btn btn-blue" onclick="changeOrderStatus('${orderId}', 'tayyor')">Tayyor</button>
+                            <button class="btn btn-red" style="margin-top: 10px;" onclick="changeOrderStatus('${orderId}', 'bekor_qilindi')">Bekor qilish</button>
+                        </div>
+                    </div>`;
+            }).join('');
+        }
+
+         function changeOrderStatus(id, newStatus) {
+            let order = ordersDatabase.find(o => String(o.tableNumber || o.id) === String(id));
+            if (order) {
+                order.status = newStatus;
+                
+                // QABUL QILINGANDA YOKI TAYYORLANMOQDA BO'LGANDA KATEGORIYALARGA BO'LIB PRINTERGA YUBORISH MANTIQI
+                if (newStatus === 'qabul_qilindi' || newStatus === 'tayyorlanyapti') {
+                    order.isPrinted = true;
+                    // Yangi qo'shilgan talab bo'yicha filtrlash va virtual chek chiqarish
+                    processOrderForKitchenPrinters(order);
+                }
+
+                syncOrdersToStorage();
+                renderAll();
+            }
+        }
+
+        // ==========================================
+        // YANGI QO'SHILGAN FUNKSIYALAR (KABOB, SOMSA, FAST FOOD VA OSHXONA BO'LIMLARI UCHUN)
+        // ==========================================
+
+        /**
+         * 1. Buyurtmani mahsulot turiga (kategoriyasiga) qarab bo'limlarga ajratuvchi funksiya
+         */
+        function splitOrderIntoKitchenSections(orderItems) {
+            let sections = {
+                kaboblar: [],
+                somsalar: [],
+                fastFood: [],
+                oshxona: [] // Umumiy oshxona (qolgan taomlar)
+            };
+
+            orderItems.forEach(item => {
+                let category = (item.category || "").toLowerCase();
+                let name = (item.name || "").toLowerCase();
+
+                // Kategoriyani aniqlash mantiqi
+                if (category.includes('kabob') || name.includes('kabob') || name.includes('shashlik')) {
+                    sections.kaboblar.push(item);
+                } else if (category.includes('somsa') || name.includes('somsa')) {
+                    sections.somsalar.push(item);
+                } else if (category.includes('fast food') || category.includes('fast-food') || name.includes('lavash') || name.includes('burger')) {
+                    sections.fastFood.push(item);
+                } else {
+                    sections.oshxona.push(item);
+                }
+            });
+
+            return sections;
+        }
+
+        /**
+         * 2. Har bir bo'lim uchun virtual chek ma'lumotlarini tuzish (narxlarsiz, faqat miqdor va tur)
+         */
+        function generateVirtualKitchenReceipts(order) {
+            let sections = splitOrderIntoKitchenSections(order.items || []);
+            let timeString = new Date().toLocaleTimeString();
+            let waiterName = order.waiterName || order.waiter || 'Ofitsiant';
+            let tableNo = order.tableNumber || 'Nomaʼlum';
+            let orderNo = order.orderNumber || '----';
+
+            let virtualReceipts = [];
+
+            const sectionConfigs = [
+                { key: 'kaboblar', title: '🔥 KABOBLAR BO\'LIMI', items: sections.kaboblar },
+                { key: 'somsalar', title: '🥟 SOMSALAR BO\'LIMI', items: sections.somsalar },
+                { key: 'fastFood', title: '🍔 FAST FOOD BO\'LIMI', items: sections.fastFood },
+                { key: 'oshxona', title: '🍲 UMUMIY OSHXONA BO\'LIMI', items: sections.oshxona }
+            ];
+
+            sectionConfigs.forEach(sec => {
+                if (sec.items.length > 0) {
+                    let receiptText = `----------------------------------------\n`;
+                    receiptText += `   ${sec.title}\n`;
+                    receiptText += `----------------------------------------\n`;
+                    receiptText += `Buyurtma №: ${orderNo} | Stol: ${tableNo}\n`;
+                    receiptText += `Ofitsiant: ${waiterName} | Vaqt: ${timeString}\n`;
+                    receiptText += `----------------------------------------\n`;
+                    receiptText += `MAHSULOT NOMI                  MIQDORI\n`;
+                    receiptText += `----------------------------------------\n`;
+
+                    sec.items.forEach(item => {
+                        let itemName = (item.name || 'Taom').padEnd(30, ' ');
+                        let qty = `${item.qty || item.quantity || 1} ta`;
+                        receiptText += `${itemName} ${qty}\n`;
+                    });
+
+                    receiptText += `----------------------------------------\n`;
+                    receiptText += `           (Faqat oshxona uchun)\n`;
+                    receiptText += `----------------------------------------\n\n`;
+
+                    virtualReceipts.push({
+                        section: sec.key,
+                        title: sec.title,
+                        content: receiptText
+                    });
+                }
+            });
+
+            return virtualReceipts;
+        }
+
+        /**
+         * 3. Bo'lingan buyurtmalarni tarmoq printerlariga yoki brauzer orqali avtomatik chop etishga yuborish mantiqi[cite: 6]
+         */
+        function printKitchenReceipts(virtualReceipts) {
+            virtualReceipts.forEach(receipt => {
+                console.log(`[PRINTER SIMULATSIYasi - ${receipt.section.toUpperCase()}]:\n${receipt.content}`);
+                
+                // ESC/POS buyruqlarini simulyatsiya qilish (Tarmoq printerlari uchun baytlar ketma-ketligi)
+                // Masalan: Qalin matn (\x1B\x45\x1), qog'ozni kesish (\x1D\x56\x41)
+                const escPosCommandSimulation = `\x1B\x40` + receipt.content + `\x1D\x56\x41`;
+                console.log(`ESC/POS Byte Payload sent to ${receipt.section} printer successfully. Length: ${escPosCommandSimulation.length} bytes.`);
+            });
+
+            // Brauzer orqali window.print() yordamida vizual chek oynasini chiqarish yoki yashirin iframe orqali chop etish
+            if (virtualReceipts.length > 0) {
+                let printWindow = window.open('', '_blank', 'width=400,height=600');
+                if (printWindow) {
+                    printWindow.document.write('<html><head><title>Oshxona Cheklari</title><style>body{font-family: monospace; font-size: 14px; padding: 10px;}</style></head><body>');
+                    virtualReceipts.forEach(r => {
+                        printWindow.document.write(`<pre style="border-bottom: 2px dashed #000; padding-bottom: 10px; margin-bottom: 10px;">${r.content}</pre>`);
+                    });
+                    printWindow.document.write('</body></html>');
+                    printWindow.document.close();
+                    printWindow.focus();
+                    setTimeout(() => {
+                        printWindow.print();
+                        printWindow.close();
+                    }, 300);
+                }
+            }
+        }
+
+        /**
+         * 4. Asosiy handler: Buyurtma qabul qilinganda ishga tushadi
+         */
+        function processOrderForKitchenPrinters(order) {
+            let receipts = generateVirtualKitchenReceipts(order);
+            printKitchenReceipts(receipts);
+        }
+
+        // ==========================================
+
+        function openCashModal(orderId) {
+            currentPayingOrderId = orderId;
+            let order = ordersDatabase.find(o => String(o.tableNumber || o.id) === String(orderId));
+            if (!order) return;
+            
+            currentOrderTotalSum = 0;
+            (order.items || []).forEach(i => {
                 let price = Number(i.sale_price || i.external_price || i.price || 0);
                 let qty = Number(i.qty || 1);
-                orderTotalSum += price * qty;
-                return `<li style="padding: 6px 0; border-bottom: 1px dashed #e1f5fe; display: flex; justify-content: space-between; font-size: 14px;">
-                    <span><b>${i.name || "Taom"}</b> — ${qty} ta × ${price.toLocaleString()}</span>
-                    <b style="color: #2e7d32;">${(price * qty).toLocaleString()} so'm</b>
-                </li>`;
-            }).join('') + `</ul>`;
-
-        const orderId = String(order.tableNumber || order.id);
-        let paymentHTML = "";
-        
-        if (order.isPrinted && order.status !== 'tolandi') {
-            paymentHTML = `
-                <div style="margin-top: 8px; background: #fffde7; padding: 10px; border: 1px solid #ffd54f; border-radius: 6px;">
-                    <span style="font-size: 13px; color: #f57f17; font-weight: bold;">To'lov turini tanlang:</span>
-                    <div class="payment-options-container">
-                        <button class="pay-option-btn pay-cash-btn" onclick="openCashModal('${orderId}')">Naqd</button>
-                        <button class="pay-option-btn pay-card-btn" onclick="acceptPayment('${orderId}', 'plastik')">Plastik</button>
-                    </div>
-                </div>`;
-        }
-
-        return `
-            <div class="order-card">
-                <div style="flex: 1; min-width: 280px;">
-                    <p style="font-size: 16px; margin-bottom: 6px;">🪑 <b style="color: #0d47a1; font-size: 18px;">${order.tableNumber}</b> | № <b>${order.orderNumber}</b> | Ofitsiant: <b>${order.waiterName || 'Ofitsiant'}</b></p>
-                    <p style="font-size: 14px;">Holat: <b style="color: #d32f2f;">${(order.status || 'yangi').toUpperCase()}</b></p>
-                    ${itemsListHTML}
-                    <div style="margin-top: 6px; font-size: 15px; font-weight: bold; color: #0d47a1; background: #e1f5fe; padding: 6px 10px; border-radius: 5px; display: inline-block;">
-                        Jami: ${orderTotalSum.toLocaleString()} so'm
-                    </div>
-                    ${paymentHTML}
-                </div>
-                <div style="display: flex; gap: 5px; flex-direction: column;">
-                    <button class="btn" style="background: #ffb74d;" onclick="changeOrderStatus('${orderId}', 'qabul_qilindi')">Qabul</button>
-                    <button class="btn" style="background: #4fc3f7;" onclick="changeOrderStatus('${orderId}', 'tayyorlanyapti')">Jarayonda</button>
-                    <button class="btn btn-blue" onclick="changeOrderStatus('${orderId}', 'tayyor')">Tayyor</button>
-                    <button class="btn btn-red" style="margin-top: 10px;" onclick="changeOrderStatus('${orderId}', 'bekor_qilindi')">Bekor qilish</button>
-                </div>
-            </div>`;
-    }).join('');
-}
-
-function changeOrderStatus(id, newStatus) {
-    let order = ordersDatabase.find(o => String(o.tableNumber || o.id) === String(id));
-    if (order) {
-        order.status = newStatus;
-        if (newStatus === 'qabul_qilindi' || newStatus === 'tayyorlanyapti') {
-            order.isPrinted = true;
-            processOrderForKitchenPrinters(order);
-        }
-        syncOrdersToStorage();
-        renderAll();
-    }
-}
-
-function splitOrderIntoKitchenSections(orderItems) {
-    let sections = { kaboblar: [], somsalar: [], fastFood: [], oshxona: [] };
-    orderItems.forEach(item => {
-        let category = (item.category || "").toLowerCase();
-        let name = (item.name || "").toLowerCase();
-        if (category.includes('kabob') || name.includes('kabob') || name.includes('shashlik')) {
-            sections.kaboblar.push(item);
-        } else if (category.includes('somsa') || name.includes('somsa')) {
-            sections.somsalar.push(item);
-        } else if (category.includes('fast food') || category.includes('fast-food') || name.includes('lavash') || name.includes('burger')) {
-            sections.fastFood.push(item);
-        } else {
-            sections.oshxona.push(item);
-        }
-    });
-    return sections;
-}
-
-function generateVirtualKitchenReceipts(order) {
-    let sections = splitOrderIntoKitchenSections(order.items || []);
-    let timeString = new Date().toLocaleTimeString();
-    let waiterName = order.waiterName || order.waiter || 'Ofitsiant';
-    let tableNo = order.tableNumber || 'Nomaʼlum';
-    let orderNo = order.orderNumber || '----';
-    let virtualReceipts = [];
-
-    const sectionConfigs = [
-        { key: 'kaboblar', title: '🔥 KABOBLAR BO\'LIMI', items: sections.kaboblar },
-        { key: 'somsalar', title: '🥟 SOMSALAR BO\'LIMI', items: sections.somsalar },
-        { key: 'fastFood', title: '🍔 FAST FOOD BO\'LIMI', items: sections.fastFood },
-        { key: 'oshxona', title: '🍲 UMUMIY OSHXONA BO\'LIMI', items: sections.oshxona }
-    ];
-
-    sectionConfigs.forEach(sec => {
-        if (sec.items.length > 0) {
-            let receiptText = `----------------------------------------\n`;
-            receiptText += `   ${sec.title}\n`;
-            receiptText += `----------------------------------------\n`;
-            receiptText += `Buyurtma №: ${orderNo} | Stol: ${tableNo}\n`;
-            receiptText += `Ofitsiant: ${waiterName} | Vaqt: ${timeString}\n`;
-            receiptText += `----------------------------------------\n`;
-            receiptText += `MAHSULOT NOMI                 MIQDORI\n`;
-            receiptText += `----------------------------------------\n`;
-
-            sec.items.forEach(item => {
-                let itemName = (item.name || 'Taom').padEnd(30, ' ');
-                let qty = `${item.qty || item.quantity || 1} ta`;
-                receiptText += `${itemName} ${qty}\n`;
+                currentOrderTotalSum += price * qty;
             });
 
-            receiptText += `----------------------------------------\n`;
-            receiptText += `            (Faqat oshxona uchun)\n`;
-            receiptText += `----------------------------------------\n\n`;
-
-            virtualReceipts.push({ section: sec.key, title: sec.title, content: receiptText });
+            document.getElementById('modal-total-sum').innerText = currentOrderTotalSum.toLocaleString();
+            document.getElementById('modal-cash-input').value = '';
+            document.getElementById('modal-change-amount').innerText = '0';
+            document.getElementById('cash-payment-modal').style.display = 'flex';
         }
-    });
-    return virtualReceipts;
-}
 
-function printKitchenReceipts(virtualReceipts) {
-    virtualReceipts.forEach(receipt => {
-        console.log(`[PRINTER SIMULATSIYasi - ${receipt.section.toUpperCase()}]:\n${receipt.content}`);
-    });
+        function calculateChange() {
+            let cashGiven = Number(document.getElementById('modal-cash-input').value) || 0;
+            let change = cashGiven - currentOrderTotalSum;
+            document.getElementById('modal-change-amount').innerText = change >= 0 ? change.toLocaleString() : 'Yetarli emas!';
+        }
 
-    if (virtualReceipts.length > 0) {
-        let printWindow = window.open('', '_blank', 'width=400,height=600');
-        if (printWindow) {
-            printWindow.document.write('<html><head><title>Oshxona Cheklari</title><style>body{font-family: monospace; font-size: 14px; padding: 10px;}</style></head><body>');
-            virtualReceipts.forEach(r => {
-                printWindow.document.write(`<pre style="border-bottom: 2px dashed #000; padding-bottom: 10px; margin-bottom: 10px;">${r.content}</pre>`);
+        function closeCashModal() {
+            document.getElementById('cash-payment-modal').style.display = 'none';
+            currentPayingOrderId = null;
+        }
+
+        function confirmCashPayment() {
+            let cashGiven = Number(document.getElementById('modal-cash-input').value) || 0;
+            if (cashGiven < currentOrderTotalSum) {
+                alert("Mijoz bergan summa yetarli emas!");
+                return;
+            }
+            acceptPayment(currentPayingOrderId, 'naqd', cashGiven);
+            closeCashModal();
+        }
+
+        function acceptPayment(orderId, paymentType, cashGiven = 0) {
+            let order = ordersDatabase.find(o => String(o.tableNumber || o.id) === String(orderId));
+            if (order) {
+                order.status = 'tolandi';
+                order.paymentType = paymentType;
+                order.cashGiven = cashGiven;
+                
+                let sum = 0;
+                (order.items || []).forEach(i => {
+                    sum += Number(i.sale_price || i.external_price || i.price || 0) * Number(i.qty || 1);
+                });
+                order.totalSum = sum;
+
+                deductWarehouseForOrder(order);
+                syncOrdersToStorage();
+                renderAll();
+            }
+        }
+
+        function deductWarehouseForOrder(order) {
+            if (!order || !order.items) return;
+            order.items.forEach(item => {
+                let itemName = item.name;
+                let itemQty = Number(item.qty || 1);
+                let whItem = warehouseDatabase.find(w => w.name.toLowerCase() === itemName.toLowerCase());
+                if (whItem) {
+                    whItem.quantity = Math.max(0, whItem.quantity - itemQty);
+                }
             });
-            printWindow.document.write('</body></html>');
-            printWindow.document.close();
-            printWindow.focus();
-            setTimeout(() => {
-                printWindow.print();
-                printWindow.close();
-            }, 300);
+            saveData();
+            renderWarehouse();
         }
-    }
-}
 
-function processOrderForKitchenPrinters(order) {
-    let receipts = generateVirtualKitchenReceipts(order);
-    printKitchenReceipts(receipts);
-}
+        function renderIncome() {
+            let orders = ordersDatabase || [];
+            let totalCash = 0, totalCard = 0, totalSale = 0, netProfit = 0;
 
-// --- TO'LOV MODALI ---
-let currentPayingOrderId = null;
-let currentOrderTotalSum = 0;
+            orders.forEach(o => {
+                if (o.status === 'tolandi') {
+                    let s = Number(o.totalSum || 0);
+                    totalSale += s;
+                    if (o.paymentType === 'naqd') totalCash += s;
+                    else if (o.paymentType === 'plastik') totalCard += s;
 
-function openCashModal(orderId) {
-    currentPayingOrderId = orderId;
-    let order = ordersDatabase.find(o => String(o.tableNumber || o.id) === String(orderId));
-    if (!order) return;
-    
-    currentOrderTotalSum = 0;
-    (order.items || []).forEach(i => {
-        let price = Number(i.sale_price || i.external_price || i.price || 0);
-        let qty = Number(i.qty || 1);
-        currentOrderTotalSum += price * qty;
-    });
+                    (o.items || []).forEach(item => {
+                        let menuItem = menuDatabase.find(m => m.name.toLowerCase() === item.name.toLowerCase());
+                        let qty = Number(item.qty || 1);
+                        if (menuItem) {
+                            let profitPerItem = Number(menuItem.sale_price || 0) - Number(menuItem.internal_price || 0);
+                            netProfit += profitPerItem * qty;
+                        } else {
+                            netProfit += s * 0.3; // Standart 30% foyda
+                        }
+                    });
+                }
+            });
 
-    if(document.getElementById('modal-total-sum')) document.getElementById('modal-total-sum').innerText = currentOrderTotalSum.toLocaleString();
-    if(document.getElementById('modal-cash-input')) document.getElementById('modal-cash-input').value = '';
-    if(document.getElementById('modal-change-amount')) document.getElementById('modal-change-amount').innerText = '0';
-    if(document.getElementById('cash-payment-modal')) document.getElementById('cash-payment-modal').style.display = 'flex';
-}
-
-function calculateChange() {
-    let cashGiven = Number(document.getElementById('modal-cash-input').value) || 0;
-    let change = cashGiven - currentOrderTotalSum;
-    if(document.getElementById('modal-change-amount')) document.getElementById('modal-change-amount').innerText = change >= 0 ? change.toLocaleString() : 'Yetarli emas!';
-}
-
-function closeCashModal() {
-    if(document.getElementById('cash-payment-modal')) document.getElementById('cash-payment-modal').style.display = 'none';
-    currentPayingOrderId = null;
-}
-
-function confirmCashPayment() {
-    let cashGiven = Number(document.getElementById('modal-cash-input').value) || 0;
-    if (cashGiven < currentOrderTotalSum) {
-        alert("Mijoz bergan summa yetarli emas!");
-        return;
-    }
-    acceptPayment(currentPayingOrderId, 'naqd', cashGiven);
-    closeCashModal();
-}
-
-function acceptPayment(orderId, paymentType, cashGiven = 0) {
-    let order = ordersDatabase.find(o => String(o.tableNumber || o.id) === String(orderId));
-    if (order) {
-        order.status = 'tolandi';
-        order.paymentType = paymentType;
-        order.cashGiven = cashGiven;
-        
-        let sum = 0;
-        (order.items || []).forEach(i => {
-            sum += Number(i.sale_price || i.external_price || i.price || 0) * Number(i.qty || 1);
-        });
-        order.totalSum = sum;
-
-        deductWarehouseForOrder(order);
-        syncOrdersToStorage();
-        renderAll();
-    }
-}
-
-function deductWarehouseForOrder(order) {
-    if (!order || !order.items) return;
-    order.items.forEach(item => {
-        let itemName = item.name;
-        let itemQty = Number(item.qty || 1);
-        let whItem = warehouseDatabase.find(w => w.name.toLowerCase() === itemName.toLowerCase());
-        if (whItem) {
-            whItem.quantity = Math.max(0, whItem.quantity - itemQty);
+            if(document.getElementById('income-cash')) document.getElementById('income-cash').innerText = totalCash.toLocaleString() + " so'm";
+            if(document.getElementById('income-card')) document.getElementById('income-card').innerText = totalCard.toLocaleString() + " so'm";
+            if(document.getElementById('income-total-sale')) document.getElementById('income-total-sale').innerText = totalSale.toLocaleString() + " so'm";
+            if(document.getElementById('income-net-profit')) document.getElementById('income-net-profit').innerText = netProfit.toLocaleString() + " so'm";
         }
-    });
-    saveData();
-    renderWarehouse();
-}
 
-// --- KASSA, TARIX VA SAQLASH ---
-function renderIncome() {
-    let orders = ordersDatabase || [];
-    let totalCash = 0, totalCard = 0, totalSale = 0, netProfit = 0;
+        function renderHistory() {
+            const tbody = document.getElementById('history-table-body');
+            const query = (document.getElementById('history-search-input') || {}).value || "";
+            let orders = ordersDatabase.filter(o => o.status === 'tolandi' || o.status === 'bekor_qilindi');
+            
+            let filtered = orders.filter(o => String(o.orderNumber || '').includes(query) || String(o.tableNumber || '').toLowerCase().includes(query.toLowerCase()));
 
-    orders.forEach(o => {
-        if (o.status === 'tolandi') {
-            let s = Number(o.totalSum || 0);
-            totalSale += s;
-            if (o.paymentType === 'naqd') totalCash += s;
-            else if (o.paymentType === 'plastik') totalCard += s;
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 10px;">Tarix bo'sh</td></tr>`;
+                return;
+            }
 
-            (o.items || []).forEach(item => {
-                let menuItem = menuDatabase.find(m => m.name.toLowerCase() === item.name.toLowerCase());
-                let qty = Number(item.qty || 1);
-                if (menuItem) {
-                    let profitPerItem = Number(menuItem.sale_price || 0) - Number(menuItem.internal_price || 0);
-                    netProfit += profitPerItem * qty;
-                } else {
-                    netProfit += s * 0.3;
+            tbody.innerHTML = filtered.map(o => {
+                let sum = Number(o.totalSum || 0);
+                return `
+                    <tr>
+                        <td>№ ${o.orderNumber || '---'}</td>
+                        <td>${o.tableNumber || '---'}</td>
+                        <td>${o.waiterName || o.waiter || '---'}</td>
+                        <td>${o.paymentType ? o.paymentType.toUpperCase() : '---'}</td>
+                        <td><b>${sum.toLocaleString()} so'm</b></td>
+                        <td><span style="color: ${o.status === 'tolandi' ? 'green' : 'red'}; font-weight: bold;">${o.status.toUpperCase()}</span></td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function updateStatsInfo() {}
+
+        function initChart() {
+            const canvas = document.getElementById('statsChart');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            if (statsChartInstance) statsChartInstance.destroy();
+
+            statsChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Dush', 'Sesh', 'Chor', 'Pay', 'Jum', 'Shan', 'Yak'],
+                    datasets: [{
+                        label: 'Kunlik Savdo (so\'m)',
+                        data: [1200000, 1900000, 1500000, 2200000, 2800000, 3500000, 3100000],
+                        backgroundColor: '#0288d1',
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } }
                 }
             });
         }
-    });
 
-    if(document.getElementById('income-cash')) document.getElementById('income-cash').innerText = totalCash.toLocaleString() + " so'm";
-    if(document.getElementById('income-card')) document.getElementById('income-card').innerText = totalCard.toLocaleString() + " so'm";
-    if(document.getElementById('income-total-sale')) document.getElementById('income-total-sale').innerText = totalSale.toLocaleString() + " so'm";
-    if(document.getElementById('income-net-profit')) document.getElementById('income-net-profit').innerText = netProfit.toLocaleString() + " so'm";
-}
-
-function renderHistory() {
-    const tbody = document.getElementById('history-table-body');
-    if (!tbody) return;
-    const query = (document.getElementById('history-search-input') || {}).value || "";
-    let orders = ordersDatabase.filter(o => o.status === 'tolandi' || o.status === 'bekor_qilindi');
-    let filtered = orders.filter(o => String(o.orderNumber || '').includes(query) || String(o.tableNumber || '').toLowerCase().includes(query.toLowerCase()));
-
-    if (filtered.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 10px;">Tarix bo'sh</td></tr>`;
-        return;
-    }
-
-    tbody.innerHTML = filtered.map(o => {
-        let sum = Number(o.totalSum || 0);
-        return `
-            <tr>
-                <td>№ ${o.orderNumber || '---'}</td>
-                <td>${o.tableNumber || '---'}</td>
-                <td>${o.waiterName || o.waiter || '---'}</td>
-                <td>${o.paymentType ? o.paymentType.toUpperCase() : '---'}</td>
-                <td><b>${sum.toLocaleString()} so'm</b></td>
-                <td><span style="color: ${o.status === 'tolandi' ? 'green' : 'red'}; font-weight: bold;">${o.status.toUpperCase()}</span></td>
-            </tr>
-        `;
-    }).join('');
-}
-
-function updateStatsInfo() {}
-
-function initChart() {
-    const canvas = document.getElementById('statsChart');
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    if (typeof statsChartInstance !== 'undefined' && statsChartInstance) statsChartInstance.destroy();
-
-    statsChartInstance = new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: ['Dush', 'Sesh', 'Chor', 'Pay', 'Jum', 'Shan', 'Yak'],
-            datasets: [{
-                label: 'Kunlik Savdo (so\'m)',
-                data: [1200000, 1900000, 1500000, 2200000, 2800000, 3500000, 3100000],
-                backgroundColor: '#0288d1',
-                borderRadius: 4
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { legend: { display: false } }
+        function saveData() {
+            try {
+                localStorage.setItem('admin_menu', JSON.stringify(menuDatabase));
+                localStorage.setItem('admin_warehouse', JSON.stringify(warehouseDatabase));
+                syncOrdersToStorage();
+            } catch (e) { console.error("Saqlashda xato:", e); }
         }
-    });
-}
 
-function saveData() {
-    try {
-        localStorage.setItem('admin_menu', JSON.stringify(menuDatabase));
-        localStorage.setItem('admin_warehouse', JSON.stringify(warehouseDatabase));
-        syncOrdersToStorage();
-    } catch (e) { console.error("Saqlashda xato:", e); }
-}
-
-function syncOrdersToStorage() {
-    try {
-        localStorage.setItem('admin_orders', JSON.stringify(ordersDatabase));
-        localStorage.setItem('restaurant_orders', JSON.stringify(ordersDatabase));
-    } catch (e) {}
-}
+        function syncOrdersToStorage() {
+            try {
+                localStorage.setItem('admin_orders', JSON.stringify(ordersDatabase));
+                localStorage.setItem('restaurant_orders', JSON.stringify(ordersDatabase));
+            } catch (e) {}
+        }
+    </script>
+</body>
+</html>

@@ -498,8 +498,8 @@
             </div>
         </div>
     </div>
-</script>
-    
+
+    <script>
         let statsChartInstance = null;
         let menuDatabase = [];
         let warehouseDatabase = [];
@@ -515,12 +515,37 @@
         let speechAnnounced10 = false;
         let speechAnnounced5 = false;
         let speechAnnounced1 = false;
-          function switchTab(tabId, event) {
-            document.querySelectorAll('.section-content').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-            document.getElementById(tabId).classList.add('active');
-            if(event) event.currentTarget.classList.add('active');
-        }
+      window.onload = function() {
+    loadInitialData();
+            renderAll();
+
+            if (typeof io !== 'undefined') {
+                socket = io('https://oshxonachi.onrender.com');
+
+                socket.on('connect', () => {
+                    if (statusBadge) {
+                        statusBadge.textContent = 'Ulangan';
+                        statusBadge.className = 'px-3 py-1 text-sm rounded-full bg-green-100 text-green-600 font-medium';
+                    }
+                });
+
+                socket.on('new_order', (data) => {
+                    if (!data) return;
+                    upsertOrder(data);
+                    renderAll();
+                    
+                    // Agar kelgan buyurtmada "Kiloli osh" yoki "osh" bo'lsa TV simulyatsiyasini avtomatik ishga tushirish va ovoz berish
+                    if(data.items && data.items.some(i => i.name && (i.name.toLowerCase().includes('osh') || i.category === 'Kiloli osh'))) {
+                        let oshItem = data.items.find(i => i.name.toLowerCase().includes('osh') || i.category === 'Kiloli osh');
+                        document.getElementById('tv-order-name').innerText = oshItem.name;
+                        document.getElementById('tv-order-meta').innerText = `Stol #${data.tableNumber || '4'} (${data.waiter || 'Ofitsiant'})`;
+                        
+                        playVoiceAnnouncement(`${data.tableNumber || '4'}-stolga ${oshItem.name} buyurtmasi qabul qilindi.`);
+                        startOshSimulation();
+                    }
+                });
+            }
+        };
 
         // OVOZLI XABARLAR BERISH FUNKSIYASI (SpeechSynthesis)
         function playVoiceAnnouncement(text) {
@@ -563,11 +588,11 @@
                         speechAnnounced10 = true;
                     }
                     if (mins === 5 && secs === 0 && !speechAnnounced5) {
-                        playVoiceAnnouncement(" Diqqat oshpazlar 5 minut qoldi");
+                        playVoiceAnnouncement("5 minut qoldi");
                         speechAnnounced5 = true;
                     }
                     if (mins === 1 && secs === 0 && !speechAnnounced1) {
-                        playVoiceAnnouncement("Ovqat tayyorlanish vaqti tugadi siz taomni vaqtida tayyorladingiz");
+                        playVoiceAnnouncement("Ovqat tayyorlanish vaqti tugadi");
                         speechAnnounced1 = true;
                     }
 
@@ -611,45 +636,6 @@
             }
         }
 
-      window.onload = function() {
-    loadInitialData();
-            renderAll();
-
-            if (typeof io !== 'undefined') {
-                socket = io('https://oshxonachi.onrender.com');
-
-                socket.on('connect', () => {
-                    if (statusBadge) {
-                        statusBadge.textContent = 'Ulangan';
-                        statusBadge.className = 'px-3 py-1 text-sm rounded-full bg-green-100 text-green-600 font-medium';
-                    }
-                });
-
-                socket.on('new_order', (data) => {
-                    if (!data) return;
-                    upsertOrder(data);
-                    renderAll();
-                    
-                    // 👇 MANASHU QISMNI QO'SHASIZ (Osh buyurtma qilinganda avtomatik TV simulyatsiya va ovoz)
-    if(data.items && data.items.some(i => i.name && (i.name.toLowerCase().includes('osh') || i.category === 'Kiloli osh' || i.category === 'Osh'))) {
-        let oshItem = data.items.find(i => i.name.toLowerCase().includes('osh') || i.category === 'Kiloli osh' || i.category === 'Osh');
-        
-        // Televizor ekranidagi ma'lumotlarni avtomatik yangilash
-        let tvOrderName = document.getElementById('tv-order-name');
-        let tvOrderMeta = document.getElementById('tv-order-meta');
-        
-        if(tvOrderName) tvOrderName.innerText = oshItem.name;
-        if(tvOrderMeta) tvOrderMeta.innerText = `Stol #${data.tableNumber || data.table || '4'} (${data.waiter || data.waiterName || 'Ofitsiant'})`;
-        
-        // Ovozli xabar berish (SpeechSynthesis)
-        let tableNum = data.tableNumber || data.table || '4';
-        playVoiceAnnouncement(`${tableNum}-stolga ${oshItem.name} buyurtmasi qabul qilindi. Oshxona ekraniga yuborildi.`);
-        
-        // Avtomatik simulyatsiyani ishga tushirish
-        startOshSimulation();
-    }
-});
-
         function loadInitialData() {
             let defaultMenu = [
                 { id: 1, category: "Kiloli osh", name: "1 kg Toshkent to'y oshi", internal_price: 70000, sale_price: 100000 },
@@ -660,7 +646,13 @@
             menuDatabase = storedMenu && storedMenu.length > 0 ? storedMenu : defaultMenu;
         }
 
-      
+        function switchTab(tabId, event) {
+            document.querySelectorAll('.section-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            if(event) event.currentTarget.classList.add('active');
+        }
+
         function renderAll() {
             renderMenu();
         }
@@ -1918,6 +1910,6 @@ function updateClock() {
                 localStorage.setItem('restaurant_orders', JSON.stringify(ordersDatabase));
             } catch (e) {}
         }
-<script>
+    </script>
 </body>
 </html>

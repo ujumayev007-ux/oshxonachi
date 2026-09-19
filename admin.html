@@ -1097,7 +1097,6 @@ function loadInitialMenuData() {
                     { id: 183, category: "Ichimliklar", name: "Kofe (Americano)", internal_price: 8000, sale_price: 15000, is_visible: true },
                     { id: 184, category: "Ichimliklar", name: "Kofe (Cappuccino)", internal_price: 10000, sale_price: 18000, is_visible: true }
                 ];
-              }  
                 let storedMenu = JSON.parse(localStorage.getItem('admin_menu'));
                 if (!storedMenu || storedMenu.length === 0) {
                     menuDatabase = defaultMenu;
@@ -1912,6 +1911,8 @@ function updateClock() {
                 localStorage.setItem('restaurant_orders', JSON.stringify(ordersDatabase));
             } catch (e) {}
         }
+        }
+        
     </script>
 </body>
 </html>

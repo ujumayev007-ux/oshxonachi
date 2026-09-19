@@ -42,7 +42,7 @@
             <div class="bg-black/60 p-8 rounded-2xl border border-yellow-600/30 text-center flex flex-col items-center justify-center">
                 <div class="text-5xl mb-4 animate-bounce">⏳</div>
                 <span class="text-xs uppercase tracking-widest text-yellow-500 font-bold mb-2">Qolgan Umumiy Vaqt</span>
-                <div id="tv-timer-display" class="text-5xl font-mono font-black text-yellow-400 tracking-wider mb-4">01:00:00</div>
+                <div id="tv-timer-display" class="text-5xl font-mono font-black text-yellow-400 tracking-wider mb-4">00:40:00</div>
                 <p id="tv-timer-status" class="text-sm text-gray-300 italic">Admin buyurtmani tasdiqlashini kutish...</p>
                 <div class="w-full bg-gray-800 h-3 rounded-full mt-6 overflow-hidden border border-yellow-600/20">
                     <div id="tv-progress-bar" class="bg-gradient-to-r from-yellow-600 to-yellow-400 h-full transition-all duration-1000" style="width: 100%;"></div>
@@ -58,7 +58,7 @@
                         <span class="w-8 h-8 rounded-full bg-black/40 flex items-center justify-center font-bold text-sm">1</span>
                         <div>
                             <p class="font-bold text-base text-white">Qozonni qizdirish va paxta yog'ini qizdirish</p>
-                            <p class="text-xs text-gray-400">00:00 - 10:00 daqiqa</p>
+                            <p class="text-xs text-gray-400">00:00 - 07:00 daqiqa</p>
                         </div>
                     </div>
                     <span class="step-status-badge text-xs font-bold px-3 py-1 rounded-full border border-gray-600">Kutilmoqda</span>
@@ -69,7 +69,7 @@
                         <span class="w-8 h-8 rounded-full bg-black/40 flex items-center justify-center font-bold text-sm">2</span>
                         <div>
                             <p class="font-bold text-base text-white">Piyozni to'g'rab, tillarrang bo'lguncha qovurish</p>
-                            <p class="text-xs text-gray-400">10:00 - 20:00 daqiqa</p>
+                            <p class="text-xs text-gray-400">07:00 - 14:00 daqiqa</p>
                         </div>
                     </div>
                     <span class="step-status-badge text-xs font-bold px-3 py-1 rounded-full border border-gray-600">Kutilmoqda</span>
@@ -80,7 +80,7 @@
                         <span class="w-8 h-8 rounded-full bg-black/40 flex items-center justify-center font-bold text-sm">3</span>
                         <div>
                             <p class="font-bold text-base text-white">Go'sht solib birga qovurish</p>
-                            <p class="text-xs text-gray-400">20:00 - 30:00 daqiqa</p>
+                            <p class="text-xs text-gray-400">14:00 - 22:00 daqiqa</p>
                         </div>
                     </div>
                     <span class="step-status-badge text-xs font-bold px-3 py-1 rounded-full border border-gray-600">Kutilmoqda</span>
@@ -91,7 +91,7 @@
                         <span class="w-8 h-8 rounded-full bg-black/40 flex items-center justify-center font-bold text-sm">4</span>
                         <div>
                             <p class="font-bold text-base text-white">Sabzi solinib, zirvak qaynatilmoqda (suv quyildi)</p>
-                            <p class="text-xs text-gray-400">30:00 - 45:00 daqiqa</p>
+                            <p class="text-xs text-gray-400">22:00 - 30:00 daqiqa</p>
                         </div>
                     </div>
                     <span class="step-status-badge text-xs font-bold px-3 py-1 rounded-full border border-gray-600">Kutilmoqda</span>
@@ -102,7 +102,7 @@
                         <span class="w-8 h-8 rounded-full bg-black/40 flex items-center justify-center font-bold text-sm">5</span>
                         <div>
                             <p class="font-bold text-base text-white">Guruch solinib, dam berish jarayoni</p>
-                            <p class="text-xs text-gray-400">45:00 - 55:00 daqiqa</p>
+                            <p class="text-xs text-gray-400">30:00 - 37:00 daqiqa</p>
                         </div>
                     </div>
                     <span class="step-status-badge text-xs font-bold px-3 py-1 rounded-full border border-gray-600">Kutilmoqda</span>
@@ -113,7 +113,7 @@
                         <span class="w-8 h-8 rounded-full bg-black/40 flex items-center justify-center font-bold text-sm">6</span>
                         <div>
                             <p class="font-bold text-base text-white">Osh damlandi! Stolga tortishga tayyor 🍛</p>
-                            <p class="text-xs text-gray-400">55:00 - 60:00 daqiqa</p>
+                            <p class="text-xs text-gray-400">37:00 - 40:00 daqiqa</p>
                         </div>
                     </div>
                     <span class="step-status-badge text-xs font-bold px-3 py-1 rounded-full border border-gray-600">Kutilmoqda</span>
@@ -124,8 +124,20 @@
 
     <script>
         let oshSimTimer = null;
-        let oshTotalSeconds = 60 * 60; 
-        let oshCurrentSecondsLeft = 60 * 60;
+        let oshTotalSeconds = 40 * 60; // 40 daqiqa
+        let oshCurrentSecondsLeft = 40 * 60;
+        let speechAnnounced10 = false;
+        let speechAnnounced5 = false;
+
+        function playVoiceAnnouncement(text) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                let utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'uz-UZ';
+                utterance.rate = 1.0;
+                window.speechSynthesis.speak(utterance);
+            }
+        }
 
         window.onload = function() {
             if (typeof io !== 'undefined') {
@@ -135,12 +147,16 @@
                     console.log("TV ekran serverga ulandi");
                 });
 
-                // Ofitsiant buyurtma olib, admin "qabul qildim" yoki yangi osh buyurtmasi kelganda ishlaydi
                 socket.on('new_order', (data) => {
-                    if (data && data.items && data.items.some(i => i.name && i.name.toLowerCase().includes('osh'))) {
-                        let oshItem = data.items.find(i => i.name.toLowerCase().includes('osh'));
+                    if (data && data.items && data.items.some(i => i.name && (i.name.toLowerCase().includes('osh') || i.category === 'Osh' || i.category === 'Kiloli osh'))) {
+                        let oshItem = data.items.find(i => i.name.toLowerCase().includes('osh') || i.category === 'Osh' || i.category === 'Kiloli osh');
+                        let tableNum = data.tableNumber || data.table || '?';
+                        let waiterName = data.waiter || data.waiterName || 'Ofitsiant';
+
                         document.getElementById('tv-order-name').innerText = oshItem.name + ` (${oshItem.qty || 1} ta)`;
-                        document.getElementById('tv-order-meta').innerText = `Stol #${data.tableNumber || '?'} (${data.waiter || 'Ofitsiant'})`;
+                        document.getElementById('tv-order-meta').innerText = `Stol #${tableNum} (${waiterName})`;
+                        
+                        playVoiceAnnouncement(`${tableNum}-stolga ${oshItem.name} buyurtmasi qabul qilindi. Oshxona ekraniga yuborildi.`);
                         startOshSimulation();
                     }
                 });
@@ -150,12 +166,14 @@
         function startOshSimulation() {
             if (oshSimTimer) clearInterval(oshSimTimer);
             oshCurrentSecondsLeft = oshTotalSeconds;
+            speechAnnounced10 = false;
+            speechAnnounced5 = false;
             
             const timerDisplay = document.getElementById('tv-timer-display');
             const timerStatus = document.getElementById('tv-timer-status');
             const progressBar = document.getElementById('tv-progress-bar');
             
-            timerStatus.innerText = "Osh tayyorlanish jarayoni boshlandi...";
+            if(timerStatus) timerStatus.innerText = "Osh tayyorlanish jarayoni boshlandi...";
 
             oshSimTimer = setInterval(() => {
                 if (oshCurrentSecondsLeft > 0) {
@@ -163,17 +181,30 @@
                     let hrs = Math.floor(oshCurrentSecondsLeft / 3600);
                     let mins = Math.floor((oshCurrentSecondsLeft % 3600) / 60);
                     let secs = oshCurrentSecondsLeft % 60;
-                    timerDisplay.innerText = `${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+                    
+                    if(timerDisplay) timerDisplay.innerText = `${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
                     
                     let percent = ((oshTotalSeconds - oshCurrentSecondsLeft) / oshTotalSeconds) * 100;
                     if(progressBar) progressBar.style.width = percent + '%';
 
+                    // 10 minut qolganda ovozli ogohlantirish
+                    if (mins === 10 && secs === 0 && !speechAnnounced10) {
+                        playVoiceAnnouncement("Diqqat oshpazlar, oshga 10 minut qoldi");
+                        speechAnnounced10 = true;
+                    }
+                    // 5 minut qolganda ovozli ogohlantirish
+                    if (mins === 5 && secs === 0 && !speechAnnounced5) {
+                        playVoiceAnnouncement("Diqqat, oshga 5 minut qoldi");
+                        speechAnnounced5 = true;
+                    }
+
                     updateOshSteps(oshTotalSeconds - oshCurrentSecondsLeft);
                 } else {
                     clearInterval(oshSimTimer);
-                    timerStatus.innerText = "Osh tayyor! Stolga tortish mumkin 🍛";
-                    timerDisplay.innerText = "00:00:00";
+                    if(timerStatus) timerStatus.innerText = "Osh tayyor! Stolga tortish mumkin 🍛";
+                    if(timerDisplay) timerDisplay.innerText = "00:00:00";
                     if(progressBar) progressBar.style.width = '100%';
+                    playVoiceAnnouncement("Osh tayyorlandi! Stolga berish mumkin!");
                     updateOshSteps(oshTotalSeconds);
                 }
             }, 1000);
@@ -181,11 +212,15 @@
 
         function updateOshSteps(elapsedSec) {
             let elapsedMin = elapsedSec / 60;
-            let thresholds = [10, 20, 30, 45, 55, 60];
+            // 40 daqiqaga moslashtirilgan chegaralar (minutda)
+            let thresholds = [7, 14, 22, 30, 37, 40];
             
             for (let i = 1; i <= 6; i++) {
                 let stepEl = document.getElementById(`step-${i}`);
+                if(!stepEl) continue;
                 let badge = stepEl.querySelector('.step-status-badge');
+                if(!badge) continue;
+
                 let startMin = i === 1 ? 0 : thresholds[i-2];
                 let endMin = thresholds[i-1];
 

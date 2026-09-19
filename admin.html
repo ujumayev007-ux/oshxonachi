@@ -589,74 +589,69 @@
     });
     };
          // OSH TV EKRAN SIMULYATSIYA LOGIKASI
-        function startOshSimulation() {
-            if (oshSimTimer) clearInterval(oshSimTimer);
-            oshCurrentSecondsLeft = oshTotalSeconds;
-            
-            const timerDisplay = document.getElementById('tv-timer-display');
-            const timerStatus = document.getElementById('tv-timer-status');
-            const progressBar = document.getElementById('tv-progress-bar');
-            
-            timerStatus.innerText = "Qozon qizdirilmoqda va jarayon boshlandi...";
+     function startOshSimulationByWeight(weightInKg) {
+    if (oshSimTimer) clearInterval(oshSimTimer);
+    
+    // Vaznga qarab vaqtni belgilash (Masalan: 1 kg = 35 min, 2 kg = 60 min, 3 kg = 90 min)
+    // 0.5 kg dan 3 kg gacha proporsional hisoblaymiz (minimum 20 minut, har 1 kg uchun +20 minut)
+    let totalMinutes = Math.max(20, Math.round(weightInKg * 30));
+    oshTotalSeconds = totalMinutes * 60;
+    oshCurrentSecondsLeft = oshTotalSeconds;
+    
+    const timerDisplay = document.getElementById('tv-timer-display');
+    const timerStatus = document.getElementById('tv-timer-status');
+    const progressBar = document.getElementById('tv-progress-bar');
+    
+    if(timerStatus) timerStatus.innerText = `${weightInKg} kg To'y oshi tayyorlanishi boshlandi...`;
 
-            oshSimTimer = setInterval(() => {
-                if (oshCurrentSecondsLeft > 0) {
-                    oshCurrentSecondsLeft--;
-                    
-                    // Vaqtni formatlash (HH:MM:SS)
-                    let hrs = Math.floor(oshCurrentSecondsLeft / 3600);
-                    let mins = Math.floor((oshCurrentSecondsLeft % 3600) / 60);
-                    let secs = oshCurrentSecondsLeft % 60;
-                    timerDisplay.innerText = `${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
-                    
-                    // Progress bar foizi
-                    let percent = ((oshTotalSeconds - oshCurrentSecondsLeft) / oshTotalSeconds) * 100;
-                    if(progressBar) progressBar.style.width = percent + '%';
+    oshSimTimer = setInterval(() => {
+        if (oshCurrentSecondsLeft > 0) {
+            oshCurrentSecondsLeft--;
+            
+            let hrs = Math.floor(oshCurrentSecondsLeft / 3600);
+            let mins = Math.floor((oshCurrentSecondsLeft % 3600) / 60);
+            let secs = oshCurrentSecondsLeft % 60;
+            if(timerDisplay) timerDisplay.innerText = `${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+            
+            let percent = ((oshTotalSeconds - oshCurrentSecondsLeft) / oshTotalSeconds) * 100;
+            if(progressBar) progressBar.style.width = percent + '%';
 
-                    // Bosqichlarni yangilash (60 daqiqa = 3600 sekund)
-                    updateOshSteps(oshTotalSeconds - oshCurrentSecondsLeft);
-                } else {
-                    clearInterval(oshSimTimer);
-                    timerStatus.innerText = "Osh tayyor! Stolga tortish mumkin 🍛";
-                    timerDisplay.innerText = "00:00:00";
-                    if(progressBar) progressBar.style.width = '100%';
-                    updateOshSteps(oshTotalSeconds);
-                }
-            }, 1000);
+            updateOshStepsDynamic(oshTotalSeconds - oshCurrentSecondsLeft, oshTotalSeconds);
+        } else {
+            clearInterval(oshSimTimer);
+            if(timerStatus) timerStatus.innerText = "Kiloli osh tayyor! Stolga tortish mumkin 🍛";
+            if(timerDisplay) timerDisplay.innerText = "00:00:00";
+            if(progressBar) progressBar.style.width = '100%';
         }
+    }, 1000);
+}
 
-        function updateOshSteps(elapsedSec) {
-            let elapsedMin = elapsedSec / 60;
-            
-            // 6 ta bosqich oraliqlari: 10, 20, 30, 45, 55, 60
-            let thresholds = [10, 20, 30, 45, 55, 60];
-            
-            for (let i = 1; i <= 6; i++) {
-                let stepEl = document.getElementById(`step-${i}`);
-                let badge = stepEl.querySelector('.step-status-badge');
-                
-                let startMin = i === 1 ? 0 : thresholds[i-2];
-                let endMin = thresholds[i-1];
+// 6 ta bosqichni umumiy vaqtga nisbatan taqsimlash
+function updateOshStepsDynamic(elapsedSec, totalSec) {
+    let elapsedPercent = (elapsedSec / totalSec) * 100;
+    // 6 ta bosqich foiz oralig'i (masalan: 15%, 30%, 50%, 70%, 90%, 100%)
+    let thresholds = [15, 30, 50, 70, 90, 100];
+    
+    for (let i = 1; i <= 6; i++) {
+        let stepEl = document.getElementById(`step-${i}`);
+        if(!stepEl) continue;
+        let badge = stepEl.querySelector('.step-status-badge');
+        
+        let startPct = i === 1 ? 0 : thresholds[i-2];
+        let endPct = thresholds[i-1];
 
-                if (elapsedMin >= endMin) {
-                    // Bajarilgan
-                    stepEl.className = "step-done p-4 rounded-xl border transition-all duration-300 flex items-center justify-between";
-                    badge.innerText = "Bajarildi ✓";
-                    badge.className = "step-status-badge text-xs font-bold px-3 py-1 rounded-full bg-green-500/20 text-green-400 border border-green-500/40";
-                } else if (elapsedMin >= startMin && elapsedMin < endMin) {
-                    // Hozir bajarilmoqda (Aktiv)
-                    stepEl.className = "step-active p-4 rounded-xl border transition-all duration-300 flex items-center justify-between";
-                    badge.innerText = "Jarayonda...";
-                    badge.className = "step-status-badge text-xs font-bold px-3 py-1 rounded-full bg-yellow-500/20 text-yellow-300 border border-yellow-500/40 animate-pulse";
-                } else {
-                    // Kutilmoqda
-                    stepEl.className = "step-pending p-4 rounded-xl border transition-all duration-300 flex items-center justify-between";
-                    badge.innerText = "Kutilmoqda";
-                    badge.className = "step-status-badge text-xs font-bold px-3 py-1 rounded-full border border-gray-600 text-gray-400";
-                }
-            }
+        if (elapsedPercent >= endPct) {
+            stepEl.className = "step-done p-4 rounded-xl border transition-all duration-300 flex items-center justify-between";
+            if(badge) { badge.innerText = "Bajarildi ✓"; badge.className = "step-status-badge text-xs font-bold px-3 py-1 rounded-full bg-green-500/20 text-green-400 border border-green-500/40"; }
+        } else if (elapsedPercent >= startPct && elapsedPercent < endPct) {
+            stepEl.className = "step-active p-4 rounded-xl border transition-all duration-300 flex items-center justify-between";
+            if(badge) { badge.innerText = "Jarayonda..."; badge.className = "step-status-badge text-xs font-bold px-3 py-1 rounded-full bg-yellow-500/20 text-yellow-300 border border-yellow-500/40 animate-pulse"; }
+        } else {
+            stepEl.className = "step-pending p-4 rounded-xl border transition-all duration-300 flex items-center justify-between";
+            if(badge) { badge.innerText = "Kutilmoqda"; badge.className = "step-status-badge text-xs font-bold px-3 py-1 rounded-full border border-gray-600 text-gray-400"; }
         }
-
+    }
+}
          // Printer IP manzilini saqlash funksiyasi
         function savePrinterIP(section) {
             let ipValue = document.getElementById(`ip-${section}`).value.trim();
@@ -811,6 +806,10 @@
         function loadInitialData() {
             try {
                 let defaultMenu = [
+                    // 1. Kiloli osh uchun vaznga qarab simulyatsiya vaqtini hisoblash funksiyasi
+                   let oshTotalSeconds = 3600; // Standart 2 kg uchun 1 soat
+                   let oshCurrentSecondsLeft = 3600;
+                   let oshSimTimer = null;
                     // Osh
                     { id: 1, category: "Osh", name: "Toshkent oshi (Toʻy oshi)", internal_price: 35000, sale_price: 50000, is_visible: true },
                     { id: 2, category: "Osh", name: "Samarqand oshi", internal_price: 38000, sale_price: 55000, is_visible: true },

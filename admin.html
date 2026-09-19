@@ -634,6 +634,31 @@ function createGramBasedOshOrder() {
     renderAll();
     alert(`Stol #${tableNum} uchun ${newItemName} buyurtmasi muvaffaqiyatli qo'shildi!`);
 }
+// Tablarni (bo'limlarni) boshqarish funksiyasi
+function switchTab(tabId, event) {
+    // 1. Barcha bo'limlardan 'active' klassini olib tashlab yashiramiz
+    let sections = document.querySelectorAll('.section-content');
+    sections.forEach(section => {
+        section.classList.remove('active');
+    });
+
+    // 2. Barcha tab tugmalaridan 'active' klassini olib tashlaymiz
+    let tabButtons = document.querySelectorAll('.tab-btn');
+    tabButtons.forEach(btn => {
+        btn.classList.remove('active');
+    });
+
+    // 3. Tanlangan bo'limni topib ekranga chiqaramiz ('active' klassini qo'shamiz)
+    let targetSection = document.getElementById(tabId);
+    if (targetSection) {
+        targetSection.classList.add('active');
+    }
+
+    // 4. Bosilgan tugmani faollashtiramiz
+    if (event && event.currentTarget) {
+        event.currentTarget.classList.add('active');
+    }
+}
         window.onload = function() {
           loadInitialMenuData();
           loadWarehouseData();

@@ -551,9 +551,15 @@
         const statusBadge = document.getElementById('connection-status');
 // 1. Avval yordamchi funksiyalarni tashqarida e'lon qilamiz
 function loadInitialMenuData() {
-            let savedMenu = localStorage.getItem('restaurant_menu_items') || localStorage.getItem('admin_menu');
+           let savedMenu = localStorage.getItem('restaurant_menu_items') || localStorage.getItem('admin_menu');
             if (savedMenu) {
-                try { menuDatabase = JSON.parse(savedMenu); } catch(e) { menuDatabase = []; }
+                try { 
+                    menuDatabase = JSON.parse(savedMenu).map(m => ({
+                        ...m,
+                        internal_price: Number(m.internal_price || 0),
+                        sale_price: Number(m.sale_price || m.external_price || 0)
+                    }));
+                } catch(e) { menuDatabase = []; }
             }
             if (menuDatabase.length === 0) {
                 menuDatabase = [
@@ -620,7 +626,6 @@ function loadInitialMenuData() {
             renderAll();
             alert(`Stol #${tableNum} uchun ${newItemName} buyurtmasi muvaffaqiyatli qo'shildi!`);
         }
-</script>
         window.onload = function() {
           loadInitialMenuData();
           loadWarehouseData();

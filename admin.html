@@ -557,11 +557,11 @@ function loadInitialMenuData() {
             }
             if (menuDatabase.length === 0) {
                 menuDatabase = [
-                    { id: 1, name: "Toshkent to'y oshi", category: "Kiloli osh", internalPrice: 70000, salePrice: 90000 },
-                    { id: 2, name: "Buxorocha so'fi oshi", category: "Kiloli osh", internalPrice: 75000, salePrice: 95000 },
-                    { id: 3, name: "Samarqand oshi", category: "Kiloli osh", internalPrice: 68000, salePrice: 88000 },
-                    { id: 4, name: "Mastava", category: "Suyuq ovqatlar", internalPrice: 15000, salePrice: 25000 },
-                    { id: 5, name: "Qo'y go'shti kabobi", category: "Kaboblar", internalPrice: 25000, salePrice: 38000 }
+                    { id: 1, name: "Toshkent to'y oshi", category: "Kiloli osh", internal_price: 70000, sale_price: 90000 },
+                    { id: 2, name: "Buxorocha so'fi oshi", category: "Kiloli osh", internal_price: 75000, sale_price: 95000 },
+                    { id: 3, name: "Samarqand oshi", category: "Kiloli osh", internal_price: 68000, sale_price: 88000 },
+                    { id: 4, name: "Mastava", category: "Suyuq ovqatlar", internal_price: 15000, sale_price: 25000 },
+                    { id: 5, name: "Qo'y go'shti kabobi", category: "Kaboblar", internal_price: 25000, sale_price: 38000 }
                 ];
                 localStorage.setItem('restaurant_menu_items', JSON.stringify(menuDatabase));
             }
@@ -578,8 +578,8 @@ function loadInitialMenuData() {
                 kiloliItems.forEach(item => {
                     let opt = document.createElement('option');
                     opt.value = item.name;
-                    opt.textContent = `${item.name} (1kg = ${item.salePrice.toLocaleString()} so'm)`;
-                    opt.dataset.price = item.salePrice;
+                    opt.textContent = `${item.name} (1kg = ${item.sale_price.toLocaleString()} so'm)`;
+                    opt.dataset.price = item.sale_price;
                     selectEl.appendChild(opt);
                 });
             }
@@ -599,7 +599,7 @@ function loadInitialMenuData() {
 
             // Narxni 1 kg (1000g) narxiga qarab gramm bo'yicha hisoblash
             let menuItem = menuDatabase.find(m => m.name === oshName);
-            let pricePerKg = menuItem ? menuItem.salePrice : 90000;
+            let pricePerKg = menuItem ? menuItem.sale_price : 90000;
             let calculatedPrice = (pricePerKg * grams) / 1000;
 
             let newItemName = `${grams}g ${oshName}`;
@@ -889,13 +889,14 @@ function loadInitialMenuData() {
                 `;
             });
         }
-        function loadInitialData() {
-            try {
-                let defaultMenu = [
-                    // 1. Kiloli osh uchun vaznga qarab simulyatsiya vaqtini hisoblash funksiyasi
+ // 1. Kiloli osh uchun vaznga qarab simulyatsiya vaqtini hisoblash funksiyasi
                    let oshTotalSeconds = 3600; // Standart 2 kg uchun 1 soat
                    let oshCurrentSecondsLeft = 3600;
                    let oshSimTimer = null;
+        function loadInitialData() {
+            try {
+                let defaultMenu = [
+                   
                     // Osh
                     { id: 1, category: "Osh", name: "Toshkent oshi (Toʻy oshi)", internal_price: 35000, sale_price: 50000, is_visible: true },
                     { id: 2, category: "Osh", name: "Samarqand oshi", internal_price: 38000, sale_price: 55000, is_visible: true },
@@ -1096,7 +1097,7 @@ function loadInitialMenuData() {
                     { id: 183, category: "Ichimliklar", name: "Kofe (Americano)", internal_price: 8000, sale_price: 15000, is_visible: true },
                     { id: 184, category: "Ichimliklar", name: "Kofe (Cappuccino)", internal_price: 10000, sale_price: 18000, is_visible: true }
                 ];
-                
+              }  
                 let storedMenu = JSON.parse(localStorage.getItem('admin_menu'));
                 if (!storedMenu || storedMenu.length === 0) {
                     menuDatabase = defaultMenu;
@@ -1435,10 +1436,10 @@ function updateClock() {
             const name = document.getElementById('new-menu-name').value.trim();
             const category = document.getElementById('new-menu-category').value;
             const intPrice = Number(document.getElementById('new-menu-internal').value);
-            const salePrice = Number(document.getElementById('new-menu-sale').value);
-            if (name && intPrice && salePrice) {
+            const sale_price = Number(document.getElementById('new-menu-sale').value);
+            if (name && intPrice && sale_price) {
                 const newId = menuDatabase.length > 0 ? Math.max(...menuDatabase.map(m => m.id)) + 1 : 1;
-                menuDatabase.push({ id: newId, name, category, internal_price: intPrice, sale_price: salePrice, external_price: salePrice, is_visible: true });
+                menuDatabase.push({ id: newId, name, category, internal_price: intPrice, sale_price: sale_price, external_price: sale_price, is_visible: true });
                 // Ma'lumotlarni saqlash va socket orqali barchaga yuborish
                 if (typeof saveData === 'function') {
                     saveData();

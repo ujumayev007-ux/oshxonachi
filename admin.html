@@ -592,40 +592,48 @@ function loadInitialMenuData() {
         }
 
         // Dinamik gramm asosida kiloli osh buyurtmasini yaratish
-        function createGramBasedOshOrder() {
-            let oshTypeSelect = document.getElementById('pos-kiloli-osh-type');
-            let gramsInput = document.getElementById('pos-osh-grams');
-            let tableNumInput = document.getElementById('pos-table-num');
-            let waiterNameInput = document.getElementById('pos-waiter-name');
+function createGramBasedOshOrder() {
+    let oshTypeSelect = document.getElementById('pos-kiloli-osh-type');
+    let gramsInput = document.getElementById('pos-osh-grams');
+    let tableNumInput = document.getElementById('pos-table-num');
+    let waiterNameInput = document.getElementById('pos-waiter-name');
+    
+    if (!oshTypeSelect || !gramsInput) return;
+    
+    let grams = parseFloat(gramsInput.value);
+    
+    if (isNaN(grams) || grams <= 0) {
+        alert('Iltimos, grammni to‘g‘ri kiriting!');
+        return;
+    }
+    
+    let oshName = oshTypeSelect.value;
+    let tableNum = tableNumInput.value.trim() || '1';
+    let waiter = waiterNameInput.value.trim() || 'Anvar';
 
-            let oshName = oshTypeSelect.value;
-            let grams = parseFloat(gramsInput.value) || 500;
-            let tableNum = tableNumInput.value.trim() || '1';
-            let waiter = waiterNameInput.value.trim() || 'Anvar';
+    // Narxni 1 kg (1000g) narxiga qarab gramm bo'yicha hisoblash
+    let menuItem = menuDatabase.find(m => m.name === oshName);
+    let pricePerKg = menuItem ? menuItem.sale_price : 90000;
+    let calculatedPrice = (pricePerKg * grams) / 1000;
 
-            // Narxni 1 kg (1000g) narxiga qarab gramm bo'yicha hisoblash
-            let menuItem = menuDatabase.find(m => m.name === oshName);
-            let pricePerKg = menuItem ? menuItem.sale_price : 90000;
-            let calculatedPrice = (pricePerKg * grams) / 1000;
+    let newItemName = `${grams}g ${oshName}`;
+    let newOrder = {
+        id: 'ORD-' + Date.now(),
+        tableNumber: tableNum,
+        waiter: waiter,
+        items: [
+            { name: newItemName, quantity: 1, grams: grams, price: calculatedPrice }
+        ],
+        totalSum: calculatedPrice,
+        status: 'pending',
+        createdAt: new Date().toISOString()
+    };
 
-            let newItemName = `${grams}g ${oshName}`;
-            let newOrder = {
-                id: 'ORD-' + Date.now(),
-                tableNumber: tableNum,
-                waiter: waiter,
-                items: [
-                    { name: newItemName, quantity: 1, grams: grams, price: calculatedPrice }
-                ],
-                totalSum: calculatedPrice,
-                status: 'pending',
-                createdAt: new Date().toISOString()
-            };
-
-            ordersDatabase.push(newOrder);
-            saveOrdersToStorage();
-            renderAll();
-            alert(`Stol #${tableNum} uchun ${newItemName} buyurtmasi muvaffaqiyatli qo'shildi!`);
-        }
+    ordersDatabase.push(newOrder);
+    saveOrdersToStorage();
+    renderAll();
+    alert(`Stol #${tableNum} uchun ${newItemName} buyurtmasi muvaffaqiyatli qo'shildi!`);
+}
         window.onload = function() {
           loadInitialMenuData();
           loadWarehouseData();

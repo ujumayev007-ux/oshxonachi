@@ -534,18 +534,25 @@
                     upsertOrder(data);
                     renderAll();
                     
-                    // Agar kelgan buyurtmada "Kiloli osh" yoki "osh" bo'lsa TV simulyatsiyasini avtomatik ishga tushirish va ovoz berish
-                    if(data.items && data.items.some(i => i.name && (i.name.toLowerCase().includes('osh') || i.category === 'Kiloli osh'))) {
-                        let oshItem = data.items.find(i => i.name.toLowerCase().includes('osh') || i.category === 'Kiloli osh');
-                        document.getElementById('tv-order-name').innerText = oshItem.name;
-                        document.getElementById('tv-order-meta').innerText = `Stol #${data.tableNumber || '4'} (${data.waiter || 'Ofitsiant'})`;
-                        
-                        playVoiceAnnouncement(`${data.tableNumber || '4'}-stolga ${oshItem.name} buyurtmasi qabul qilindi.`);
-                        startOshSimulation();
-                    }
-                });
-            }
-        };
+                    // 👇 MANASHU QISMNI QO'SHASIZ (Osh buyurtma qilinganda avtomatik TV simulyatsiya va ovoz)
+    if(data.items && data.items.some(i => i.name && (i.name.toLowerCase().includes('osh') || i.category === 'Kiloli osh' || i.category === 'Osh'))) {
+        let oshItem = data.items.find(i => i.name.toLowerCase().includes('osh') || i.category === 'Kiloli osh' || i.category === 'Osh');
+        
+        // Televizor ekranidagi ma'lumotlarni avtomatik yangilash
+        let tvOrderName = document.getElementById('tv-order-name');
+        let tvOrderMeta = document.getElementById('tv-order-meta');
+        
+        if(tvOrderName) tvOrderName.innerText = oshItem.name;
+        if(tvOrderMeta) tvOrderMeta.innerText = `Stol #${data.tableNumber || data.table || '4'} (${data.waiter || data.waiterName || 'Ofitsiant'})`;
+        
+        // Ovozli xabar berish (SpeechSynthesis)
+        let tableNum = data.tableNumber || data.table || '4';
+        playVoiceAnnouncement(`${tableNum}-stolga ${oshItem.name} buyurtmasi qabul qilindi. Oshxona ekraniga yuborildi.`);
+        
+        // Avtomatik simulyatsiyani ishga tushirish
+        startOshSimulation();
+    }
+});
 
         // OVOZLI XABARLAR BERISH FUNKSIYASI (SpeechSynthesis)
         function playVoiceAnnouncement(text) {
@@ -588,11 +595,11 @@
                         speechAnnounced10 = true;
                     }
                     if (mins === 5 && secs === 0 && !speechAnnounced5) {
-                        playVoiceAnnouncement("5 minut qoldi");
+                        playVoiceAnnouncement(" Diqqat oshpazlar 5 minut qoldi");
                         speechAnnounced5 = true;
                     }
                     if (mins === 1 && secs === 0 && !speechAnnounced1) {
-                        playVoiceAnnouncement("Ovqat tayyorlanish vaqti tugadi");
+                        playVoiceAnnouncement("Ovqat tayyorlanish vaqti tugadi siz taomni vaqtida tayyorladingiz");
                         speechAnnounced1 = true;
                     }
 

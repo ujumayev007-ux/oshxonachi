@@ -522,10 +522,33 @@
         let currentOrderTotalSum = 0;
         let socket = null;
         const statusBadge = document.getElementById('connection-status');
-
+// 1. Avval yordamchi funksiyalarni tashqarida e'lon qilamiz
+function loadInitialMenuData() {
+    let savedMenu = localStorage.getItem('restaurant_menu_items');
+    if (savedMenu) {
+        menuDatabase = JSON.parse(savedMenu);
+    } else {
+        menuDatabase = [
+            { id: 1, name: "0.5 kg To'y oshi", category: "Osh", internalPrice: 35000, salePrice: 45000 },
+            { id: 2, name: "1 kg To'y oshi", category: "Osh", internalPrice: 70000, salePrice: 90000 },
+            { id: 3, name: "2 kg To'y oshi", category: "Osh", internalPrice: 140000, salePrice: 180000 },
+            { id: 4, name: "3 kg To'y oshi", category: "Osh", internalPrice: 210000, salePrice: 270000 },
+            { id: 5, name: "Mastava", category: "Suyuq ovqatlar", internalPrice: 15000, salePrice: 25000 },
+            { id: 6, name: "Qo'y go'shti kabobi", category: "Kaboblar", internalPrice: 25000, salePrice: 38000 }
+        ];
+        localStorage.setItem('restaurant_menu_items', JSON.stringify(menuDatabase));
+    }
+    if (typeof renderMenu === 'function') {
+        renderMenu();
+    }
+}
       window.onload = function() {
-    loadInitialData();
-     // Sahifa yuklanganda saqlangan printer IP larini inputlarga chiqarish
+          loadInitialMenuData();
+          loadWarehouseData();
+          loadInitialData();
+          
+
+               // Sahifa yuklanganda saqlangan printer IP larini inputlarga chiqarish
             let savedIPs = JSON.parse(localStorage.getItem('kitchen_printer_ips')) || {};
             if(document.getElementById('ip-kabob')) document.getElementById('ip-kabob').value = savedIPs.kabob || '';
             if(document.getElementById('ip-somsa')) document.getElementById('ip-somsa').value = savedIPs.somsa || '';
@@ -590,68 +613,52 @@
     };
          // OSH TV EKRAN SIMULYATSIYA LOGIKASI
      function startOshSimulationByWeight(weightInKg) {
-    if (oshSimTimer) clearInterval(oshSimTimer);
-    
-    // Vaznga qarab vaqtni belgilash (Masalan: 1 kg = 35 min, 2 kg = 60 min, 3 kg = 90 min)
-    // 0.5 kg dan 3 kg gacha proporsional hisoblaymiz (minimum 20 minut, har 1 kg uchun +20 minut)
-    let totalMinutes = Math.max(20, Math.round(weightInKg * 30));
-    oshTotalSeconds = totalMinutes * 60;
-    oshCurrentSecondsLeft = oshTotalSeconds;
-    
-    const timerDisplay = document.getElementById('tv-timer-display');
-    const timerStatus = document.getElementById('tv-timer-status');
-    const progressBar = document.getElementById('tv-progress-bar');
-    
-    if(timerStatus) timerStatus.innerText = `${weightInKg} kg To'y oshi tayyorlanishi boshlandi...`;
-
-    oshSimTimer = setInterval(() => {
-        if (oshCurrentSecondsLeft > 0) {
-            oshCurrentSecondsLeft--;
+            if (oshSimTimer) clearInterval(oshSimTimer);
+            let totalMinutes = Math.max(20, Math.round(weightInKg * 30));
+            oshTotalSeconds = totalMinutes * 60;
+            oshCurrentSecondsLeft = oshTotalSeconds;
             
-            let hrs = Math.floor(oshCurrentSecondsLeft / 3600);
-            let mins = Math.floor((oshCurrentSecondsLeft % 3600) / 60);
-            let secs = oshCurrentSecondsLeft % 60;
-            if(timerDisplay) timerDisplay.innerText = `${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+            const timerDisplay = document.getElementById('tv-timer-display');
+            const timerStatus = document.getElementById('tv-timer-status');
+            const progressBar = document.getElementById('tv-progress-bar');
             
-            let percent = ((oshTotalSeconds - oshCurrentSecondsLeft) / oshTotalSeconds) * 100;
-            if(progressBar) progressBar.style.width = percent + '%';
+            if(timerStatus) timerStatus.innerText = `${weightInKg} kg To'y oshi tayyorlanishi boshlandi...`;
 
-            updateOshStepsDynamic(oshTotalSeconds - oshCurrentSecondsLeft, oshTotalSeconds);
-        } else {
-            clearInterval(oshSimTimer);
-            if(timerStatus) timerStatus.innerText = "Kiloli osh tayyor! Stolga tortish mumkin 🍛";
-            if(timerDisplay) timerDisplay.innerText = "00:00:00";
-            if(progressBar) progressBar.style.width = '100%';
+            oshSimTimer = setInterval(() => {
+                if (oshCurrentSecondsLeft > 0) {
+                    oshCurrentSecondsLeft--;
+                    let hrs = Math.floor(oshCurrentSecondsLeft / 3600);
+                    let mins = Math.floor((oshCurrentSecondsLeft % 3600) / 60);
+                    let secs = oshCurrentSecondsLeft % 60;
+                    if(timerDisplay) timerDisplay.innerText = `${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+                    let percent = ((oshTotalSeconds - oshCurrentSecondsLeft) / oshTotalSeconds) * 100;
+                    if(progressBar) progressBar.style.width = percent + '%';
+                    updateOshStepsDynamic(oshTotalSeconds - oshCurrentSecondsLeft, oshTotalSeconds);
+                } else {
+                    clearInterval(oshSimTimer);
+                    if(timerStatus) timerStatus.innerText = "Kiloli osh tayyor! Stolga tortish mumkin 🍛";
+                }
+            }, 1000);
         }
-    }, 1000);
-}
 
-// 6 ta bosqichni umumiy vaqtga nisbatan taqsimlash
-function updateOshStepsDynamic(elapsedSec, totalSec) {
-    let elapsedPercent = (elapsedSec / totalSec) * 100;
-    // 6 ta bosqich foiz oralig'i (masalan: 15%, 30%, 50%, 70%, 90%, 100%)
-    let thresholds = [15, 30, 50, 70, 90, 100];
-    
-    for (let i = 1; i <= 6; i++) {
-        let stepEl = document.getElementById(`step-${i}`);
-        if(!stepEl) continue;
-        let badge = stepEl.querySelector('.step-status-badge');
-        
-        let startPct = i === 1 ? 0 : thresholds[i-2];
-        let endPct = thresholds[i-1];
-
-        if (elapsedPercent >= endPct) {
-            stepEl.className = "step-done p-4 rounded-xl border transition-all duration-300 flex items-center justify-between";
-            if(badge) { badge.innerText = "Bajarildi ✓"; badge.className = "step-status-badge text-xs font-bold px-3 py-1 rounded-full bg-green-500/20 text-green-400 border border-green-500/40"; }
-        } else if (elapsedPercent >= startPct && elapsedPercent < endPct) {
-            stepEl.className = "step-active p-4 rounded-xl border transition-all duration-300 flex items-center justify-between";
-            if(badge) { badge.innerText = "Jarayonda..."; badge.className = "step-status-badge text-xs font-bold px-3 py-1 rounded-full bg-yellow-500/20 text-yellow-300 border border-yellow-500/40 animate-pulse"; }
-        } else {
-            stepEl.className = "step-pending p-4 rounded-xl border transition-all duration-300 flex items-center justify-between";
-            if(badge) { badge.innerText = "Kutilmoqda"; badge.className = "step-status-badge text-xs font-bold px-3 py-1 rounded-full border border-gray-600 text-gray-400"; }
+        function updateOshStepsDynamic(elapsedSec, totalSec) {
+            let elapsedPercent = (elapsedSec / totalSec) * 100;
+            let thresholds = [15, 30, 50, 70, 90, 100];
+            for (let i = 1; i <= 6; i++) {
+                let stepEl = document.getElementById(`step-${i}`);
+                if(!stepEl) continue;
+                let badge = stepEl.querySelector('.step-status-badge');
+                let startPct = i === 1 ? 0 : thresholds[i-2];
+                let endPct = thresholds[i-1];
+                if (elapsedPercent >= endPct) {
+                    stepEl.className = "step-done p-4 rounded-xl border transition-all duration-300 flex items-center justify-between";
+                    if(badge) badge.innerText = "Bajarildi ✓";
+                } else if (elapsedPercent >= startPct && elapsedPercent < endPct) {
+                    stepEl.className = "step-active p-4 rounded-xl border transition-all duration-300 flex items-center justify-between";
+                    if(badge) badge.innerText = "Jarayonda...";
+                }
+            }
         }
-    }
-}
          // Printer IP manzilini saqlash funksiyasi
         function savePrinterIP(section) {
             let ipValue = document.getElementById(`ip-${section}`).value.trim();

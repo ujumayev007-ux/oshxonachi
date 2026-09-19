@@ -50,17 +50,6 @@
         .modal-content p { margin-bottom: 10px; font-size: 14px; }
         .modal-content input { margin-bottom: 12px; }
         .modal-buttons { display: flex; gap: 10px; margin-top: 15px; }
-/* OSH TV EKRAN MAXSUS DIZAYNI */
-        .tv-screen-container { background: linear-gradient(135deg, #111111 0%, #1c1408 100%); color: #f5f5f5; border: 2px solid #d4af37; border-radius: 16px; padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
-        @keyframes pulse-glow {
-            0% { box-shadow: 0 0 5px rgba(212, 175, 55, 0.4); border-color: #d4af37; }
-            50% { box-shadow: 0 0 20px rgba(212, 175, 55, 0.9); border-color: #ffea79; }
-            100% { box-shadow: 0 0 5px rgba(212, 175, 55, 0.4); border-color: #d4af37; }
-        }
-        .step-active { background: rgba(212, 175, 55, 0.15) !important; border-color: #d4af37 !important; animation: pulse-glow 1.5s infinite; }
-        .step-done { background: rgba(46, 125, 50, 0.2) !important; border-color: #2e7d32 !important; color: #a5d6a7 !important; }
-        .step-pending { background: rgba(255, 255, 255, 0.05); border-color: #444; color: #888; }
-
     </style>
 </head>
 <body>
@@ -97,8 +86,6 @@
                     <button class="tab-btn" onclick="switchTab('stats', event)">Statistika</button>
                     <button class="tab-btn" onclick="switchTab('waiters', event)">Ofitsiantlar</button>
                     <button class="tab-btn" onclick="switchTab('printers', event)">🖨️ Printerlar IP</button>
-                    <button class="tab-btn" onclick="switchTab('osh-tv', event)" style="background: #d4af37; color: #111;">📺 Osh TV Ekran</button>
-  
                 </div>
             </div>
         </header>
@@ -108,112 +95,7 @@
             <h2>Kelib tushgan buyurtmalar</h2>
             <div id="orders-container" style="margin-top: 15px;"></div>
         </div>
-        <!-- OSH TV EKRAN SIMULYATSIYASI (YANGI QO'SHILGAN BO'LIM) -->
-        <div id="osh-tv" class="section-content">
-            <div class="tv-screen-container">
-                <div class="flex flex-col md:flex-row justify-between items-center border-b border-yellow-600/40 pb-6 mb-6 gap-4">
-                    <div>
-                        <span class="text-yellow-500 font-bold uppercase tracking-widest text-xs">Jonli Oshxona Simulyatsiyasi</span>
-                        <h2 class="text-3xl font-extrabold text-white mt-1">🍲 Milliy To'y Oshi Tayyorlanish Jarayoni</h2>
-                    </div>
-                    <div class="flex items-center gap-6 bg-black/40 px-6 py-3 rounded-xl border border-yellow-600/30">
-                        <div>
-                            <p class="text-xs text-gray-400">Buyurtma:</p>
-                            <p id="tv-order-name" class="text-lg font-bold text-yellow-400">2 kg To'y oshi</p>
-                        </div>
-                        <div class="border-l border-gray-700 pl-6">
-                            <p class="text-xs text-gray-400">Stol / Ofitsiant:</p>
-                            <p id="tv-order-meta" class="text-sm font-semibold text-white">Stol #4 (Anvar)</p>
-                        </div>
-                        <button onclick="startOshSimulation()" class="bg-yellow-500 hover:bg-yellow-600 text-black font-bold px-4 py-2 rounded-lg text-sm transition">🔄 Simulyatsiyani Boshlash</button>
-                    </div>
-                </div>
 
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-                    <!-- Chap qism: Qum soat va yirik taymer -->
-                    <div class="lg:col-span-1 bg-black/60 p-8 rounded-2xl border border-yellow-600/30 text-center flex flex-col items-center justify-center">
-                        <div class="text-5xl mb-4 animate-bounce">⏳</div>
-                        <span class="text-xs uppercase tracking-widest text-yellow-500 font-bold mb-2">Qolgan Umumiy Vaqt</span>
-                        <div id="tv-timer-display" class="text-5xl font-mono font-black text-yellow-400 tracking-wider mb-4">01:00:00</div>
-                        <p id="tv-timer-status" class="text-sm text-gray-300 italic">Jarayon kutilmoqda...</p>
-                        <div class="w-full bg-gray-800 h-3 rounded-full mt-6 overflow-hidden border border-yellow-600/20">
-                            <div id="tv-progress-bar" class="bg-gradient-to-r from-yellow-600 to-yellow-400 h-full transition-all duration-1000" style="width: 100%;"></div>
-                        </div>
-                    </div>
-
-                    <!-- O'ng qism: Qulab boruvchi (ketma-ket) 6 ta bosqich -->
-                    <div class="lg:col-span-2 flex flex-col gap-3">
-                        <h3 class="text-sm uppercase tracking-wider text-yellow-500 font-bold mb-1">Bosqichma-bosqich Nazorat</h3>
-                        
-                        <div id="step-1" class="step-pending p-4 rounded-xl border transition-all duration-300 flex items-center justify-between">
-                            <div class="flex items-center gap-3">
-                                <span class="w-8 h-8 rounded-full bg-black/40 flex items-center justify-center font-bold text-sm">1</span>
-                                <div>
-                                    <p class="font-bold text-base text-white">Qozonni qizdirish va paxta yog'ini qizdirish</p>
-                                    <p class="text-xs text-gray-400">00:00 - 10:00 daqiqa</p>
-                                </div>
-                            </div>
-                            <span class="step-status-badge text-xs font-bold px-3 py-1 rounded-full border border-gray-600">Kutilmoqda</span>
-                        </div>
-
-                        <div id="step-2" class="step-pending p-4 rounded-xl border transition-all duration-300 flex items-center justify-between">
-                            <div class="flex items-center gap-3">
-                                <span class="w-8 h-8 rounded-full bg-black/40 flex items-center justify-center font-bold text-sm">2</span>
-                                <div>
-                                    <p class="font-bold text-base text-white">Sarxil piyozlarni to'g'rab, tillarrang bo'lguncha qovurish</p>
-                                    <p class="text-xs text-gray-400">10:00 - 20:00 daqiqa</p>
-                                </div>
-                            </div>
-                            <span class="step-status-badge text-xs font-bold px-3 py-1 rounded-full border border-gray-600">Kutilmoqda</span>
-                        </div>
-
-                        <div id="step-3" class="step-pending p-4 rounded-xl border transition-all duration-300 flex items-center justify-between">
-                            <div class="flex items-center gap-3">
-                                <span class="w-8 h-8 rounded-full bg-black/40 flex items-center justify-center font-bold text-sm">3</span>
-                                <div>
-                                    <p class="font-bold text-base text-white">Maxsus mol go'shti (qo'y go'shti) solib birga qovurish</p>
-                                    <p class="text-xs text-gray-400">20:00 - 30:00 daqiqa</p>
-                                </div>
-                            </div>
-                            <span class="step-status-badge text-xs font-bold px-3 py-1 rounded-full border border-gray-600">Kutilmoqda</span>
-                        </div>
-
-                        <div id="step-4" class="step-pending p-4 rounded-xl border transition-all duration-300 flex items-center justify-between">
-                            <div class="flex items-center gap-3">
-                                <span class="w-8 h-8 rounded-full bg-black/40 flex items-center justify-center font-bold text-sm">4</span>
-                                <div>
-                                    <p class="font-bold text-base text-white">Saralangan toza sabzilar solinib, zirvak qaynatilmoqda (suv quyildi)</p>
-                                    <p class="text-xs text-gray-400">30:00 - 45:00 daqiqa</p>
-                                </div>
-                            </div>
-                            <span class="step-status-badge text-xs font-bold px-3 py-1 rounded-full border border-gray-600">Kutilmoqda</span>
-                        </div>
-
-                        <div id="step-5" class="step-pending p-4 rounded-xl border transition-all duration-300 flex items-center justify-between">
-                            <div class="flex items-center gap-3">
-                                <span class="w-8 h-8 rounded-full bg-black/40 flex items-center justify-center font-bold text-sm">5</span>
-                                <div>
-                                    <p class="font-bold text-base text-white">Saralangan Lazer guruchlari solinib, dam berish bosqichiga tayyorlanmoqda</p>
-                                    <p class="text-xs text-gray-400">45:00 - 55:00 daqiqa</p>
-                                </div>
-                            </div>
-                            <span class="step-status-badge text-xs font-bold px-3 py-1 rounded-full border border-gray-600">Kutilmoqda</span>
-                        </div>
-
-                        <div id="step-6" class="step-pending p-4 rounded-xl border transition-all duration-300 flex items-center justify-between">
-                            <div class="flex items-center gap-3">
-                                <span class="w-8 h-8 rounded-full bg-black/40 flex items-center justify-center font-bold text-sm">6</span>
-                                <div>
-                                    <p class="font-bold text-base text-white">Osh damlandi! Stolga tortishga tayyorlanmoqda 🍛</p>
-                                    <p class="text-xs text-gray-400">55:00 - 60:00 daqiqa</p>
-                                </div>
-                            </div>
-                            <span class="step-status-badge text-xs font-bold px-3 py-1 rounded-full border border-gray-600">Kutilmoqda</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
         <!-- MENYU BOSHQARUVI -->
         <div id="menu" class="section-content">
             <h2>Menyu va narxlar</h2>
@@ -554,13 +436,7 @@
             if (!data) return;
             upsertOrder(data);
             renderAll();
-        // Agar kelgan buyurtmada osh bo'lsa TV simulyatsiyasini avtoshart boshlash mumkin
-                    if(data.items && data.items.some(i => i.name && i.name.toLowerCase().includes('osh'))) {
-                        document.getElementById('tv-order-name').innerText = data.items.find(i => i.name.toLowerCase().includes('osh')).name;
-                        document.getElementById('tv-order-meta').innerText = `Stol #${data.tableNumber || 'Noma\'lum'} (${data.waiter || 'Ofitsiant'})`;
-                        startOshSimulation();
-                    }
-                });
+        });
 
         socket.on('update_orders', (ordersList) => {
             if (!ordersList) return;
@@ -588,75 +464,6 @@
         }
     });
     };
-         // OSH TV EKRAN SIMULYATSIYA LOGIKASI
-        function startOshSimulation() {
-            if (oshSimTimer) clearInterval(oshSimTimer);
-            oshCurrentSecondsLeft = oshTotalSeconds;
-            
-            const timerDisplay = document.getElementById('tv-timer-display');
-            const timerStatus = document.getElementById('tv-timer-status');
-            const progressBar = document.getElementById('tv-progress-bar');
-            
-            timerStatus.innerText = "Qozon qizdirilmoqda va jarayon boshlandi...";
-
-            oshSimTimer = setInterval(() => {
-                if (oshCurrentSecondsLeft > 0) {
-                    oshCurrentSecondsLeft--;
-                    
-                    // Vaqtni formatlash (HH:MM:SS)
-                    let hrs = Math.floor(oshCurrentSecondsLeft / 3600);
-                    let mins = Math.floor((oshCurrentSecondsLeft % 3600) / 60);
-                    let secs = oshCurrentSecondsLeft % 60;
-                    timerDisplay.innerText = `${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
-                    
-                    // Progress bar foizi
-                    let percent = ((oshTotalSeconds - oshCurrentSecondsLeft) / oshTotalSeconds) * 100;
-                    if(progressBar) progressBar.style.width = percent + '%';
-
-                    // Bosqichlarni yangilash (60 daqiqa = 3600 sekund)
-                    updateOshSteps(oshTotalSeconds - oshCurrentSecondsLeft);
-                } else {
-                    clearInterval(oshSimTimer);
-                    timerStatus.innerText = "Osh tayyor! Stolga tortish mumkin 🍛";
-                    timerDisplay.innerText = "00:00:00";
-                    if(progressBar) progressBar.style.width = '100%';
-                    updateOshSteps(oshTotalSeconds);
-                }
-            }, 1000);
-        }
-
-        function updateOshSteps(elapsedSec) {
-            let elapsedMin = elapsedSec / 60;
-            
-            // 6 ta bosqich oraliqlari: 10, 20, 30, 45, 55, 60
-            let thresholds = [10, 20, 30, 45, 55, 60];
-            
-            for (let i = 1; i <= 6; i++) {
-                let stepEl = document.getElementById(`step-${i}`);
-                let badge = stepEl.querySelector('.step-status-badge');
-                
-                let startMin = i === 1 ? 0 : thresholds[i-2];
-                let endMin = thresholds[i-1];
-
-                if (elapsedMin >= endMin) {
-                    // Bajarilgan
-                    stepEl.className = "step-done p-4 rounded-xl border transition-all duration-300 flex items-center justify-between";
-                    badge.innerText = "Bajarildi ✓";
-                    badge.className = "step-status-badge text-xs font-bold px-3 py-1 rounded-full bg-green-500/20 text-green-400 border border-green-500/40";
-                } else if (elapsedMin >= startMin && elapsedMin < endMin) {
-                    // Hozir bajarilmoqda (Aktiv)
-                    stepEl.className = "step-active p-4 rounded-xl border transition-all duration-300 flex items-center justify-between";
-                    badge.innerText = "Jarayonda...";
-                    badge.className = "step-status-badge text-xs font-bold px-3 py-1 rounded-full bg-yellow-500/20 text-yellow-300 border border-yellow-500/40 animate-pulse";
-                } else {
-                    // Kutilmoqda
-                    stepEl.className = "step-pending p-4 rounded-xl border transition-all duration-300 flex items-center justify-between";
-                    badge.innerText = "Kutilmoqda";
-                    badge.className = "step-status-badge text-xs font-bold px-3 py-1 rounded-full border border-gray-600 text-gray-400";
-                }
-            }
-        }
-
          // Printer IP manzilini saqlash funksiyasi
         function savePrinterIP(section) {
             let ipValue = document.getElementById(`ip-${section}`).value.trim();

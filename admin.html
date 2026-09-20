@@ -1107,7 +1107,7 @@
                     menuDatabase = storedMenu.map(m => ({
                         ...m,
                         sale_price: Number(m.sale_price || m.external_price || 0),
-                        external_price: Number(m.sale_price || m.external_price || 0)
+                        external_price: Number(m.sale_price || m.external_price || 0),
                         unit: m.unit || (m.name.toLowerCase().includes('kg') ? 'kg' : 'dona'),
                         step: m.step || (m.name.toLowerCase().includes('kg') ? 0.1 : 1)
                     }));

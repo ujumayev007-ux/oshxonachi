@@ -637,8 +637,7 @@
         }
 
         function loadInitialData() {
-           try {
-               let defaultMenu = [
+           let defaultMenu = [
                 { id: 1, category: "Osh", name: "Kiloli to'y oshi", internal_price: 70000, sale_price: 100000, unit: "kg", step: 0.1 },
                 { id: 2, category: "Osh", name: "Kiloli zakaz oshi", internal_price: 70000, sale_price: 100000, unit: "kg", step: 0.1 },
                 { id: 3, category: "Osh", name: "Kiloli maxsus osh", internal_price: 70000, sale_price: 100000, unit: "kg", step: 0.1 },
@@ -652,8 +651,8 @@
                 ...m,
                 unit: m.unit || (m.name.toLowerCase().includes('kg') ? 'kg' : 'dona'),
                 step: m.step || (m.name.toLowerCase().includes('kg') ? 0.1 : 1)
-            }));
-        }
+            }))];
+        
 
         function switchTab(tabId, event) {
             document.querySelectorAll('.section-content').forEach(el => el.classList.remove('active'));

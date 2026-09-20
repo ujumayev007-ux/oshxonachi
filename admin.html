@@ -1602,21 +1602,48 @@ function updateClock() {
         }
 
          function changeOrderStatus(id, newStatus) {
-            let order = ordersDatabase.find(o => String(o.tableNumber || o.id) === String(id));
-            if (order) {
-                order.status = newStatus;
-                
-                // QABUL QILINGANDA YOKI TAYYORLANMOQDA BO'LGANDA KATEGORIYALARGA BO'LIB PRINTERGA YUBORISH MANTIQI
-                if (newStatus === 'qabul_qilindi' || newStatus === 'tayyorlanyapti') {
-                    order.isPrinted = true;
-                    // Yangi qo'shilgan talab bo'yicha filtrlash va virtual chek chiqarish
-                    processOrderForKitchenPrinters(order);
-                }
+    let order = ordersDatabase.find(o => String(o.tableNumber || o.id) === String(id));
+    if (order) {
+        order.status = newStatus;
+        
+        // QABUL QILINGANDA YOKI TAYYORLANMOQDA BO'LGANDA
+        if (newStatus === 'qabul_qilindi' || newStatus === 'tayyorlanyapti') {
+            order.isPrinted = true;
+            processOrderForKitchenPrinters(order);
 
-                syncOrdersToStorage();
-                renderAll();
+            // 🟢 TASHKIL QILINDI: Agar buyurtmada kiloli osh turlaridan biri bo'lsa, simulyatsiyani avtomatik boshlash
+            if (order.items && order.items.some(i => {
+                let name = (i.name || "").toLowerCase();
+                let cat = (i.category || "").toLowerCase();
+                return name.includes("kilolik") || name.includes("osh") || cat.includes("osh");
+            })) {
+                let oshItem = order.items.find(i => {
+                    let name = (i.name || "").toLowerCase();
+                    return name.includes("kilolik") || name.includes("osh");
+                });
+
+                if (oshItem) {
+                    // TV ekran/panel elementlariga ma'lumotni chiqarish
+                    let nameEl = document.getElementById('tv-order-name');
+                    let metaEl = document.getElementById('tv-order-meta');
+                    
+                    if (nameEl) nameEl.innerText = `${oshItem.name} (${oshItem.qty || 1} ta)`;
+                    if (metaEl) metaEl.innerText = `Stol #${order.tableNumber || '?'} (${order.waiterName || order.waiter || 'Ofitsiant'})`;
+                    
+                    playVoiceAnnouncement(`${order.tableNumber || '1'}-stolga ${oshItem.name} buyurtmasi qabul qilindi. Jarayon boshlandi.`);
+                    
+                    // Osh simulyatsiyasini ishga tushirish
+                    if (typeof startOshSimulation === 'function') {
+                        startOshSimulation();
+                    }
+                }
             }
         }
+
+        syncOrdersToStorage();
+        renderAll();
+    }
+}
 
         // ==========================================
         // YANGI QO'SHILGAN FUNKSIYALAR (KABOB, SOMSA, FAST FOOD VA OSHXONA BO'LIMLARI UCHUN)

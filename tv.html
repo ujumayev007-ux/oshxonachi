@@ -148,20 +148,28 @@
                 });
 
                 socket.on('new_order', (data) => {
-                    if (data && data.items && data.items.some(i => i.name && (i.name.toLowerCase().includes('oshi') || i.category === 'Osh' || i.category === 'Kiloli osh'))) {
-                        let oshItem = data.items.find(i => i.name.toLowerCase().includes('oshi') || i.category === 'Osh' || i.category === 'Kiloli osh');
-                        let tableNum = data.tableNumber || data.table || '?';
-                        let waiterName = data.waiter || data.waiterName || 'Ofitsiant';
+    if (data && data.items) {
+        // Kelgan buyurtma ichida yuqoridagi 3 ta nomdan biri bor-yo'qligini tekshiramiz
+        let oshItem = data.items.find(i => {
+            if (!i.name) return false;
+            let name = i.name.toLowerCase();
+            return name.includes("kilolik to'y oshi") || 
+                   name.includes("kilolik zakaz osh") || 
+                   name.includes("kilolik maxsus");
+        });
+        
+        if (oshItem) {
+            let tableNum = data.tableNumber || data.table || '1';
+            let waiterName = data.waiterName || data.waiter || 'Ofitsiant';
 
-                        document.getElementById('tv-order-name').innerText = oshItem.name + ` (${oshItem.qty || 1} ta)`;
-                        document.getElementById('tv-order-meta').innerText = `Stol #${tableNum} (${waiterName})`;
-                        
-                        playVoiceAnnouncement(`${tableNum}-stolga ${oshItem.name} buyurtmasi qabul qilindi. Oshxona ekraniga yuborildi.`);
-                        startOshSimulation();
-                    }
-                });
-            }
-        };
+            document.getElementById('tv-order-name').innerText = oshItem.name + ` (${oshItem.qty || 1} ta)`;
+            document.getElementById('tv-order-meta').innerText = `Stol #${tableNum} (${waiterName})`;
+            
+            playVoiceAnnouncement(`${tableNum}-stolga ${oshItem.name} buyurtmasi qabul qilindi. Jarayon boshlandi.`);
+            startOshSimulation();
+        }
+    }
+});
 
         function startOshSimulation() {
             if (oshSimTimer) clearInterval(oshSimTimer);

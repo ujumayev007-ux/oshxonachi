@@ -901,7 +901,10 @@
                     { id: 3, category: "Osh", name: "Buxoro oshi (\"Sochqi oshi\")", internal_price: 40000, sale_price: 60000, is_visible: true },
                     { id: 4, category: "Osh", name: "Fargʻona oshi", internal_price: 36000, sale_price: 52000, is_visible: true },
                     { id: 5, category: "Osh", name: "Devzira oshi", internal_price: 45000, sale_price: 68000, is_visible: true },
-                    
+                    { id: 185, category: "Osh", name: "Kilolik to'y oshi", internal_price: 70000, sale_price: 100000, unit: "kg", step: 0.1 },
+                    { id: 186, category: "Osh", name: "Kilolik Zakaz osh", internal_price: 75000, sale_price: 110000, unit: "kg", step: 0.1 },
+                    { id: 187, category: "Osh", name: "Kilolik Maxsus", internal_price: 35000, sale_price: 50000, unit: "kg", step: 0.1 },
+                            
                     // Suyuq ovqatlar
                     { id: 6, category: "Suyuq ovqatlar", name: "Qaynatma shoʻrva", internal_price: 22000, sale_price: 35000, is_visible: true },
                     { id: 7, category: "Suyuq ovqatlar", name: "Mastava", internal_price: 18000, sale_price: 28000, is_visible: true },
@@ -1105,6 +1108,8 @@
                         ...m,
                         sale_price: Number(m.sale_price || m.external_price || 0),
                         external_price: Number(m.sale_price || m.external_price || 0)
+                        unit: m.unit || (m.name.toLowerCase().includes('kg') ? 'kg' : 'dona'),
+                        step: m.step || (m.name.toLowerCase().includes('kg') ? 0.1 : 1)
                     }));
                 }
 

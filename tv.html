@@ -23,7 +23,7 @@
         <div class="flex justify-between items-center border-b border-yellow-600/40 pb-6 mb-6">
             <div>
                 <span class="text-yellow-500 font-bold uppercase tracking-widest text-xs">Oshxona Jonli Ekrani</span>
-                <h1 class="text-3xl font-extrabold text-white mt-1">🍲 Milliy To'y Oshi Tayyorlanish Jarayoni</h1>
+                <h1 class="text-3xl font-extrabold text-white mt-1">🍲 Buyurtmadagi Oshimizning Tayyorlanish Jarayoni</h1>
             </div>
             <div class="flex items-center gap-6 bg-black/40 px-6 py-3 rounded-xl border border-yellow-600/30">
                 <div>
@@ -148,8 +148,8 @@
                 });
 
                 socket.on('new_order', (data) => {
-                    if (data && data.items && data.items.some(i => i.name && (i.name.toLowerCase().includes('osh') || i.category === 'Osh' || i.category === 'Kiloli osh'))) {
-                        let oshItem = data.items.find(i => i.name.toLowerCase().includes('osh') || i.category === 'Osh' || i.category === 'Kiloli osh');
+                    if (data && data.items && data.items.some(i => i.name && (i.name.toLowerCase().includes('oshi') || i.category === 'Osh' || i.category === 'Kiloli osh'))) {
+                        let oshItem = data.items.find(i => i.name.toLowerCase().includes('oshi') || i.category === 'Osh' || i.category === 'Kiloli osh');
                         let tableNum = data.tableNumber || data.table || '?';
                         let waiterName = data.waiter || data.waiterName || 'Ofitsiant';
 

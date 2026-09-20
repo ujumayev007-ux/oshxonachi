@@ -1803,20 +1803,63 @@ function updateClock() {
             }
         }
 
-        function deductWarehouseForOrder(order) {
-            if (!order || !order.items) return;
-            order.items.forEach(item => {
-                let itemName = item.name;
-                let itemQty = Number(item.qty || 1);
-                let whItem = warehouseDatabase.find(w => w.name.toLowerCase() === itemName.toLowerCase());
-                if (whItem) {
-                    whItem.quantity = Math.max(0, whItem.quantity - itemQty);
+       // Har bir taom tayyorlanishiga ketadigan mahsulotlar miqdori (Retseptlar bazasi)
+const recipeDatabase = {
+    "1 kg to'y oshi": [
+        { name: "Mol goʻshti", qty: 350, unit: "gramm" }, // 350g go'sht
+        { name: "Guruch (Lazer)", qty: 400, unit: "gramm" }, // 400g guruch
+        { name: "Paxta Yogʻi", qty: 150, unit: "gramm" }, // 150g yog'
+        { name: "Qizil Sabzi", qty: 400, unit: "gramm" }  // 400g sabzi
+    ],
+    "1.5 kg to'y oshi": [
+        { name: "Mol goʻshti", qty: 500, unit: "gramm" },
+        { name: "Guruch (Lazer)", qty: 600, unit: "gramm" },
+        { name: "Paxta Yogʻi", qty: 220, unit: "gramm" },
+        { name: "Qizil Sabzi", qty: 600, unit: "gramm" }
+    ],
+    "osh porsiya": [
+        { name: "Mol goʻshti", qty: 100, unit: "gramm" },
+        { name: "Guruch (Lazer)", qty: 150, unit: "gramm" },
+        { name: "Paxta Yogʻi", qty: 50, unit: "gramm" },
+        { name: "Qizil Sabzi", qty: 150, unit: "gramm" }
+    ]
+};
+
+// Barcha ombordagi mahsulotlarni (nol bo'lsa ham yoki minusga ketkazib) yechuvchi funksiya
+function deductWarehouseForOrder(order) {
+    if (!order || !order.items) return;
+
+    order.items.forEach(orderItem => {
+        let itemNameLower = (orderItem.name || "").toLowerCase();
+        let orderItemQty = Number(orderItem.qty || 1); // Masalan: 1 ta, 2 ta yoki 1.5 kg
+
+        // 1. Agar taom retseptlar bazasida aniq bo'lsa
+        let matchedRecipeKey = Object.keys(recipeDatabase).find(key => itemNameLower.includes(key));
+
+        if (matchedRecipeKey) {
+            let ingredients = recipeDatabase[matchedRecipeKey];
+            
+            ingredients.forEach(ing => {
+                let warehouseItem = warehouseDatabase.find(w => w.name.toLowerCase() === ing.name.toLowerCase());
+                if (warehouseItem) {
+                    // Retseptdagi miqdorni buyurtma miqdoriga ko'paytirib ayiramiz
+                    let totalDeduct = ing.qty * orderItemQty;
+                    warehouseItem.quantity -= totalDeduct; // Minusga ketaveradi
                 }
             });
-            saveData();
-            renderWarehouse();
+        } else {
+            // 2. Agar maxsus retsept topilmasa, to'g'ridan-to'g'ri ombrordan taomning o'z nomidagi mahsulotni qidirib ayiradi
+            let warehouseItem = warehouseDatabase.find(w => w.name.toLowerCase() === itemNameLower);
+            if (warehouseItem) {
+                warehouseItem.quantity -= orderItemQty;
+            }
         }
+    });
 
+    // O'zgargan ma'lumotlarni saqlash va omborni yangilash
+    saveData();
+    renderWarehouse();
+}
         function renderIncome() {
             let orders = ordersDatabase || [];
             let totalCash = 0, totalCard = 0, totalSale = 0, netProfit = 0;

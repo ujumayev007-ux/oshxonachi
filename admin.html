@@ -549,13 +549,25 @@
 
         // OVOZLI XABARLAR BERISH FUNKSIYASI (SpeechSynthesis)
         function playVoiceAnnouncement(text) {
-            if ('speechSynthesis' in window) {
-                let utterance = new SpeechSynthesisUtterance(text);
-                utterance.lang = 'uz-UZ';
-                utterance.rate = 1.0;
-                window.speechSynthesis.speak(utterance);
-            }
+    if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel(); // Avvalgi gaplarni to'xtatish
+        let utterance = new SpeechSynthesisUtterance(text);
+        
+        // O'zbek tilidagi mavjud ovozni qidirib topish
+        let voices = window.speechSynthesis.getVoices();
+        let uzVoice = voices.find(v => v.lang.startsWith('uz') || v.lang.startsWith('UZ'));
+        
+        if (uzVoice) {
+            utterance.voice = uzVoice;
         }
+        
+        utterance.lang = 'uz-UZ';
+        utterance.rate = 0.95; // Ozgina sekinroq va tunarliroq o'qishi uchun (1.0 - standart)
+        utterance.pitch = 1.0;
+        
+        window.speechSynthesis.speak(utterance);
+    }
+}
 
         // OSH TV EKRAN SIMULYATSIYA VA OVOZLI OGOHLANTirish LOGIKASI
         function startOshSimulation() {

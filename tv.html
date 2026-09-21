@@ -148,28 +148,29 @@
                 });
 
                 socket.on('new_order', (data) => {
-    if (data && data.items) {
-        // Kelgan buyurtma ichida yuqoridagi 3 ta nomdan biri bor-yo'qligini tekshiramiz
-        let oshItem = data.items.find(i => {
-            if (!i.name) return false;
-            let name = i.name.toLowerCase();
-            return name.includes("kilolik to'y oshi") || 
-                   name.includes("kilolik zakaz osh") || 
-                   name.includes("kilolik maxsus");
-        });
-        
-        if (oshItem) {
-            let tableNum = data.tableNumber || data.table || '1';
-            let waiterName = data.waiterName || data.waiter || 'Ofitsiant';
+                    if (data && data.items) {
+                        let oshItem = data.items.find(i => {
+                            if (!i.name) return false;
+                            let name = i.name.toLowerCase();
+                            return name.includes("kilolik to'y oshi") || 
+                                   name.includes("kilolik zakaz osh") || 
+                                   name.includes("kilolik maxsus");
+                        });
+                        
+                        if (oshItem) {
+                            let tableNum = data.tableNumber || data.table || '1';
+                            let waiterName = data.waiterName || data.waiter || 'Ofitsiant';
 
-            document.getElementById('tv-order-name').innerText = oshItem.name + ` (${oshItem.qty || 1} ta)`;
-            document.getElementById('tv-order-meta').innerText = `Stol #${tableNum} (${waiterName})`;
-            
-            playVoiceAnnouncement(`${tableNum}-stolga ${oshItem.name} buyurtmasi qabul qilindi. Jarayon boshlandi.`);
-            startOshSimulation();
-        }
-    }
-});
+                            document.getElementById('tv-order-name').innerText = oshItem.name + ` (${oshItem.qty || 1} ta)`;
+                            document.getElementById('tv-order-meta').innerText = `Stol #${tableNum} (${waiterName})`;
+                            
+                            playVoiceAnnouncement(`${tableNum}-stolga ${oshItem.name} buyurtmasi qabul qilindi. Jarayon boshlandi.`);
+                            startOshSimulation();
+                        }
+                    }
+                });
+            }
+        };
 
         function startOshSimulation() {
             if (oshSimTimer) clearInterval(oshSimTimer);
@@ -195,12 +196,10 @@
                     let percent = ((oshTotalSeconds - oshCurrentSecondsLeft) / oshTotalSeconds) * 100;
                     if(progressBar) progressBar.style.width = percent + '%';
 
-                    // 10 minut qolganda ovozli ogohlantirish
                     if (mins === 10 && secs === 0 && !speechAnnounced10) {
                         playVoiceAnnouncement("Diqqat oshpazlar, oshga 10 minut qoldi");
                         speechAnnounced10 = true;
                     }
-                    // 5 minut qolganda ovozli ogohlantirish
                     if (mins === 5 && secs === 0 && !speechAnnounced5) {
                         playVoiceAnnouncement("Diqqat, oshga 5 minut qoldi");
                         speechAnnounced5 = true;
@@ -220,7 +219,6 @@
 
         function updateOshSteps(elapsedSec) {
             let elapsedMin = elapsedSec / 60;
-            // 40 daqiqaga moslashtirilgan chegaralar (minutda)
             let thresholds = [7, 14, 22, 30, 37, 40];
             
             for (let i = 1; i <= 6; i++) {

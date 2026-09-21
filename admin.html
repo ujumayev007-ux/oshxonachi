@@ -549,25 +549,13 @@
 
         // OVOZLI XABARLAR BERISH FUNKSIYASI (SpeechSynthesis)
         function playVoiceAnnouncement(text) {
-    if ('speechSynthesis' in window) {
-        window.speechSynthesis.cancel(); // Avvalgi gaplarni to'xtatish
-        let utterance = new SpeechSynthesisUtterance(text);
-        
-        // O'zbek tilidagi mavjud ovozni qidirib topish
-        let voices = window.speechSynthesis.getVoices();
-        let uzVoice = voices.find(v => v.lang.startsWith('uz') || v.lang.startsWith('UZ'));
-        
-        if (uzVoice) {
-            utterance.voice = uzVoice;
+            if ('speechSynthesis' in window) {
+                let utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'uz-UZ';
+                utterance.rate = 1.0;
+                window.speechSynthesis.speak(utterance);
+            }
         }
-        
-        utterance.lang = 'uz-UZ';
-        utterance.rate = 0.95; // Ozgina sekinroq va tunarliroq o'qishi uchun (1.0 - standart)
-        utterance.pitch = 1.0;
-        
-        window.speechSynthesis.speak(utterance);
-    }
-}
 
         // OSH TV EKRAN SIMULYATSIYA VA OVOZLI OGOHLANTirish LOGIKASI
         function startOshSimulation() {
@@ -647,7 +635,17 @@
                 }
             }
         }
-       
+
+        function loadInitialData() {
+            let defaultMenu = [
+                { id: 1, category: "Kiloli osh", name: "1 kg Toshkent to'y oshi", internal_price: 70000, sale_price: 100000 },
+                { id: 2, category: "Kiloli osh", name: "1.5 kg Toshkent to'y oshi", internal_price: 105000, sale_price: 150000 },
+                { id: 3, category: "Osh", name: "Toshkent oshi (Porsiya)", internal_price: 35000, sale_price: 50000 }
+            ];
+            let storedMenu = JSON.parse(localStorage.getItem('admin_menu'));
+            menuDatabase = storedMenu && storedMenu.length > 0 ? storedMenu : defaultMenu;
+        }
+
         function switchTab(tabId, event) {
             document.querySelectorAll('.section-content').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
@@ -655,7 +653,24 @@
             if(event) event.currentTarget.classList.add('active');
         }
 
-       
+        function renderAll() {
+            renderMenu();
+        }
+
+        function renderMenu() {
+            const tbody = document.getElementById('menu-table-body');
+            if(!tbody) return;
+            tbody.innerHTML = menuDatabase.map(item => `
+                <tr>
+                    <td>${item.id}</td>
+                    <td><b>${item.name}</b></td>
+                    <td><span class="bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-xs">${item.category}</span></td>
+                    <td>${item.sale_price.toLocaleString()} so'm</td>
+                    <td><button class="btn btn-blue" onclick="alert('Saqlandi')">Saqlash</button></td>
+                </tr>
+            `).join('');
+        }
+
         function addNewMenuItem() {
             const name = document.getElementById('new-menu-name').value.trim();
             const category = document.getElementById('new-menu-category').value;
@@ -1092,7 +1107,7 @@
                     menuDatabase = storedMenu.map(m => ({
                         ...m,
                         sale_price: Number(m.sale_price || m.external_price || 0),
-                        external_price: Number(m.sale_price || m.external_price || 0),
+                        external_price: Number(m.sale_price || m.external_price || 0)
                         unit: m.unit || (m.name.toLowerCase().includes('kg') ? 'kg' : 'dona'),
                         step: m.step || (m.name.toLowerCase().includes('kg') ? 0.1 : 1)
                     }));
@@ -1388,60 +1403,37 @@ function updateClock() {
     }
 }
 
-      // 1. Asosiy renderAll funksiyasi
-function renderAll() {
-    renderMenu();
-    // Boshqa render funksiyalari (masalan, renderOrders, renderStock va h.k.)
-}
-
-// 2. To'g'ri va yagona renderMenu funksiyasi (global darajada)
-function renderMenu() {
-    const tbody = document.getElementById('menu-table-body');
-    if (!tbody) return;
-    
-    const query = (document.getElementById('menu-search-input') || {}).value || "";
-    const filteredMenu = menuDatabase.filter(item => 
-        item.name.toLowerCase().includes(query.toLowerCase()) || 
-        item.category.toLowerCase().includes(query.toLowerCase())
-    );
-    
-    tbody.innerHTML = filteredMenu.map(item => `
-        <tr>
-            <td>${item.id}</td>
-            <td><input type="text" class="form-input" value="${item.name}" onchange="updateMenuField(${item.id}, 'name', this.value)"></td>
-            <td>${item.category}</td>
-            <td><input type="number" class="form-input" value="${item.internal_price}" onchange="updateMenuField(${item.id}, 'internal_price', Number(this.value))"></td>
-            <td><input type="number" class="form-input" value="${item.sale_price}" onchange="updateMenuField(${item.id}, 'sale_price', Number(this.value))"></td>
-            <td>
-                <select class="form-select" onchange="updateMenuField(${item.id}, 'is_visible', this.value === 'true')">
-                    <option value="true" ${item.is_visible !== false ? 'selected' : ''}>Ko'rinadi</option>
-                    <option value="false" ${item.is_visible === false ? 'selected' : ''}>Yashiringan</option>
-                </select>
-            </td>
-            <td>
-                <button class="btn btn-blue text-xs" onclick="saveSingleItem(${item.id})">Saqlash</button>
-            </td>
-        </tr>
-    `).join('');
-}
-
-function updateMenuField(id, field, value) {
-    const item = menuDatabase.find(m => m.id === id);
-    if (item) { 
-        item[field] = value; 
-        if (field === 'sale_price') {
-            item.external_price = value; // Tashqi narxni ham avtomatik moslash
+        function renderMenu() {
+            const tbody = document.getElementById('menu-table-body');
+            const query = (document.getElementById('menu-search-input') || {}).value || "";
+            const filteredMenu = menuDatabase.filter(item => item.name.toLowerCase().includes(query.toLowerCase()) || item.category.toLowerCase().includes(query.toLowerCase()));
+            
+            tbody.innerHTML = filteredMenu.map(item => `
+                <tr>
+                    <td>${item.id}</td>
+                    <td><input type="text" value="${item.name}" onchange="updateMenuField(${item.id}, 'name', this.value)"></td>
+                    <td>${item.category}</td>
+                    <td><input type="number" value="${item.internal_price}" onchange="updateMenuField(${item.id}, 'internal_price', Number(this.value))"></td>
+                    <td><input type="number" value="${item.sale_price}" onchange="updateMenuField(${item.id}, 'sale_price', Number(this.value))"></td>
+                    <td>
+                        <select onchange="updateMenuField(${item.id}, 'is_visible', this.value === 'true')">
+                            <option value="true" ${item.is_visible !== false ? 'selected' : ''}>Ko'rinadi</option>
+                            <option value="false" ${item.is_visible === false ? 'selected' : ''}>Yashiringan</option>
+                        </select>
+                    </td>
+                    <td><button class="btn btn-blue" onclick="renderAll()">Saqlash</button></td>
+                </tr>
+            `).join('');
         }
-        saveData(); // Ma'lumotlar bazasiga saqlash
-    }
-}
 
-// Butun jadvalni qayta chirmasdan, faqat bildirishnoma berish yoki kerak bo'lsa saqlash
-function saveSingleItem(id) {
-    saveData();
-    // Foydalanuvchiga saqlangani haqida kichik belgi yoki xabar berish mumkin
-    showToast ? showToast("Muvaffaqiyatli saqlandi!") : alert("O'zgarishlar saqlandi!");
-}
+        function updateMenuField(id, field, value) {
+            const item = menuDatabase.find(m => m.id === id);
+            if (item) { 
+                item[field] = value; 
+                if (field === 'sale_price') item.external_price = value;
+                saveData(); 
+            }
+        }
 
         function addNewMenuItem() {
             const name = document.getElementById('new-menu-name').value.trim();
@@ -1609,25 +1601,23 @@ function saveSingleItem(id) {
             }).join('');
         }
 
-        function changeOrderStatus(id, newStatus) {
-    let order = ordersDatabase.find(o => String(o.tableNumber || o.id) === String(id));
-    if (order) {
-        order.status = newStatus;
-        
-        if (newStatus === 'qabul_qilindi' || newStatus === 'tayyorlanyapti') {
-            order.isPrinted = true;
-            processOrderForKitchenPrinters(order);
+         function changeOrderStatus(id, newStatus) {
+            let order = ordersDatabase.find(o => String(o.tableNumber || o.id) === String(id));
+            if (order) {
+                order.status = newStatus;
+                
+                // QABUL QILINGANDA YOKI TAYYORLANMOQDA BO'LGANDA KATEGORIYALARGA BO'LIB PRINTERGA YUBORISH MANTIQI
+                if (newStatus === 'qabul_qilindi' || newStatus === 'tayyorlanyapti') {
+                    order.isPrinted = true;
+                    // Yangi qo'shilgan talab bo'yicha filtrlash va virtual chek chiqarish
+                    processOrderForKitchenPrinters(order);
+                }
 
-            // 🟢 TV ekranga Socket orqali signal yuborish
-            if (socket && socket.connected) {
-                socket.emit('order_accepted', order);
+                syncOrdersToStorage();
+                renderAll();
             }
         }
 
-        syncOrdersToStorage();
-        renderAll();
-    }
-}
         // ==========================================
         // YANGI QO'SHILGAN FUNKSIYALAR (KABOB, SOMSA, FAST FOOD VA OSHXONA BO'LIMLARI UCHUN)
         // ==========================================

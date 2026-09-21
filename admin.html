@@ -659,7 +659,7 @@
             renderMenu();
         }
 
-        function renderMenu() {
+         {
             const tbody = document.getElementById('menu-table-body');
             if(!tbody) return;
             tbody.innerHTML = menuDatabase.map(item => `
@@ -1405,37 +1405,54 @@ function updateClock() {
     }
 }
 
-        function renderMenu() {
-            const tbody = document.getElementById('menu-table-body');
-            const query = (document.getElementById('menu-search-input') || {}).value || "";
-            const filteredMenu = menuDatabase.filter(item => item.name.toLowerCase().includes(query.toLowerCase()) || item.category.toLowerCase().includes(query.toLowerCase()));
-            
-            tbody.innerHTML = filteredMenu.map(item => `
-                <tr>
-                    <td>${item.id}</td>
-                    <td><input type="text" value="${item.name}" onchange="updateMenuField(${item.id}, 'name', this.value)"></td>
-                    <td>${item.category}</td>
-                    <td><input type="number" value="${item.internal_price}" onchange="updateMenuField(${item.id}, 'internal_price', Number(this.value))"></td>
-                    <td><input type="number" value="${item.sale_price}" onchange="updateMenuField(${item.id}, 'sale_price', Number(this.value))"></td>
-                    <td>
-                        <select onchange="updateMenuField(${item.id}, 'is_visible', this.value === 'true')">
-                            <option value="true" ${item.is_visible !== false ? 'selected' : ''}>Ko'rinadi</option>
-                            <option value="false" ${item.is_visible === false ? 'selected' : ''}>Yashiringan</option>
-                        </select>
-                    </td>
-                    <td><button class="btn btn-blue" onclick="renderAll()">Saqlash</button></td>
-                </tr>
-            `).join('');
-        }
+       function renderMenu() {
+    const tbody = document.getElementById('menu-table-body');
+    if (!tbody) return;
+    
+    const query = (document.getElementById('menu-search-input') || {}).value || "";
+    const filteredMenu = menuDatabase.filter(item => 
+        item.name.toLowerCase().includes(query.toLowerCase()) || 
+        item.category.toLowerCase().includes(query.toLowerCase())
+    );
+    
+    tbody.innerHTML = filteredMenu.map(item => `
+        <tr>
+            <td>${item.id}</td>
+            <td><input type="text" class="form-input" value="${item.name}" onchange="updateMenuField(${item.id}, 'name', this.value)"></td>
+            <td>${item.category}</td>
+            <td><input type="number" class="form-input" value="${item.internal_price}" onchange="updateMenuField(${item.id}, 'internal_price', Number(this.value))"></td>
+            <td><input type="number" class="form-input" value="${item.sale_price}" onchange="updateMenuField(${item.id}, 'sale_price', Number(this.value))"></td>
+            <td>
+                <select class="form-select" onchange="updateMenuField(${item.id}, 'is_visible', this.value === 'true')">
+                    <option value="true" ${item.is_visible !== false ? 'selected' : ''}>Ko'rinadi</option>
+                    <option value="false" ${item.is_visible === false ? 'selected' : ''}>Yashiringan</option>
+                </select>
+            </td>
+            <td>
+                <!-- "Saqlash" tugmasi o'rniga qatorni yangilash yoki vizual tasdiq ko'rsatish -->
+                <button class="btn btn-blue text-xs" onclick="saveSingleItem(${item.id})">Saqlash</button>
+            </td>
+        </tr>
+    `).join('');
+}
 
-        function updateMenuField(id, field, value) {
-            const item = menuDatabase.find(m => m.id === id);
-            if (item) { 
-                item[field] = value; 
-                if (field === 'sale_price') item.external_price = value;
-                saveData(); 
-            }
+function updateMenuField(id, field, value) {
+    const item = menuDatabase.find(m => m.id === id);
+    if (item) { 
+        item[field] = value; 
+        if (field === 'sale_price') {
+            item.external_price = value; // Tashqi narxni ham avtomatik moslash
         }
+        saveData(); // Ma'lumotlar bazasiga saqlash
+    }
+}
+
+// Butun jadvalni qayta chirmasdan, faqat bildirishnoma berish yoki kerak bo'lsa saqlash
+function saveSingleItem(id) {
+    saveData();
+    // Foydalanuvchiga saqlangani haqida kichik belgi yoki xabar berish mumkin
+    showToast ? showToast("Muvaffaqiyatli saqlandi!") : alert("O'zgarishlar saqlandi!");
+}
 
         function addNewMenuItem() {
             const name = document.getElementById('new-menu-name').value.trim();

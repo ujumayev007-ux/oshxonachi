@@ -901,10 +901,7 @@
                     { id: 3, category: "Osh", name: "Buxoro oshi (\"Sochqi oshi\")", internal_price: 40000, sale_price: 60000, is_visible: true },
                     { id: 4, category: "Osh", name: "Fargʻona oshi", internal_price: 36000, sale_price: 52000, is_visible: true },
                     { id: 5, category: "Osh", name: "Devzira oshi", internal_price: 45000, sale_price: 68000, is_visible: true },
-                    { id: 185, category: "Osh", name: "Kilolik to'y oshi", internal_price: 70000, sale_price: 100000, unit: "kg", step: 0.1 },
-                    { id: 186, category: "Osh", name: "Kilolik Zakaz osh", internal_price: 75000, sale_price: 110000, unit: "kg", step: 0.1 },
-                    { id: 187, category: "Osh", name: "Kilolik Maxsus", internal_price: 35000, sale_price: 50000, unit: "kg", step: 0.1 },
-                            
+                    
                     // Suyuq ovqatlar
                     { id: 6, category: "Suyuq ovqatlar", name: "Qaynatma shoʻrva", internal_price: 22000, sale_price: 35000, is_visible: true },
                     { id: 7, category: "Suyuq ovqatlar", name: "Mastava", internal_price: 18000, sale_price: 28000, is_visible: true },
@@ -1108,8 +1105,6 @@
                         ...m,
                         sale_price: Number(m.sale_price || m.external_price || 0),
                         external_price: Number(m.sale_price || m.external_price || 0)
-                        unit: m.unit || (m.name.toLowerCase().includes('kg') ? 'kg' : 'dona'),
-                        step: m.step || (m.name.toLowerCase().includes('kg') ? 0.1 : 1)
                     }));
                 }
 
@@ -1803,63 +1798,20 @@ function updateClock() {
             }
         }
 
-       // Har bir taom tayyorlanishiga ketadigan mahsulotlar miqdori (Retseptlar bazasi)
-const recipeDatabase = {
-    "1 kg to'y oshi": [
-        { name: "Mol goʻshti", qty: 350, unit: "gramm" }, // 350g go'sht
-        { name: "Guruch (Lazer)", qty: 400, unit: "gramm" }, // 400g guruch
-        { name: "Paxta Yogʻi", qty: 150, unit: "gramm" }, // 150g yog'
-        { name: "Qizil Sabzi", qty: 400, unit: "gramm" }  // 400g sabzi
-    ],
-    "1.5 kg to'y oshi": [
-        { name: "Mol goʻshti", qty: 500, unit: "gramm" },
-        { name: "Guruch (Lazer)", qty: 600, unit: "gramm" },
-        { name: "Paxta Yogʻi", qty: 220, unit: "gramm" },
-        { name: "Qizil Sabzi", qty: 600, unit: "gramm" }
-    ],
-    "osh porsiya": [
-        { name: "Mol goʻshti", qty: 100, unit: "gramm" },
-        { name: "Guruch (Lazer)", qty: 150, unit: "gramm" },
-        { name: "Paxta Yogʻi", qty: 50, unit: "gramm" },
-        { name: "Qizil Sabzi", qty: 150, unit: "gramm" }
-    ]
-};
-
-// Barcha ombordagi mahsulotlarni (nol bo'lsa ham yoki minusga ketkazib) yechuvchi funksiya
-function deductWarehouseForOrder(order) {
-    if (!order || !order.items) return;
-
-    order.items.forEach(orderItem => {
-        let itemNameLower = (orderItem.name || "").toLowerCase();
-        let orderItemQty = Number(orderItem.qty || 1); // Masalan: 1 ta, 2 ta yoki 1.5 kg
-
-        // 1. Agar taom retseptlar bazasida aniq bo'lsa
-        let matchedRecipeKey = Object.keys(recipeDatabase).find(key => itemNameLower.includes(key));
-
-        if (matchedRecipeKey) {
-            let ingredients = recipeDatabase[matchedRecipeKey];
-            
-            ingredients.forEach(ing => {
-                let warehouseItem = warehouseDatabase.find(w => w.name.toLowerCase() === ing.name.toLowerCase());
-                if (warehouseItem) {
-                    // Retseptdagi miqdorni buyurtma miqdoriga ko'paytirib ayiramiz
-                    let totalDeduct = ing.qty * orderItemQty;
-                    warehouseItem.quantity -= totalDeduct; // Minusga ketaveradi
+        function deductWarehouseForOrder(order) {
+            if (!order || !order.items) return;
+            order.items.forEach(item => {
+                let itemName = item.name;
+                let itemQty = Number(item.qty || 1);
+                let whItem = warehouseDatabase.find(w => w.name.toLowerCase() === itemName.toLowerCase());
+                if (whItem) {
+                    whItem.quantity = Math.max(0, whItem.quantity - itemQty);
                 }
             });
-        } else {
-            // 2. Agar maxsus retsept topilmasa, to'g'ridan-to'g'ri ombrordan taomning o'z nomidagi mahsulotni qidirib ayiradi
-            let warehouseItem = warehouseDatabase.find(w => w.name.toLowerCase() === itemNameLower);
-            if (warehouseItem) {
-                warehouseItem.quantity -= orderItemQty;
-            }
+            saveData();
+            renderWarehouse();
         }
-    });
 
-    // O'zgargan ma'lumotlarni saqlash va omborni yangilash
-    saveData();
-    renderWarehouse();
-}
         function renderIncome() {
             let orders = ordersDatabase || [];
             let totalCash = 0, totalCard = 0, totalSale = 0, netProfit = 0;

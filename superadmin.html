@@ -273,7 +273,52 @@
                 <tbody id="warehouse-table-body"></tbody>
             </table>
         </div>
+<!-- BOZORGA QO'SHISH BO'LIMI -->
+<div style="margin-top: 30px; background: #fff8e1; padding: 20px; border-radius: 8px; border: 1px solid #ffe0b2;">
+    <h3 style="font-size: 16px; color: #ef6c00; margin-bottom: 12px;">🛒 Bozorga qo'shish va xarajatlar tarixi</h3>
+    
+    <!-- Qidirish va qo'shish qismi -->
+    <div style="display: flex; gap: 10px; position: relative; margin-bottom: 15px; flex-wrap: wrap;">
+        <div class="autocomplete-container" style="flex: 2; min-width: 220px;">
+            <input type="text" id="market-search-input" placeholder="Ombordan mahsulot qidirish (masalan: mol go'shti)..." autocomplete="off" oninput="handleMarketAutocomplete(this.value)">
+            <div id="market-autocomplete-list" class="autocomplete-items"></div>
+        </div>
+        <input type="number" id="market-item-qty" placeholder="Miqdori (kg/dona)" style="width: 120px;" step="any">
+        <input type="number" id="market-item-price" placeholder="Jami summasi (so'm)" style="width: 160px;">
+        <input type="text" id="market-added-by" placeholder="Kim qo'shdi? (Ism)" style="width: 150px;" value="Admin">
+        <button class="btn" style="background-color: #ef6c00; color: white;" onclick="addMarketItemToWarehouse()">Bozorlikka qo'shish</button>
+    </div>
 
+    <!-- Joriy sessiya bozorlik ro'yxati va summasi -->
+    <div style="background: #ffffff; padding: 12px; border-radius: 6px; border: 1px solid #ffe0b2; margin-bottom: 15px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <b style="color: #d84315;">Joriy bozorlik savatchasi:</b>
+            <span style="font-size: 16px; font-weight: bold; color: #2e7d32;" id="market-cart-total">Jami bozorlik summasi: 0 so'm</span>
+        </div>
+        <div id="market-cart-items" style="font-size: 13px; color: #555; max-height: 100px; overflow-y: auto; margin-bottom: 8px;">
+            <i>Hozircha mahsulotlar qo'shilmadi...</i>
+        </div>
+        <button class="btn btn-blue" style="font-size: 12px; padding: 4px 10px;" onclick="saveMarketSession()">Bozorlikni omborga saqlash va yakunlash</button>
+    </div>
+
+    <!-- Bozorlik tarixi (Tarix va kim qo'shgani) -->
+    <h4 style="font-size: 14px; color: #d84315; margin-bottom: 8px;">📜 Bozorlik summasi tarixi</h4>
+    <div style="max-height: 200px; overflow-y: auto;">
+        <table style="background: white; width: 100%;">
+            <thead>
+                <tr>
+                    <th>Sana / Vaqt</th>
+                    <th>Kim qo'shdi?</th>
+                    <th>Mahsulotlar tafsiloti</th>
+                    <th>Jami Summa</th>
+                </tr>
+            </thead>
+            <tbody id="market-history-table-body">
+                <tr><td colspan="4" style="text-align: center; color: #777;">Tarix bo'sh</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
         <!-- DAROMAD -->
         <div id="income" class="section-content">
             <h2>Real vaqt rejimidagi daromad va tahlillar</h2>
@@ -515,8 +560,162 @@
         let speechAnnounced10 = false;
         let speechAnnounced5 = false;
         let speechAnnounced1 = false;
+        // Global bozorlik savatchasi va qidiruv uchun o'zgaruvchilar
+let marketCart = [];
+let marketSelectedProduct = null;
+
+// Ombordan mahsulot qidirish (Autofill / Avto-to'ldirish)
+function handleMarketAutocomplete(val) {
+    const listContainer = document.getElementById('market-autocomplete-list');
+    listContainer.innerHTML = '';
+    if (!val.trim()) return;
+
+    // warehouseDatabase massividan qidirish
+    let matches = warehouseDatabase.filter(item => item.name.toLowerCase().includes(val.toLowerCase()));
+    
+    matches.forEach(match => {
+        let div = document.createElement('div');
+        div.innerHTML = `<b>${match.name}</b> <span style="font-size:11px; color:#666;">(${match.group})</span>`;
+        div.onclick = function() {
+            document.getElementById('market-search-input').value = match.name;
+            marketSelectedProduct = match;
+            listContainer.innerHTML = '';
+        };
+        listContainer.appendChild(div);
+    });
+}
+
+// Bozorlikka mahsulot qo'shish va vaqtinchalik savatchaga yig'ish
+function addMarketItemToWarehouse() {
+    let nameInput = document.getElementById('market-search-input').value.trim();
+    let qty = parseFloat(document.getElementById('market-item-qty').value);
+    let price = parseFloat(document.getElementById('market-item-price').value);
+    let addedBy = document.getElementById('market-added-by').value.trim() || "Admin";
+
+    if (!nameInput || isNaN(qty) || isNaN(price) || qty <= 0 || price <= 0) {
+        alert("Iltimos, mahsulot nomini to'g'ri tanlang, miqdor va narxni kiriting!");
+        return;
+    }
+
+    // Savatchaga qo'shish
+    marketCart.push({
+        name: nameInput,
+        quantity: qty,
+        price: price,
+        addedBy: addedBy,
+        date: new Date().toLocaleString()
+    });
+
+    // Ombordagi mavjud mahsulot miqdorini avtomatik to'ldirib borish (qo'shish)
+    let warehouseItem = warehouseDatabase.find(i => i.name.toLowerCase() === nameInput.toLowerCase());
+    if (warehouseItem) {
+        warehouseItem.quantity += qty;
+    } else {
+        // Agar omborda bo'lmasa, yangi mahsulot sifatida qo'shib yuborish
+        warehouseDatabase.push({
+            name: nameInput,
+            group: "Bozordan olinganlar",
+            quantity: qty,
+            unit: "kg / dona"
+        });
+    }
+
+    // LocalStorage ni yangilash va render qilish
+    localStorage.setItem('admin_warehouse', JSON.stringify(warehouseDatabase));
+    renderWarehouse();
+    updateMarketCartUI();
+
+    // Inputlarni tozalash
+    document.getElementById('market-search-input').value = '';
+    document.getElementById('market-item-qty').value = '';
+    document.getElementById('market-item-price').value = '';
+    marketSelectedProduct = null;
+}
+
+// Savatcha ko'rinishini yangilash
+function updateMarketCartUI() {
+    let cartContainer = document.getElementById('market-cart-items');
+    let totalSpan = document.getElementById('market-cart-total');
+    
+    if (marketCart.length === 0) {
+        cartContainer.innerHTML = '<i>Hozircha mahsulotlar qo'shilmadi...</i>';
+        totalSpan.innerText = "Jami bozorlik summasi: 0 so'm";
+        return;
+    }
+
+    let totalSum = marketCart.reduce((sum, item) => sum + item.price, 0);
+    totalSpan.innerText = `Jami bozorlik summasi: ${totalSum.toLocaleString()} so'm`;
+
+    cartContainer.innerHTML = marketCart.map((item, idx) => `
+        <div style="display: flex; justify-content: space-between; border-bottom: 1px dashed #eee; padding: 2px 0;">
+            <span>${idx + 1}. <b>${item.name}</b> — ${item.quantity} miqdor, <b>${item.price.toLocaleString()} so'm</b> (${item.addedBy})</span>
+            <button onclick="removeMarketCartItem(${idx})" style="color: red; border: none; background: none; cursor: pointer; font-size: 11px;">O'chirish</button>
+        </div>
+    `).join('');
+}
+
+// Savatchadan bitta elementni olib tashlash
+function removeMarketCartItem(index) {
+    marketCart.splice(index, 1);
+    updateMarketCartUI();
+}
+
+// Bozorlik sessiyasini tarixga saqlash
+function saveMarketSession() {
+    if (marketCart.length === 0) {
+        alert("Saqlash uchun bozorlik savatchasi bo'sh!");
+        return;
+    }
+
+    let totalSum = marketCart.reduce((sum, item) => sum + item.price, 0);
+    let addedBy = marketCart[0].addedBy || "Admin";
+    let detailsText = marketCart.map(i => `${i.name} (${i.quantity} miqdor - ${i.price.toLocaleString()} so'm)`).join(', ');
+
+    let marketHistory = JSON.parse(localStorage.getItem('restaurant_market_history')) || [];
+    
+    let sessionRecord = {
+        date: new Date().toLocaleString(),
+        addedBy: addedBy,
+        details: detailsText,
+        totalSum: totalSum
+    };
+
+    marketHistory.unshift(sessionRecord); // Yangisini boshiga qo'shish
+    localStorage.setItem('restaurant_market_history', JSON.stringify(marketHistory));
+
+    // Savatchani tozalash va tarixni qayta yuklash
+    marketCart = [];
+    updateMarketCartUI();
+    renderMarketHistory();
+    alert("Bozorlik muvaffaqiyatli omborga qo'shildi va tarixga yozildi!");
+}
+
+// Bozorlik tarixini ekranga chiqarish
+function renderMarketHistory() {
+    let tbody = document.getElementById('market-history-table-body');
+    if (!tbody) return;
+
+    let marketHistory = JSON.parse(localStorage.getItem('restaurant_market_history')) || [];
+
+    if (marketHistory.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: #777;">Tarix bo'sh</td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = marketHistory.map(row => `
+        <tr>
+            <td>${row.date}</td>
+            <td><b>${row.addedBy}</b></td>
+            <td>${row.details}</td>
+            <td style="color: #2e7d32; font-weight: bold;">${row.totalSum.toLocaleString()} so'm</td>
+        </tr>
+    `).join('');
+}
+
+// Sahifa to'liq yuklanganda tarixni chaqirib qo'yish uchun window.onload ichiga renderMarketHistory(); ni qo'shib qo'yasiz.
       window.onload = function() {
     loadInitialData();
+          renderMarketHistory();
             renderAll();
 
             if (typeof io !== 'undefined') {

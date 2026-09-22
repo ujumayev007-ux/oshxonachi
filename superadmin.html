@@ -2,34 +2,317 @@
 <html lang="uz">
 <head>
     <meta charset="UTF-8">
-    <title>Superadmin Paneli & AI</title>
-    <link rel="stylesheet" href="css/style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Restoran Boshqaruv Tizimi - Super Admin Paneli</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background-color: #e3f2fd !important; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #333; padding: 20px; }
+        header { display: flex; justify-content: space-between; align-items: center; background: #ffffff; padding: 15px 25px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 20px; flex-wrap: wrap; gap: 15px; }
+        .header-left { display: flex; flex-direction: column; gap: 4px; }
+        h1 { color: #0d47a1; font-size: 24px; }
+        .live-clock-container { font-size: 13px; color: #555; font-weight: 500; display: flex; gap: 10px; align-items: center; }
+        .live-clock-container span.clock-badge { background: #e1f5fe; padding: 2px 8px; border-radius: 4px; color: #0288d1; font-weight: bold; }
+        .nav-tabs { display: flex; gap: 10px; flex-wrap: wrap; }
+        .tab-btn { padding: 8px 16px; border: none; background: #bbdefb; color: #0d47a1; font-weight: bold; border-radius: 6px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 6px; }
+        .tab-btn.active, .tab-btn:hover { background: #0288d1; color: white; }
+        .section-content { display: none; background: #ffffff; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .section-content.active { display: block; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { border: 1px solid #b3d7ff; padding: 10px; text-align: left; font-size: 14px; }
+        th { background-color: #e1f5fe; color: #0d47a1; }
+        input, select { padding: 6px; border: 1px solid #90caf9; border-radius: 4px; width: 100%; }
+        .btn { padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .btn-blue { background-color: #0288d1; color: white; }
+        .btn-blue:hover { background-color: #01579b; }
+        .btn-red { background-color: #d32f2f; color: white; }
+        .btn-red:hover { background-color: #b71c1c; }
+        .metric-card { background: #f8f9fa; border: 1px solid #b3d7ff; padding: 15px; border-radius: 8px; text-align: center; }
+        .metric-card h3 { font-size: 15px; color: #0d47a1; margin-bottom: 8px; }
+        .metric-card p { font-size: 18px; font-weight: bold; color: #2e7d32; }
+        .tv-screen-container { background: linear-gradient(135deg, #111111 0%, #1c1408 100%); color: #f5f5f5; border: 2px solid #d4af37; border-radius: 16px; padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
+        @keyframes pulse-glow {
+            0% { box-shadow: 0 0 5px rgba(212, 175, 55, 0.4); border-color: #d4af37; }
+            50% { box-shadow: 0 0 20px rgba(212, 175, 55, 0.9); border-color: #ffea79; }
+            100% { box-shadow: 0 0 5px rgba(212, 175, 55, 0.4); border-color: #d4af37; }
+        }
+        .step-active { background: rgba(212, 175, 55, 0.15) !important; border-color: #d4af37 !important; animation: pulse-glow 1.5s infinite; }
+        .step-done { background: rgba(46, 125, 50, 0.2) !important; border-color: #2e7d32 !important; color: #a5d6a7 !important; }
+        .step-pending { background: rgba(255, 255, 255, 0.05); border-color: #444; color: #888; }
+    </style>
 </head>
 <body>
-    <header>
-        <h2>Superadmin Paneli & Gemini AI Maslahatchisi</h2>
-    </header>
+    <div id="admin-main-content">
+        <header>
+            <div class="header-left">
+                <h1>Restoran SUPER ADMIN Paneli</h1>
+                <div class="live-clock-container">
+                    <span>📅 <span class="clock-badge" id="live-date">--.--.----</span></span>
+                    <span>⏰ <span class="clock-badge" id="live-time">--:--:--</span></span>
+                </div>
+            </div>
+            <div class="flex items-center gap-4">
+                <span id="connection-status" class="px-3 py-1 text-sm rounded-full bg-red-100 text-red-600 font-medium">Ulanmoqda...</span>
+                <div style="background: #f8f9fa; border: 1px solid #90caf9; border-radius: 6px; padding: 8px; width: 260px; height: 110px; overflow-y: auto; font-size: 13px;" id="admin-reviews-box">
+                    <div style="font-weight: bold; color: #0d47a1; margin-bottom: 4px; font-size: 12px; display: flex; justify-content: space-between; align-items: center;">
+                        <span>💬 Mijozlar Izohlari</span>
+                        <span id="reviews-count-badge" style="background: #0288d1; color: white; padding: 0 5px; border-radius: 10px; font-size: 10px;">0</span>
+                    </div>
+                    <div id="admin-reviews-list" style="display: flex; flex-direction: column; gap: 4px;">
+                        <span style="color: #666; font-style: italic; font-size: 12px;">Hozircha izohlar yo'q...</span>
+                    </div>
+                </div>
+                <div class="nav-tabs">
+                    <button class="tab-btn active" onclick="switchTab('orders', event)">Buyurtmalar</button>
+                    <button class="tab-btn" onclick="switchTab('menu', event)">Menyu Boshqaruvi</button>
+                    <button class="tab-btn" onclick="switchTab('warehouse', event)">Ombor & Bozorlik</button>
+                    <button class="tab-btn" onclick="switchTab('income', event)">Daromad</button>
+                    <button class="tab-btn" onclick="switchTab('history', event)">Tarix</button>
+                    <button class="tab-btn" onclick="switchTab('stats', event)">Statistika</button>
+                    <button class="tab-btn" onclick="switchTab('waiters', event)">Ofitsiantlar</button>
+                    <button class="tab-btn" onclick="switchTab('osh-tv', event)">Osh TV</button>
+                    <button class="tab-btn" onclick="switchTab('printers', event)">🖨️ Printerlar IP</button>
+                </div>
+            </div>
+        </header>
 
-    <div class="container">
-        <div class="card">
-            <h3>AI Tahlil</h3>
-            <input type="text" id="ai-prompt" placeholder="Masalan: Omvorda nima yetishmayapti?" style="width:70%; padding:8px;">
-            <button onclick="askGeminiAI()">So'rash</button>
-            <p id="ai-response" style="margin-top:15px; font-weight:bold;"></p>
+        <!-- BUYURTMALAR -->
+        <div id="orders" class="section-content active">
+            <h2>Kelib tushgan buyurtmalar</h2>
+            <div id="orders-container" style="margin-top: 15px;"></div>
+        </div>
+
+        <!-- OSH TV EKRAN -->
+        <div id="osh-tv" class="section-content">
+            <div class="tv-screen-container">
+                <div class="flex flex-col md:flex-row justify-between items-center border-b border-yellow-600/40 pb-6 mb-6 gap-4">
+                    <div>
+                        <span class="text-yellow-500 font-bold uppercase tracking-widest text-xs">Oshpazlar uchun TV Ekran Paneli</span>
+                        <h2 class="text-3xl font-extrabold text-white mt-1">🍲 Toshkentcha To'y Oshi Jarayoni</h2>
+                    </div>
+                    <button onclick="startOshSimulation()" class="bg-yellow-500 hover:bg-yellow-600 text-black font-bold px-4 py-2 rounded-lg text-sm transition">🔄 Simulyatsiyani Boshlash</button>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+                    <div class="lg:col-span-1 bg-black/60 p-6 rounded-2xl border border-yellow-600/30 text-center flex flex-col items-center justify-center">
+                        <div class="text-4xl mb-2">⏳</div>
+                        <span class="text-xs uppercase tracking-widest text-yellow-500 font-bold mb-1">Qolgan Vaqt</span>
+                        <div id="tv-timer-display" class="text-4xl font-mono font-black text-yellow-400 tracking-wider mb-2">00:40:00</div>
+                        <p id="tv-timer-status" class="text-xs text-gray-300 italic">Kutilmoqda...</p>
+                        <div class="w-full bg-gray-800 h-2.5 rounded-full mt-4 overflow-hidden border border-yellow-600/20">
+                            <div id="tv-progress-bar" class="bg-gradient-to-r from-yellow-600 to-yellow-400 h-full transition-all duration-1000" style="width: 100%;"></div>
+                        </div>
+                    </div>
+                    <div class="lg:col-span-2 flex flex-col gap-2.5">
+                        <h3 class="text-sm uppercase tracking-wider text-yellow-500 font-bold mb-1">Bosqichlar</h3>
+                        <div id="step-1" class="step-pending p-3 rounded-xl border flex items-center justify-between"><span>1. Qozonni qizdirish va yog' dog'lash</span><span class="step-status-badge text-xs">Kutilmoqda</span></div>
+                        <div id="step-2" class="step-pending p-3 rounded-xl border flex items-center justify-between"><span>2. Piyozni qovurish</span><span class="step-status-badge text-xs">Kutilmoqda</span></div>
+                        <div id="step-3" class="step-pending p-3 rounded-xl border flex items-center justify-between"><span>3. Go'sht solib qovurish</span><span class="step-status-badge text-xs">Kutilmoqda</span></div>
+                        <div id="step-4" class="step-pending p-3 rounded-xl border flex items-center justify-between"><span>4. Sabzi va zirvak qaynatish</span><span class="step-status-badge text-xs">Kutilmoqda</span></div>
+                        <div id="step-5" class="step-pending p-3 rounded-xl border flex items-center justify-between"><span>5. Guruch solib dam berish</span><span class="step-status-badge text-xs">Kutilmoqda</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- MENYU BOSHQARUVI -->
+        <div id="menu" class="section-content">
+            <h2>Menyu va narxlar (Super Admin)</h2>
+            <div style="margin-bottom: 20px; background: #f5f5f5; padding: 15px; border-radius: 8px;">
+                <h3 style="font-size: 16px; color: #0d47a1; margin-bottom: 10px;">Yangi taom qo'shish</h3>
+                <div style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr auto; gap: 10px; align-items: center;">
+                    <input type="text" id="new-menu-name" placeholder="Nomi">
+                    <select id="new-menu-category">
+                        <option value="Osh">Osh</option>
+                        <option value="Suyuq ovqatlar">Suyuq ovqatlar</option>
+                        <option value="Quyuq taomlar">Quyuq taomlar</option>
+                        <option value="Kaboblar">Kaboblar</option>
+                        <option value="Fast Food">Fast Food</option>
+                        <option value="Ichimliklar">Ichimliklar</option>
+                    </select>
+                    <input type="number" id="new-menu-internal" placeholder="Ichki narx">
+                    <input type="number" id="new-menu-sale" placeholder="Sotish narxi">
+                    <button class="btn btn-blue" onclick="addNewMenuItem()">Qo'shish</button>
+                </div>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th><th>Nomi</th><th>Kategoriya</th><th>Ichki Narx</th><th>Sotish Narxi</th><th>Ko'rinishi</th><th>Amal</th>
+                    </tr>
+                </thead>
+                <tbody id="menu-table-body"></tbody>
+            </table>
+        </div>
+
+        <!-- OMBOR & BOZORLIK -->
+        <div id="warehouse" class="section-content">
+            <h2>Ombor va Bozorlik Boshqaruvi</h2>
+            <div style="margin-bottom: 20px; background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #b3d7ff;">
+                <h3 style="font-size: 16px; color: #0d47a1; margin-bottom: 10px;">🛒 Bozorlik Qo'shish (Xarid)</h3>
+                <div style="display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 10px; margin-bottom: 10px;">
+                    <input type="text" id="bozorlik-desc" placeholder="Nima olindi? (masalan: 10kg kartoshka, 30ta tuxum)">
+                    <input type="number" id="bozorlik-amount" placeholder="Jami summa (so'm)">
+                    <input type="date" id="bozorlik-date">
+                    <button class="btn btn-blue" onclick="addBozorlikRecord()">Bozorlikni Qo'shish</button>
+                </div>
+            </div>
+            <h3 style="margin-top: 20px; color: #0d47a1;">Bozorlik tarixi va cheklari</h3>
+            <table>
+                <thead>
+                    <tr><th>№</th><th>Sana</th><th>Tarkibi / Tavsifi</th><th>Summa</th></tr>
+                </thead>
+                <tbody id="bozorlik-table-body">
+                    <tr><td colspan="4" style="text-align: center;">Hozircha bozorliklar yo'q</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- DAROMAD -->
+        <div id="income" class="section-content">
+            <h2>Daromad va Sof Foyda (Super Admin)</h2>
+            <div style="margin-top: 15px; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px;">
+                <div class="metric-card"><h3>Naqd pul tushumi</h3><p id="income-cash">0 so'm</p></div>
+                <div class="metric-card"><h3>Plastik karta tushumi</h3><p id="income-card">0 so'm</p></div>
+                <div class="metric-card"><h3>Jami Tashqi Savdo</h3><p id="income-total-sale">0 so'm</p></div>
+                <div class="metric-card"><h3>Sof Foyda</h3><p id="income-net-profit" style="color: #1565c0;">0 so'm</p></div>
+            </div>
+        </div>
+
+        <!-- TARIX -->
+        <div id="history" class="section-content">
+            <h2>Buyurtmalar Tarixi</h2>
+            <table>
+                <thead>
+                    <tr><th>Buyurtma №</th><th>Stol</th><th>Ofitsiant</th><th>To'lov turi</th><th>Summa</th><th>Status</th></tr>
+                </thead>
+                <tbody id="history-table-body"></tbody>
+            </table>
+        </div>
+
+        <!-- STATISTIKA -->
+        <div id="stats" class="section-content">
+            <h2>Statistika va Ofitsiantlar Oyligi</h2>
+            <div class="bg-white p-6 rounded-xl shadow-md mb-6 border border-gray-100">
+                <h3 class="text-lg font-bold text-gray-800 mb-4">💰 Ofitsiantlar Oyligi va Foiz Hisoblagichi</h3>
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-gray-100 text-gray-700 text-xs uppercase">
+                            <th class="p-3 border-b">Ismi</th><th class="p-3 border-b text-center">Buyurtmalar</th><th class="p-3 border-b text-right">Tushum</th><th class="p-3 border-b text-right">Hisoblangan Oylik (10%)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="waiter-commission-table-body"></tbody>
+                </table>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                <div style="background: #e3f2fd; padding: 15px; border-radius: 8px;"><p>Bugungi savdo</p><p id="today-sales" style="font-weight:bold;">0 so'm</p></div>
+                <div style="background: #e8f5e9; padding: 15px; border-radius: 8px;"><p>Haftalik savdo</p><p id="weekly-sales" style="font-weight:bold;">0 so'm</p></div>
+                <div style="background: #fff3e0; padding: 15px; border-radius: 8px;"><p>Oylik savdo</p><p id="monthly-sales" style="font-weight:bold;">0 so'm</p></div>
+            </div>
+        </div>
+
+        <!-- OFITSIANTLAR -->
+        <div id="waiters" class="section-content">
+            <h2>Ofitsiantlarni Boshqarish</h2>
+            <form id="add-waiter-form" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 bg-gray-50 p-4 rounded-lg border">
+                <input type="text" id="waiter-name" required placeholder="Ismi">
+                <input type="text" id="waiter-login" required placeholder="Login">
+                <input type="password" id="waiter-password" required placeholder="Parol">
+                <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded">Qo'shish</button>
+            </form>
+            <table>
+                <thead><tr><th>Ismi</th><th>Login</th><th>Amal</th></tr></thead>
+                <tbody id="waiters-table-body"></tbody>
+            </table>
+        </div>
+
+        <!-- PRINTERLAR -->
+        <div id="printers" class="section-content">
+            <h2>Printerlar IP Adreslari</h2>
+            <div style="background: #f9f9f9; padding: 15px; border-radius: 8px;">
+                <input type="text" id="ip-oshxona" placeholder="192.168.1.54">
+                <button class="btn btn-blue mt-2" onclick="savePrinterIP('oshxona')">Saqlash</button>
+            </div>
         </div>
     </div>
 
-    <script src="js/config.js"></script>
     <script>
-        async function askGeminiAI() {
-            const prompt = document.getElementById('ai-prompt').value;
-            const res = await fetch(`${API_URL}/api/gemini-ai`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ prompt })
-            });
-            const data = await res.json();
-            document.getElementById('ai-response').innerText = "Gemini AI: " + data.reply;
+        let menuDatabase = JSON.parse(localStorage.getItem('admin_menu')) || [];
+        let bozorlikDatabase = JSON.parse(localStorage.getItem('admin_bozorlik')) || [];
+
+        function switchTab(tabId, event) {
+            document.querySelectorAll('.section-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            if(event) event.currentTarget.classList.add('active');
+        }
+
+        function renderMenu() {
+            const tbody = document.getElementById('menu-table-body');
+            if(!tbody) return;
+            tbody.innerHTML = menuDatabase.map(item => `
+                <tr>
+                    <td>${item.id}</td>
+                    <td><b>${item.name}</b></td>
+                    <td>${item.category}</td>
+                    <td>${item.internal_price ? item.internal_price.toLocaleString() : 0} so'm</td>
+                    <td>${item.sale_price.toLocaleString()} so'm</td>
+                    <td>${item.is_visible !== false ? 'Ko\'rinadi' : 'Yashiringan'}</td>
+                    <td><button class="btn btn-blue" onclick="toggleMenuVisibility(${item.id})">O'zgartirish</button></td>
+                </tr>
+            `).join('');
+        }
+
+        function addNewMenuItem() {
+            const name = document.getElementById('new-menu-name').value.trim();
+            const category = document.getElementById('new-menu-category').value;
+            const intPrice = Number(document.getElementById('new-menu-internal').value);
+            const salePrice = Number(document.getElementById('new-menu-sale').value);
+            if(name && salePrice) {
+                menuDatabase.push({ id: Date.now(), name, category, internal_price: intPrice, sale_price: salePrice, is_visible: true });
+                localStorage.setItem('admin_menu', JSON.stringify(menuDatabase));
+                renderMenu();
+                alert("Taom qo'shildi!");
+            }
+        }
+
+        function toggleMenuVisibility(id) {
+            let item = menuDatabase.find(m => m.id === id);
+            if(item) {
+                item.is_visible = item.is_visible === false ? true : false;
+                localStorage.setItem('admin_menu', JSON.stringify(menuDatabase));
+                renderMenu();
+            }
+        }
+
+        function addBozorlikRecord() {
+            const desc = document.getElementById('bozorlik-desc').value.trim();
+            const amount = Number(document.getElementById('bozorlik-amount').value);
+            const date = document.getElementById('bozorlik-date').value || new Date().toISOString().split('T')[0];
+            if(desc && amount) {
+                bozorlikDatabase.push({ id: Date.now(), date, desc, amount });
+                localStorage.setItem('admin_bozorlik', JSON.stringify(bozorlikDatabase));
+                renderBozorlik();
+                alert("Bozorlik qo'shildi va hisoblandi!");
+            }
+        }
+
+        function renderBozorlik() {
+            const tbody = document.getElementById('bozorlik-table-body');
+            if(!tbody) return;
+            if(bozorlikDatabase.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align: center;">Hozircha bozorliklar yo'q</td></tr>`;
+                return;
+            }
+            tbody.innerHTML = bozorlikDatabase.map((b, idx) => `
+                <tr><td>${idx+1}</td><td>${b.date}</td><td>${b.desc}</td><td><b>${b.amount.toLocaleString()} so'm</b></td></tr>
+            `).join('');
+        }
+
+        window.onload = function() {
+            renderMenu();
+            renderBozorlik();
         }
     </script>
 </body>

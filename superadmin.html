@@ -685,8 +685,14 @@ function saveMarketSession() {
         }
 
         let totalSum = marketCart.reduce((sum, item) => sum + (parseFloat(item.price) || 0), 0);
-        let addedBy = marketCart[0].addedBy || "Admin";
-        let detailsText = marketCart.map(i => `${i.name} (${i.quantity} ${i.unit || 'kg'} - ${(parseFloat(i.price) || 0).toLocaleString()} so'm)`).join(', ');
+        let addedBy = marketCart[0].addedBy || marketCart[0].added_by || "Admin";
+        
+        let detailsText = marketCart.map(i => {
+            let q = i.quantity || i.qty || 0;
+            let u = i.unit || 'kg';
+            let p = parseFloat(i.price) || 0;
+            return `${i.name} (${q} ${u} - ${p.toLocaleString()} so'm)`;
+        }).join(', ');
 
         let warehouseDatabase = JSON.parse(localStorage.getItem('admin_warehouse')) || [];
 
@@ -696,28 +702,28 @@ function saveMarketSession() {
             let cleanCartName = cartItem.name.toLowerCase().trim();
             let warehouseItem = warehouseDatabase.find(i => i && i.name && i.name.toLowerCase().trim() === cleanCartName);
             
-            let qty = parseFloat(cartItem.quantity) || 0;
+            // XATO TO'G'RILANDI: quantity yoki qty larning qaysi biri borligini tekshiradi
+            let qty = parseFloat(cartItem.quantity) || parseFloat(cartItem.qty) || 0;
             let finalQtyToAdd = qty;
             
             let targetUnit = (warehouseItem && warehouseItem.unit) ? warehouseItem.unit.toLowerCase().trim() : 'gramm (g)';
-            let cartUnit = (cartItem.unit) ? cartItem.unit.toLowerCase().trim() : 'kg';
+            let cartUnit = (cartItem.unit || 'kg').toLowerCase().trim();
 
-            // Kengaytirilgan tekshiruv
             let isCartKg = cartUnit.includes('kg') || cartUnit.includes('kilogram') || cartUnit.includes('кг');
             let isTargetGram = targetUnit.includes('gram') || targetUnit.includes('g') || targetUnit.includes('гр');
 
-            // Agar omborda gramm bo'lsa va biz kg kiritgan bo'lsak
+            // Agar omborda gramm bo'lsa va biz kg kiritgan bo'lsak, 1000 ga ko'paytiramiz
             if (isTargetGram && isCartKg) {
                 finalQtyToAdd = qty * 1000;
             }
 
             if (warehouseItem) {
-                let currentQty = parseFloat(warehouseItem.quantity) || 0;
+                let currentQty = parseFloat(warehouseItem.quantity) || parseFloat(warehouseItem.qty) || 0;
                 warehouseItem.quantity = currentQty + finalQtyToAdd;
             } else {
                 warehouseDatabase.push({
                     name: cartItem.name,
-                    group: "Go'sht va yarim tayyor mahsulotlar",
+                    group: cartItem.group || "Go'sht va yarim tayyor mahsulotlar",
                     quantity: finalQtyToAdd,
                     unit: 'gramm (g)'
                 });

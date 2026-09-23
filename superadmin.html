@@ -657,13 +657,14 @@ function addMarketItemToWarehouse() {
 function updateMarketCartUI() {
     let cartContainer = document.getElementById('market-cart-items');
     let totalSpan = document.getElementById('market-cart-total');
+    if (!cartContainer || !totalSpan) return;
 
     let totalSum = marketCart.reduce((sum, item) => sum + item.price, 0);
     totalSpan.innerText = `Jami bozorlik summasi: ${totalSum.toLocaleString()} so'm`;
 
     cartContainer.innerHTML = marketCart.map((item, idx) => `
         <div style="display: flex; justify-content: space-between; border-bottom: 1px dashed #eee; padding: 2px 0;">
-            <span>${idx + 1}. <b>${item.name}</b> — ${item.quantity} miqdor, <b>${item.price.toLocaleString()} so'm</b> (${item.addedBy})</span>
+            <span>${idx + 1}. <b>${item.name}</b> — ${item.quantity} ${item.unit}, <b>${item.price.toLocaleString()} so'm</b> (${item.addedBy})</span>
             <button onclick="removeMarketCartItem(${idx})" style="color: red; border: none; background: none; cursor: pointer; font-size: 11px;">O'chirish</button>
         </div>
     `).join('');
@@ -674,7 +675,7 @@ function removeMarketCartItem(index) {
     updateMarketCartUI();
 }
 
-// Bozorlik sessiyasini tarixga saqlash
+// Bozorlik sessiyasini omborga saqlash, birliklarni to'g'rilash va tarixga yozish
 function saveMarketSession() {
     if (marketCart.length === 0) {
         alert("Saqlash uchun bozorlik savatchasi bo'sh!");
@@ -683,8 +684,42 @@ function saveMarketSession() {
 
     let totalSum = marketCart.reduce((sum, item) => sum + item.price, 0);
     let addedBy = marketCart[0].addedBy || "Admin";
-    let detailsText = marketCart.map(i => `${i.name} (${i.quantity} miqdor - ${i.price.toLocaleString()} so'm)`).join(', ');
+    let detailsText = marketCart.map(i => `${i.name} (${i.quantity} ${i.unit || 'miqdor'} - ${i.price.toLocaleString()} so'm)`).join(', ');
 
+    // 1. OMBORDAGI MAHSULOTLAR MIQDORINI VA BIRLIKLARINI TO'G'RILAB QO'SHISH
+    marketCart.forEach(cartItem => {
+        let warehouseItem = warehouseDatabase.find(i => i.name.toLowerCase() === cartItem.name.toLowerCase());
+        
+        let finalQtyToAdd = cartItem.quantity;
+        let targetUnit = warehouseItem && warehouseItem.unit ? warehouseItem.unit.toLowerCase() : 'kg';
+        let cartUnit = cartItem.unit ? cartItem.unit.toLowerCase() : 'kg';
+
+        // Gramm va Kilogramm moslashuvi (Masalan: omborda gramm, bozorlikda kg bo'lsa)
+        if ((targetUnit.includes('g') || targetUnit.includes('gramm')) && cartUnit === 'kg') {
+            finalQtyToAdd = cartItem.quantity * 1000; // 1 kg = 1000 g
+        } 
+        // Omborda kg, bozorlikda gramm bo'lsa
+        else if (targetUnit.includes('kg') && (cartUnit.includes('g') || cartUnit.includes('gramm'))) {
+            finalQtyToAdd = cartItem.quantity / 1000;
+        }
+
+        if (warehouseItem) {
+            warehouseItem.quantity += finalQtyToAdd;
+        } else {
+            // Agar omborda umuman bo'lmasa, yangi mahsulot sifatida qo'shish
+            warehouseDatabase.push({
+                name: cartItem.name,
+                group: "Bozordan olinganlar",
+                quantity: finalQtyToAdd,
+                unit: cartItem.unit || 'kg'
+            });
+        }
+    });
+
+    // LocalStoragega yangilangan omborni saqlash
+    localStorage.setItem('admin_warehouse', JSON.stringify(warehouseDatabase));
+
+    // 2. TARIXGA YOZISH (F5 qilinganda yo'qolmasligi uchun localStorage ga saqlanadi)
     let marketHistory = JSON.parse(localStorage.getItem('restaurant_market_history')) || [];
     
     let sessionRecord = {
@@ -697,10 +732,14 @@ function saveMarketSession() {
     marketHistory.unshift(sessionRecord); // Yangisini boshiga qo'shish
     localStorage.setItem('restaurant_market_history', JSON.stringify(marketHistory));
 
-    // Savatchani tozalash va tarixni qayta yuklash
+    // 3. TOZALASH VA EKRANNI YANGILASH
     marketCart = [];
     updateMarketCartUI();
-    renderMarketHistory();
+    if (typeof renderWarehouse === 'function') {
+        renderWarehouse(); // Ombor jadvalini yangilash
+    }
+    renderMarketHistory(); // Tarix jadvalini yangilash
+
     alert("Bozorlik muvaffaqiyatli omborga qo'shildi va tarixga yozildi!");
 }
 

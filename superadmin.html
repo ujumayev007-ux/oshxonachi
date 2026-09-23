@@ -2263,7 +2263,7 @@ function updateWarehouseQty(buttonElement, index) {
             const ctx = canvas.getContext('2d');
             if (statsChartInstance) statsChartInstance.destroy();
 
-           statsChartInstance = new Chart(ctx, {
+        statsChartInstance = new Chart(ctx, {
     type: 'bar',
     data: {
         labels: ['Dush', 'Sesh', 'Chor', 'Pay', 'Jum', 'Shan', 'Yak'],
@@ -2277,11 +2277,12 @@ function updateWarehouseQty(buttonElement, index) {
     options: {
         responsive: true,
         maintainAspectRatio: false,
-        plugins: { legend: { display: false } },
-        // --- ANIMATSIYA QISMI QO'SHILDI ---
+        plugins: { 
+            legend: { display: false } 
+        },
         animation: {
-            duration: 1500, // Animatsiya davomiyligi (1.5 soniya)
-            easing: 'easeInOutQuart' // Harakat effekti silliq chiqishi uchun
+            duration: 1500,
+            easing: 'easeInOutQuart'
         }
     }
 });

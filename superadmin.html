@@ -784,7 +784,7 @@ function renderMarketHistory() {
     `).join('');
 }
 
-// Sahifa to'liq yuklanganda tarixni chaqirib qo'yish uchun window.onload ichiga renderMarketHistory(); ni qo'shib qo'yasiz.
+// Sahifa to'liq yuklanganda.
       window.onload = function() {
     loadInitialData();
           renderMarketHistory();
@@ -1006,12 +1006,19 @@ function renderMarketHistory() {
     initChart();
     initLiveClock();
 
-    window.addEventListener('storage', function(e) {
-        if(['waiter_orders', 'active_orders', 'admin_orders', 'orders'].includes(e.key)) {
+   window.addEventListener('storage', function(e) {
+    if (['waiter_orders', 'active_orders', 'admin_orders', 'orders', 'restaurant_market_history'].includes(e.key)) {
+        if (typeof loadOrdersFromStorage === 'function') {
             loadOrdersFromStorage();
+        }
+        if (typeof renderMarketHistory === 'function') {
+            renderMarketHistory();
+        }
+        if (typeof renderAll === 'function') {
             renderAll();
         }
-    });
+    }
+});
          // Printer IP manzilini saqlash funksiyasi
         function savePrinterIP(section) {
             let ipValue = document.getElementById(`ip-${section}`).value.trim();

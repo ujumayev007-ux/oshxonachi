@@ -1768,15 +1768,32 @@ function updateClock() {
             `).join('');
         }
 
-        function updateMenuField(id, field, value) {
-            const item = menuDatabase.find(m => m.id === id);
-            if (item) { 
-                item[field] = value; 
-                if (field === 'sale_price') item.external_price = value;
-                saveData(); 
-            }
-        }
+      function updateMenuField(id, field, value) {
+    const item = menuDatabase.find(m => m.id === id);
+    if (item) { 
+        // Agar narx raqam bo'lsa, Number ga o'tkazamiz
+        item[field] = (field === 'internal_price' || field === 'sale_price' || field === 'external_price') ? Number(value) : value; 
+        if (field === 'sale_price') item.external_price = Number(value);
 
+        saveData(); // Ma'lumotlarni saqlash
+
+        // Ofitsiant oynasi darhol sezishi uchun signal beramiz
+        localStorage.setItem('menu_updated_at', Date.now());
+    }
+}
+function saveMenuItem(id) {
+    // 1. Ma'lumotlarni localStorage'ga saqlaymiz
+    saveData();
+    
+    // 2. Ofitsiant oynasi o'zgarishni sezishi uchun vaqt belgisini yangilaymiz
+    localStorage.setItem('menu_updated_at', Date.now());
+    
+    // 3. Superadmin jadvalini qaytadan chizamiz
+    renderMenu();
+    
+    // 4. Ekranga xabar chiqaramiz
+    alert("Muvaffaqiyatli saqlandi va ofitsiantlarga yuborildi!");
+}
         function addNewMenuItem() {
             const name = document.getElementById('new-menu-name').value.trim();
             const category = document.getElementById('new-menu-category').value;

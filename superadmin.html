@@ -435,7 +435,18 @@
             <p style="font-size: 18px; font-weight: bold; color: #ef6c00; margin: 0;" id="monthly-sales">0 so'm</p>
         </div>
     </div>
-
+<!-- Statistika bo'limidagi bozorlik tugmasi va oynasi -->
+<div style="margin-top: 20px; background: #fff; padding: 15px; border-radius: 8px; border: 1px solid #ddd;">
+    <h3 style="color: #0d47a1; margin-bottom: 10px;">📊 Bozorlik Statistikasi</h3>
+    <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+        <button class="btn btn-blue" onclick="showMarketStats('daily')">Kunlik</button>
+        <button class="btn btn-blue" onclick="showMarketStats('weekly')">Haftalik</button>
+        <button class="btn btn-blue" onclick="showMarketStats('monthly')">Oylik</button>
+    </div>
+    <div id="market-stats-result" style="font-size: 16px; font-weight: bold; color: #333;">
+        Tugmani bosing va statistikani ko'ring.
+    </div>
+</div>
     <!-- 2. Top 5 taomlar va Grafik yonma-yon -->
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
         
@@ -760,24 +771,71 @@ function saveMarketSession() {
 
 // Bozorlik tarixini ekranga chiqarish funksiyasi
 function renderMarketHistory() {
-    let tbody = document.getElementById('market-history-table-body');
-    if (!tbody) return;
+    let historyTableBody = document.getElementById('market-history-table-body');
+    if (!historyTableBody) return;
 
     let marketHistory = JSON.parse(localStorage.getItem('restaurant_market_history')) || [];
+    
+    // Joriy oy va yilni aniqlaymiz (masalan: "2026-09")
+    let now = new Date();
+    let currentMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    
+    // Oylik cheklov uchun saqlangan oyni tekshiramiz
+    let lastSavedMonth = localStorage.getItem('market_history_month') || currentMonthKey;
+    
+    // Agar yangi oy boshlangan bo'lsa, tarixni yangidan boshlash (tozalash yoki alohida arxivlash)
+    if (lastSavedMonth !== currentMonthKey) {
+        // Agar o'zgargan bo'lsa, eski oylik tarixni tozalaymiz (yoki xohlasangiz saqlab qolishingiz mumkin)
+        marketHistory = [];
+        localStorage.setItem('restaurant_market_history', JSON.stringify(marketHistory));
+        localStorage.setItem('market_history_month', currentMonthKey);
+    }
 
-    if (!marketHistory || marketHistory.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: #777;">Tarix bo'sh</td></tr>`;
+    historyTableBody.innerHTML = '';
+
+    if (marketHistory.length === 0) {
+        historyTableBody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: #777;">Tarix bo'sh</td></tr>`;
+        updateTotalMarketSum(0);
         return;
     }
 
-    tbody.innerHTML = marketHistory.map(row => `
-        <tr>
-            <td>${row.date || ''}</td>
-            <td><b>${row.addedBy || 'Admin'}</b></td>
-            <td>${row.details || ''}</td>
-            <td style="color: #2e7d32; font-weight: bold;">${(row.totalSum || 0).toLocaleString()} so'm</td>
-        </tr>
-    `).join('');
+    let grandTotal = 0;
+
+    marketHistory.forEach(record => {
+        let sum = parseFloat(record.totalSum) || 0;
+        grandTotal += sum;
+
+        historyTableBody.innerHTML += `
+            <tr>
+                <td>${record.date}</td>
+                <td>${record.addedBy}</td>
+                <td>${record.details}</td>
+                <td><b>${sum.toLocaleString()} so'm</b></td>
+            </tr>
+        `;
+    });
+
+    // Umumiy summani sahifadagi tegishli joyga chiqarish
+    updateTotalMarketSum(grandTotal);
+}
+
+function updateTotalMarketSum(total) {
+    // Jadval tagiga umumiy summani chiqaruvchi elementni topamiz yoki yaratamiz
+    let totalContainer = document.getElementById('market-grand-total');
+    if (!totalContainer) {
+        // Agar HTML da hali bo'lmasa, tarix jadvalidan keyin o'ng burchakka chiqaramiz
+        let historyTable = document.querySelector('#market-history-table-body').closest('table');
+        if (historyTable) {
+            let div = document.createElement('div');
+            div.id = 'market-grand-total';
+            div.style.cssText = "text-align: right; margin-top: 10px; font-weight: bold; font-size: 16px; color: #d84315;";
+            historyTable.parentNode.insertBefore(div, historyTable.nextSibling);
+            totalContainer = div;
+        }
+    }
+    if (totalContainer) {
+        totalContainer.innerHTML = `Jami oylik bozorlik summasi: ${total.toLocaleString()} so'm`;
+    }
 }
 
 // Sahifa to'liq yuklanganda.
@@ -2205,25 +2263,28 @@ function updateWarehouseQty(buttonElement, index) {
             const ctx = canvas.getContext('2d');
             if (statsChartInstance) statsChartInstance.destroy();
 
-            statsChartInstance = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: ['Dush', 'Sesh', 'Chor', 'Pay', 'Jum', 'Shan', 'Yak'],
-                    datasets: [{
-                        label: 'Kunlik Savdo (so\'m)',
-                        data: [1200000, 1900000, 1500000, 2200000, 2800000, 3500000, 3100000],
-                        backgroundColor: '#0288d1',
-                        borderRadius: 4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } }
-                }
-            });
+           statsChartInstance = new Chart(ctx, {
+    type: 'bar',
+    data: {
+        labels: ['Dush', 'Sesh', 'Chor', 'Pay', 'Jum', 'Shan', 'Yak'],
+        datasets: [{
+            label: 'Kunlik Savdo (so\'m)',
+            data: [1200000, 1900000, 1500000, 2200000, 2800000, 3500000, 3100000],
+            backgroundColor: '#0288d1',
+            borderRadius: 4
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        // --- ANIMATSIYA QISMI QO'SHILDI ---
+        animation: {
+            duration: 1500, // Animatsiya davomiyligi (1.5 soniya)
+            easing: 'easeInOutQuart' // Harakat effekti silliq chiqishi uchun
         }
-
+    }
+});
         function saveData() {
             try {
                 localStorage.setItem('admin_menu', JSON.stringify(menuDatabase));

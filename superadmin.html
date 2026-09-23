@@ -292,7 +292,7 @@
     <!-- Joriy sessiya bozorlik ro'yxati va summasi -->
 <div style="background: #ffffff; padding: 12px; border-radius: 6px; border: 1px solid #ffe0b2; margin-bottom: 15px;">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-        <b style="color: #d84315;">Joriy bozorlik savatchasi:</b>
+        <b style="color: #d84315;">Joriy bozorlik chasi:</b>
         <span style="font-size: 16px; font-weight: bold; color: #2e7d32;" id="market-cart-total">Jami bozorlik summasi: 0 so'm</span>
     </div>
     <div id="market-cart-items" style="font-size: 13px; color: #555; max-height: 100px; overflow-y: auto; margin-bottom: 8px;">
@@ -560,7 +560,7 @@
         let speechAnnounced10 = false;
         let speechAnnounced5 = false;
         let speechAnnounced1 = false;
-        // Global bozorlik savatchasi va qidiruv uchun o'zgaruvchilar
+        // Global bozorlik chasi va qidiruv uchun o'zgaruvchilar
 let marketCart = [];
 let marketSelectedProduct = null;
 
@@ -585,7 +585,7 @@ function handleMarketAutocomplete(val) {
     });
 }
 
-// Bozorlikka mahsulot qo'shish va vaqtinchalik savatchaga yig'ish
+// Bozorlikka mahsulot qo'shish va vaqtinchalik chaga yig'ish
 function addMarketItemToWarehouse() {
     let nameInput = document.getElementById('market-search-input').value.trim();
     let qty = parseFloat(document.getElementById('market-item-qty').value);
@@ -636,7 +636,6 @@ function addMarketItemToWarehouse() {
 function updateMarketCartUI() {
     let cartContainer = document.getElementById('market-cart-items');
     let totalSpan = document.getElementById('market-cart-total');
-    }
 
     let totalSum = marketCart.reduce((sum, item) => sum + item.price, 0);
     totalSpan.innerText = `Jami bozorlik summasi: ${totalSum.toLocaleString()} so'm`;
@@ -648,7 +647,6 @@ function updateMarketCartUI() {
         </div>
     `).join('');
 }
-
 // Savatchadan bitta elementni olib tashlash
 function removeMarketCartItem(index) {
     marketCart.splice(index, 1);

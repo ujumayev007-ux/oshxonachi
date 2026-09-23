@@ -250,16 +250,31 @@
         <h3 style="font-size: 16px; color: #ef6c00; margin-bottom: 12px;">🛒 Bozorga qo'shish va xarajatlar tarixi</h3>
         
         <!-- Qidirish va qo'shish qismi -->
-        <div style="display: flex; gap: 10px; position: relative; margin-bottom: 15px; flex-wrap: wrap;">
-            <div class="autocomplete-container" style="flex: 2; min-width: 220px;">
-                <input type="text" id="market-search-input" placeholder="Ombordan mahsulot qidirish (masalan: mol go'shti)..." autocomplete="off" oninput="handleMarketAutocomplete(this.value)">
-                <div id="market-autocomplete-list" class="autocomplete-items"></div>
-            </div>
-            <input type="number" id="market-item-qty" placeholder="Miqdori (kg/dona)" style="width: 120px;" step="any">
-            <input type="number" id="market-item-price" placeholder="Jami summasi (so'm)" style="width: 160px;">
-            <input type="text" id="market-added-by" placeholder="Kim qo'shdi? (Ism)" style="width: 150px;" value="Admin">
-            <button class="btn" style="background-color: #ef6c00; color: white;" onclick="addMarketItemToWarehouse()">Bozorlikka qo'shish</button>
-        </div>
+        <div style="display: flex; gap: 10px; position: relative; margin-bottom: 15px; flex-wrap: wrap; align-items: center;">
+    <!-- 1. Ombordan qidirish -->
+    <div class="autocomplete-container" style="flex: 2; min-width: 220px;">
+        <input type="text" id="market-search-input" placeholder="Ombordan mahsulot qidirish (masalan: mol go'shti)..." autocomplete="off" oninput="handleMarketAutocomplete(this.value)">
+        <div id="market-autocomplete-list" class="autocomplete-items"></div>
+    </div>
+    
+    <!-- 2. Miqdori va Birligi alohida -->
+    <input type="number" id="market-item-qty" placeholder="Miqdori" style="width: 100px;" step="any">
+    <select id="market-item-unit" style="width: 90px; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+        <option value="kg">kg</option>
+        <option value="dona">dona</option>
+        <option value="litr">litr</option>
+        <option value="gramm">gramm</option>
+    </select>
+
+    <!-- 3. Jami summasi -->
+    <input type="number" id="market-item-price" placeholder="Jami summasi (so'm)" style="width: 140px;">
+    
+    <!-- 4. Kim qo'shdi -->
+    <input type="text" id="market-added-by" placeholder="Kim qo'shdi? (Ism)" style="width: 130px;" value="Admin">
+    
+    <!-- 5. Qo'shish tugmasi -->
+    <button class="btn" style="background-color: #ef6c00; color: white;" onclick="addMarketItemToWarehouse()">Bozorlikka qo'shish</button>
+</div>
 
         <!-- Joriy sessiya bozorlik ro'yxati va summasi -->
         <div style="background: #ffffff; padding: 12px; border-radius: 6px; border: 1px solid #ffe0b2; margin-bottom: 15px;">
@@ -593,18 +608,20 @@ function handleMarketAutocomplete(val) {
 function addMarketItemToWarehouse() {
     let nameInput = document.getElementById('market-search-input').value.trim();
     let qty = parseFloat(document.getElementById('market-item-qty').value);
+    let unit = document.getElementById('market-item-unit') ? document.getElementById('market-item-unit').value : 'kg'; // Birlikni olish
     let price = parseFloat(document.getElementById('market-item-price').value);
     let addedBy = document.getElementById('market-added-by').value.trim() || "Admin";
 
-    if (!nameInput || isNaN(qty) || isNaN(price) || qty <= 0 || price <= 0) {
+    if (!nameInput || isNaN(qty) || isNaN(price) || qty <= 0 || price < 0) {
         alert("Iltimos, mahsulot nomini to'g'ri tanlang, miqdor va narxni kiriting!");
         return;
     }
 
-    // Savatchaga qo'shish
+    // Savatchaga qo'shish (birlik bilan birga)
     marketCart.push({
         name: nameInput,
         quantity: qty,
+        unit: unit,
         price: price,
         addedBy: addedBy,
         date: new Date().toLocaleString()
@@ -620,7 +637,7 @@ function addMarketItemToWarehouse() {
             name: nameInput,
             group: "Bozordan olinganlar",
             quantity: qty,
-            unit: "kg / dona"
+            unit: unit
         });
     }
 

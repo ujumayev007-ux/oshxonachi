@@ -1757,11 +1757,9 @@ function updateClock() {
             });
         }
 
-     // 1. Skript boshida bazani localStorage'dan yuklab olamiz (Global o'zgaruvchi)
-let warehouseDatabase = JSON.parse(localStorage.getItem('admin_warehouse')) || [];
-
+    
 function renderWarehouse() {
-    // Har safarrender qilishdan oldin localStorage'dan yangi ma'lumotni o'qib olamiz
+    // Mavjud global o'zgaruvchiga localStorage'dan qiymatni yuklaymiz (let yozilmaydi!)
     warehouseDatabase = JSON.parse(localStorage.getItem('admin_warehouse')) || [];
     
     const tbody = document.getElementById('warehouse-table-body');
@@ -1785,7 +1783,6 @@ function renderWarehouse() {
 
     tbody.innerHTML = filteredWarehouse.map((w, i) => {
         let originalIndex = w.originalIndex;
-        // quantity yoki qty qaysi biri mavjud bo'lsa shuni olamiz
         let currentQty = parseFloat(w.quantity) !== undefined ? parseFloat(w.quantity) : (parseFloat(w.qty) || 0);
         
         return `
@@ -1812,14 +1809,11 @@ function updateWarehouseQty(buttonElement, index) {
 
     const val = Number(inputEl.value);
     if (!isNaN(val)) { 
-        // Bazadagi qiymatni yangilaymiz (ham quantity, ham qty ga yozib qo'yamiz chalkashmasligi uchun)
         warehouseDatabase[index].quantity = val;
         warehouseDatabase[index].qty = val; 
         
-        // Ma'lumotlarni localStorage'ga saqlash
         localStorage.setItem('admin_warehouse', JSON.stringify(warehouseDatabase));
         
-        // Ekranni yangilash
         if (typeof renderAll === 'function') {
             renderAll();
         } else {
@@ -1831,7 +1825,6 @@ function updateWarehouseQty(buttonElement, index) {
         alert("Iltimos, to'g'ri son kiriting!");
     }
 }
-
         function addWarehouseItem() {
             const name = document.getElementById('new-item-name').value.trim();
             const qty = Number(document.getElementById('new-item-qty').value);

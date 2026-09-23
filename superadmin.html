@@ -688,35 +688,35 @@ function saveMarketSession() {
         let addedBy = marketCart[0].addedBy || "Admin";
         let detailsText = marketCart.map(i => `${i.name} (${i.quantity} ${i.unit || 'kg'} - ${(parseFloat(i.price) || 0).toLocaleString()} so'm)`).join(', ');
 
-        // warehouseDatabase mavjudligini tekshiramiz
-        if (typeof warehouseDatabase === 'undefined' || !Array.isArray(warehouseDatabase)) {
-            warehouseDatabase = JSON.parse(localStorage.getItem('admin_warehouse')) || [];
-        }
+        // Ombor bazasini olish
+        let warehouseDatabase = JSON.parse(localStorage.getItem('admin_warehouse')) || [];
 
-        // 1. OMBORDAGI MAHSULOTLAR MIQDORINI VA BIRLIKLARINI TO'G'RILAB QO'SHISH
+        // 1. OMBORDAGI MAHSULOTLARNI YANGILASH VA BIRLIKLARNI MOSLASH
         marketCart.forEach(cartItem => {
             if (!cartItem || !cartItem.name) return;
 
-            // Xavfsiz qidirish (name mavjudligini tekshirib)
             let warehouseItem = warehouseDatabase.find(i => i && i.name && i.name.toLowerCase().trim() === cartItem.name.toLowerCase().trim());
             
             let qty = parseFloat(cartItem.quantity) || 0;
             let finalQtyToAdd = qty;
-            let targetUnit = warehouseItem && warehouseItem.unit ? warehouseItem.unit.toLowerCase() : 'kg';
+            
+            let targetUnit = (warehouseItem && warehouseItem.unit) ? warehouseItem.unit.toLowerCase() : 'kg';
             let cartUnit = cartItem.unit ? cartItem.unit.toLowerCase() : 'kg';
 
-            // Gramm va Kilogramm moslashuvi
-            if ((targetUnit.includes('g') || targetUnit === 'gramm') && (cartUnit === 'kg' || cartUnit === 'kilogramm')) {
-                finalQtyToAdd = qty * 1000; // 1 kg = 1000 g
+            // Agar omborda "gramm (g)" bo'lib, siz "kg" da kiritgan bo'lsangiz (1000 ga ko'paytiramiz)
+            if ((targetUnit.includes('g') || targetUnit.includes('gramm') || targetUnit.includes('гр')) && 
+                (cartUnit.includes('kg') || cartUnit.includes('кг') || cartUnit.includes('kilogramm'))) {
+                finalQtyToAdd = qty * 1000; 
             } 
-            else if ((targetUnit.includes('kg') || targetUnit === 'kilogramm') && (cartUnit.includes('g') || cartUnit === 'gramm')) {
+            // Agar omborda "kg" bo'lib, siz "gramm" da kiritgan bo'lsangiz (1000 ga bo'lamiz)
+            else if ((targetUnit.includes('kg') || targetUnit.includes('кг') || targetUnit.includes('kilogramm')) && 
+                     (cartUnit.includes('g') || cartUnit.includes('gramm') || cartUnit.includes('гр'))) {
                 finalQtyToAdd = qty / 1000;
             }
 
             if (warehouseItem) {
                 warehouseItem.quantity = (parseFloat(warehouseItem.quantity) || 0) + finalQtyToAdd;
             } else {
-                // Agar omborda umuman bo'lmasa, yangi mahsulot sifatida qo'shish
                 warehouseDatabase.push({
                     name: cartItem.name,
                     group: "Bozordan olinganlar",
@@ -726,10 +726,10 @@ function saveMarketSession() {
             }
         });
 
-        // LocalStoragega yangilangan omborni saqlash
+        // Omborni saqlash
         localStorage.setItem('admin_warehouse', JSON.stringify(warehouseDatabase));
 
-        // 2. TARIXGA YOZISH (F5 qilinganda yo'qolmaydi)
+        // 2. TARIXGA YOZISH VA LOCALSTORAGE'GA SAQLASH
         let marketHistory = JSON.parse(localStorage.getItem('restaurant_market_history')) || [];
         
         let sessionRecord = {
@@ -739,47 +739,42 @@ function saveMarketSession() {
             totalSum: totalSum
         };
 
-        marketHistory.unshift(sessionRecord); // Yangisini boshiga qo'shish
+        marketHistory.unshift(sessionRecord);
         localStorage.setItem('restaurant_market_history', JSON.stringify(marketHistory));
 
-        // 3. TOZALASH VA EKRANNI YANGILASH
+        // 3. SAVATCHANI TOZALASH VA EKRANNI YANGILASH
         marketCart = [];
-        if (typeof updateMarketCartUI === 'function') {
-            updateMarketCartUI();
-        }
-        if (typeof renderWarehouse === 'function') {
-            renderWarehouse(); // Ombor jadvalini yangilash
-        }
-        if (typeof renderMarketHistory === 'function') {
-            renderMarketHistory(); // Tarix jadvalini yangilash
-        }
+        
+        if (typeof updateMarketCartUI === 'function') updateMarketCartUI();
+        if (typeof renderWarehouse === 'function') renderWarehouse();
+        renderMarketHistory(); // Tarixni ekranga chiqarish
 
         alert("Bozorlik muvaffaqiyatli omborga qo'shildi va tarixga yozildi!");
 
     } catch (err) {
-        console.error("Xatolik yuz berdi:", err);
+        console.error("Xatolik:", err);
         alert("Xatolik yuz berdi: " + err.message);
     }
 }
 
-// Bozorlik tarixini ekranga chiqarish
+// Bozorlik tarixini ekranga chiqarish funksiyasi
 function renderMarketHistory() {
     let tbody = document.getElementById('market-history-table-body');
     if (!tbody) return;
 
     let marketHistory = JSON.parse(localStorage.getItem('restaurant_market_history')) || [];
 
-    if (marketHistory.length === 0) {
+    if (!marketHistory || marketHistory.length === 0) {
         tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: #777;">Tarix bo'sh</td></tr>`;
         return;
     }
 
     tbody.innerHTML = marketHistory.map(row => `
         <tr>
-            <td>${row.date}</td>
-            <td><b>${row.addedBy}</b></td>
-            <td>${row.details}</td>
-            <td style="color: #2e7d32; font-weight: bold;">${row.totalSum.toLocaleString()} so'm</td>
+            <td>${row.date || ''}</td>
+            <td><b>${row.addedBy || 'Admin'}</b></td>
+            <td>${row.details || ''}</td>
+            <td style="color: #2e7d32; font-weight: bold;">${(row.totalSum || 0).toLocaleString()} so'm</td>
         </tr>
     `).join('');
 }
@@ -1005,8 +1000,19 @@ function renderMarketHistory() {
     renderAll();
     initChart();
     initLiveClock();
+// Sahifa yuklanganda bajariladigan barcha amallar va tinglovchilar
+window.addEventListener('DOMContentLoaded', function() {
+    // 1. Sahifa ochilganda yoki F5 qilinganda tarix va omborni chiqarish
+    if (typeof renderMarketHistory === 'function') {
+        renderMarketHistory();
+    }
+    if (typeof renderWarehouse === 'function') {
+        renderWarehouse();
+    }
+});
 
-   window.addEventListener('storage', function(e) {
+// 2. Boshqa oynadan/tabdan ma'lumot o'zgarganda yangilash
+window.addEventListener('storage', function(e) {
     if (['waiter_orders', 'active_orders', 'admin_orders', 'orders', 'restaurant_market_history'].includes(e.key)) {
         if (typeof loadOrdersFromStorage === 'function') {
             loadOrdersFromStorage();

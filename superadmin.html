@@ -1752,42 +1752,58 @@ function updateClock() {
         }
 
         function renderWarehouse() {
-    const tbody = document.getElementById('warehouse-table-body');
-    const query = (document.getElementById('warehouse-search-input') || {}).value || "";
-    
-    if (!tbody) return;
+            const tbody = document.getElementById('warehouse-table-body');
+            const query = (document.getElementById('warehouse-search-input') || {}).value || "";
+            
+            if (!tbody) return;
 
-    // Har bir mahsulotga uning asl indeksini (originalIndex) biriktirib olamiz
-    const indexedWarehouse = warehouseDatabase.map((w, idx) => ({ ...w, originalIndex: idx }));
-    
-    // Qidiruv bo'yicha filtrlash
-    const filteredWarehouse = indexedWarehouse.filter(w => 
-        w.name.toLowerCase().includes(query.toLowerCase()) || 
-        (w.group && w.group.toLowerCase().includes(query.toLowerCase()))
-    );
+            // Har bir mahsulotga uning asl indeksini (originalIndex) biriktirib olamiz
+            const indexedWarehouse = warehouseDatabase.map((w, idx) => ({ ...w, originalIndex: idx }));
+            
+            // Qidiruv bo'yicha filtrlash
+            const filteredWarehouse = indexedWarehouse.filter(w => 
+                w.name.toLowerCase().includes(query.toLowerCase()) || 
+                (w.group && w.group.toLowerCase().includes(query.toLowerCase()))
+            );
 
-    tbody.innerHTML = filteredWarehouse.map((w, i) => {
-        let originalIndex = w.originalIndex; // Asl indeksni to'g'ri olamiz
-        return `
-            <tr>
-                <td>${i + 1}</td>
-                <td><b>${w.name}</b></td>
-                <td><span style="background: #e1f5fe; padding: 3px 8px; border-radius: 4px; font-size: 12px; color: #0288d1;">${w.group || 'Umumiy'}</span></td>
-                <td><input type="number" value="${w.quantity}" id="wh-qty-${originalIndex}" style="width: 120px;"></td>
-                <td>${w.unit}</td>
-                <td><button class="btn btn-blue" onclick="updateWarehouseQty(${originalIndex})">Yangilash</button></td>
-            </tr>
-        `;
-    }).join('');
-}
+            tbody.innerHTML = filteredWarehouse.map((w, i) => {
+                let originalIndex = w.originalIndex; // Asl indeksni to'g'ri olamiz
+                return `
+                    <tr>
+                        <td>${i + 1}</td>
+                        <td><b>${w.name}</b></td>
+                        <td><span style="background: #e1f5fe; padding: 3px 8px; border-radius: 4px; font-size: 12px; color: #0288d1;">${w.group || 'Umumiy'}</span></td>
+                        <td><input type="number" value="${w.quantity}" id="wh-qty-${originalIndex}" style="width: 120px;"></td>
+                        <td>${w.unit}</td>
+                        <td><button class="btn btn-blue" onclick="updateWarehouseQty(${originalIndex})">Yangilash</button></td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
         function updateWarehouseQty(index) {
-    const val = Number(document.getElementById(`wh-qty-${index}`).value);
-    if (!isNaN(val)) { 
-        warehouseDatabase[index].quantity = val; 
-        saveData(); // <-- MA'LUMOTNI LOCALSTORAGE'GA SAQLASH UCHUN SHU SHART
-        renderAll(); 
-    }
-}
+            const inputEl = document.getElementById(`wh-qty-${index}`);
+            if (!inputEl) return;
+
+            const val = Number(inputEl.value);
+            if (!isNaN(val)) { 
+                warehouseDatabase[index].quantity = val; 
+                
+                // Ma'lumotlarni saqlash
+                if (typeof saveData === 'function') {
+                    saveData();
+                } else {
+                    localStorage.setItem('admin_warehouse', JSON.stringify(warehouseDatabase));
+                }
+                
+                // Ekranni yangilash
+                if (typeof renderAll === 'function') {
+                    renderAll();
+                } else {
+                    renderWarehouse();
+                }
+            }
+        }
 
         function addWarehouseItem() {
             const name = document.getElementById('new-item-name').value.trim();

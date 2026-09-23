@@ -688,6 +688,7 @@ function saveMarketSession() {
         let addedBy = marketCart[0].addedBy || "Admin";
         let detailsText = marketCart.map(i => `${i.name} (${i.quantity} ${i.unit || 'kg'} - ${(parseFloat(i.price) || 0).toLocaleString()} so'm)`).join(', ');
 
+        // Ombor bazasini olib kelamiz
         let warehouseDatabase = JSON.parse(localStorage.getItem('admin_warehouse')) || [];
 
         marketCart.forEach(cartItem => {
@@ -699,45 +700,44 @@ function saveMarketSession() {
             let qty = parseFloat(cartItem.quantity) || 0;
             let finalQtyToAdd = qty;
             
-            let targetUnit = (warehouseItem && warehouseItem.unit) ? warehouseItem.unit.toLowerCase().trim() : 'kg';
+            let targetUnit = (warehouseItem && warehouseItem.unit) ? warehouseItem.unit.toLowerCase().trim() : 'gramm (g)';
             let cartUnit = cartItem.unit ? cartItem.unit.toLowerCase().trim() : 'kg';
 
-            // Tekshiruv uchun konsolga chiqaramiz
-            console.log(`Mahsulot: ${cartItem.name} | Ombordagi birlik: "${targetUnit}" | Kiritilgan birlik: "${cartUnit}" | Miqdor: ${qty}`);
-
-            // KG ekanligini aniqlash
+            // Birlik turini aniqlash
             let isCartKg = cartUnit === 'kg' || cartUnit.includes('kilogramm') || cartUnit.includes('кг');
-            // Gramm ekanligini aniqlash (sizdagi 'gramm (g)' va 'gramm' larni to'liq ushlaydi)
             let isCartGram = cartUnit.includes('g') || cartUnit.includes('gramm') || cartUnit.includes('гр');
 
             let isTargetKg = targetUnit === 'kg' || targetUnit.includes('kilogramm') || targetUnit.includes('кг');
             let isTargetGram = targetUnit.includes('g') || targetUnit.includes('gramm') || targetUnit.includes('гр');
 
-            // 1. Omborda GRAMM, lekin kiritishda KG bo'lsa -> 1000 ga ko'paytiramiz
+            // Agar omborda gramm bo'lib, siz kg kiritgan bo'lsangiz -> 1000 ga ko'paytiramiz (Masalan: 5 kg = 5000 gramm)
             if (isTargetGram && isCartKg) {
                 finalQtyToAdd = qty * 1000;
-                console.log("KG -> GRAMM ga o'tkazildi:", finalQtyToAdd);
             } 
-            // 2. Omborda KG, lekin kiritishda GRAMM bo'lsa -> 1000 ga bo'lamiz
+            // Agar omborda kg bo'lib, siz gramm kiritgan bo'lsangiz -> 1000 ga bo'lamiz
             else if (isTargetKg && isCartGram) {
                 finalQtyToAdd = qty / 1000;
-                console.log("GRAMM -> KG ga o'tkazildi:", finalQtyToAdd);
             }
 
             if (warehouseItem) {
-                warehouseItem.quantity = (parseFloat(warehouseItem.quantity) || 0) + finalQtyToAdd;
+                // Ombordagi eski miqdor ustiga to'g'ri qo'shamiz (0 bo'lib qolishining oldi olinadi)
+                let currentQty = parseFloat(warehouseItem.quantity) || 0;
+                warehouseItem.quantity = currentQty + finalQtyToAdd;
             } else {
+                // Agar mahsulot omborda umuman bo'lmasa, yangi qo'shamiz
                 warehouseDatabase.push({
                     name: cartItem.name,
-                    group: "Bozordan olinganlar",
+                    group: "Go'sht va yarim tayyor mahsulotlar",
                     quantity: finalQtyToAdd,
-                    unit: cartItem.unit || 'kg'
+                    unit: cartItem.unit || 'gramm (g)'
                 });
             }
         });
 
+        // Yangilangan omborni saqlaymiz
         localStorage.setItem('admin_warehouse', JSON.stringify(warehouseDatabase));
 
+        // Bozorlik tarixiga yozish
         let marketHistory = JSON.parse(localStorage.getItem('restaurant_market_history')) || [];
         
         let sessionRecord = {
@@ -750,13 +750,14 @@ function saveMarketSession() {
         marketHistory.unshift(sessionRecord);
         localStorage.setItem('restaurant_market_history', JSON.stringify(marketHistory));
 
+        // Savatchani tozalash va oynalarni yangilash
         marketCart = [];
         
         if (typeof updateMarketCartUI === 'function') updateMarketCartUI();
         if (typeof renderWarehouse === 'function') renderWarehouse();
         if (typeof renderMarketHistory === 'function') renderMarketHistory();
 
-        alert("Bozorlik muvaffaqiyatli saqlandi!");
+        alert("Bozorlik muvaffaqiyatli saqlandi va omborga grammga o'tkazib qo'shildi!");
 
     } catch (err) {
         console.error("Xatolik:", err);

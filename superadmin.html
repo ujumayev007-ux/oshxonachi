@@ -575,6 +575,17 @@
     </div>
 
     <script>
+      function saveData() {
+        try {
+            localStorage.setItem('admin_menu', JSON.stringify(menuDatabase));
+            localStorage.setItem('admin_warehouse', JSON.stringify(warehouseDatabase));
+            if (typeof syncOrdersToStorage === 'function') {
+                syncOrdersToStorage();
+            }
+        } catch (e) { 
+            console.error("Saqlashda xato:", e); 
+        }
+    }  
         let statsChartInstance = null;
         let menuDatabase = [];
         let warehouseDatabase = [];
@@ -970,16 +981,7 @@ function updateTotalMarketSum(total) {
             let storedMenu = JSON.parse(localStorage.getItem('admin_menu'));
             menuDatabase = storedMenu && storedMenu.length > 0 ? storedMenu : defaultMenu;
         }
-// 1. Avval saveData funksiyasini e'lon qilamiz:
-function saveData() {
-    try {
-        localStorage.setItem('admin_menu', JSON.stringify(menuDatabase));
-        localStorage.setItem('admin_warehouse', JSON.stringify(warehouseDatabase));
-        syncOrdersToStorage();
-    } catch (e) { 
-        console.error("Saqlashda xato:", e); 
-    }
-}
+
         function renderAll() {
             renderMenu();
         }

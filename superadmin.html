@@ -243,6 +243,57 @@
 
         <!-- OMBOR -->
         <div id="warehouse" class="section-content">
+            <h2>Ombor zaxiralari va boshqaruv</h2>
+
+    <!-- BOZORGA QO'SHISH VA XARAJATLAR TARIXI (Faqat omborda ko'rinadi) -->
+    <div style="margin-top: 15px; margin-bottom: 25px; background: #fff8e1; padding: 20px; border-radius: 8px; border: 1px solid #ffe0b2;">
+        <h3 style="font-size: 16px; color: #ef6c00; margin-bottom: 12px;">🛒 Bozorga qo'shish va xarajatlar tarixi</h3>
+        
+        <!-- Qidirish va qo'shish qismi -->
+        <div style="display: flex; gap: 10px; position: relative; margin-bottom: 15px; flex-wrap: wrap;">
+            <div class="autocomplete-container" style="flex: 2; min-width: 220px;">
+                <input type="text" id="market-search-input" placeholder="Ombordan mahsulot qidirish (masalan: mol go'shti)..." autocomplete="off" oninput="handleMarketAutocomplete(this.value)">
+                <div id="market-autocomplete-list" class="autocomplete-items"></div>
+            </div>
+            <input type="number" id="market-item-qty" placeholder="Miqdori (kg/dona)" style="width: 120px;" step="any">
+            <input type="number" id="market-item-price" placeholder="Jami summasi (so'm)" style="width: 160px;">
+            <input type="text" id="market-added-by" placeholder="Kim qo'shdi? (Ism)" style="width: 150px;" value="Admin">
+            <button class="btn" style="background-color: #ef6c00; color: white;" onclick="addMarketItemToWarehouse()">Bozorlikka qo'shish</button>
+        </div>
+
+        <!-- Joriy sessiya bozorlik ro'yxati va summasi -->
+        <div style="background: #ffffff; padding: 12px; border-radius: 6px; border: 1px solid #ffe0b2; margin-bottom: 15px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <b style="color: #d84315;">Joriy bozorlik chasi:</b>
+                <span style="font-size: 16px; font-weight: bold; color: #2e7d32;" id="market-cart-total">Jami bozorlik summasi: 0 so'm</span>
+            </div>
+            <div id="market-cart-items" style="font-size: 13px; color: #555; max-height: 100px; overflow-y: auto; margin-bottom: 8px;">
+                <span style="font-style: italic; color: #777;">Savatcha bo'sh</span>
+            </div>
+            <button class="btn btn-blue" style="font-size: 12px; padding: 4px 10px;" onclick="saveMarketSession()">Bozorlikni omborga saqlash va yakunlash</button>
+        </div>
+
+        <!-- Bozorlik tarixi -->
+        <h4 style="font-size: 14px; color: #d84315; margin-bottom: 8px;">📜 Bozorlik summasi tarixi</h4>
+        <div style="max-height: 200px; overflow-y: auto;">
+            <table style="background: white; width: 100%;">
+                <thead>
+                    <tr>
+                        <th>Sana / Vaqt</th>
+                        <th>Kim qo'shdi?</th>
+                        <th>Mahsulotlar tafsiloti</th>
+                        <th>Jami Summa</th>
+                    </tr>
+                </thead>
+                <tbody id="market-history-table-body">
+                    <tr><td colspan="4" style="text-align: center; color: #777;">Tarix bo'sh</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Bu yerda sizning boshqa ombor elementlaringiz / mahsulot qo'shish qismlari davom etadi -->
+</div>
             <h2>Ombor zaxiralari va mahsulot qo'shish</h2>
             <div style="margin-bottom: 20px; background: #f5f5f5; padding: 15px; border-radius: 8px;">
                 <h3 style="font-size: 16px; color: #0d47a1; margin-bottom: 10px;">Yangi mahsulot qo'shish yoki mavjudini to'ldirish</h3>
@@ -271,95 +322,6 @@
                     </tr>
                 </thead>
                 <tbody id="warehouse-table-body"></tbody>
-            </table>
-        </div>
-<!-- BOZORGA QO'SHISH BO'LIMI -->
-<div style="margin-top: 30px; background: #fff8e1; padding: 20px; border-radius: 8px; border: 1px solid #ffe0b2;">
-    <h3 style="font-size: 16px; color: #ef6c00; margin-bottom: 12px;">🛒 Bozorga qo'shish va xarajatlar tarixi</h3>
-    
-    <!-- Qidirish va qo'shish qismi -->
-    <div style="display: flex; gap: 10px; position: relative; margin-bottom: 15px; flex-wrap: wrap;">
-        <div class="autocomplete-container" style="flex: 2; min-width: 220px;">
-            <input type="text" id="market-search-input" placeholder="Ombordan mahsulot qidirish (masalan: mol go'shti)..." autocomplete="off" oninput="handleMarketAutocomplete(this.value)">
-            <div id="market-autocomplete-list" class="autocomplete-items"></div>
-        </div>
-        <input type="number" id="market-item-qty" placeholder="Miqdori (kg/dona)" style="width: 120px;" step="any">
-        <input type="number" id="market-item-price" placeholder="Jami summasi (so'm)" style="width: 160px;">
-        <input type="text" id="market-added-by" placeholder="Kim qo'shdi? (Ism)" style="width: 150px;" value="Admin">
-        <button class="btn" style="background-color: #ef6c00; color: white;" onclick="addMarketItemToWarehouse()">Bozorlikka qo'shish</button>
-    </div>
-
-    <!-- Joriy sessiya bozorlik ro'yxati va summasi -->
-<div style="background: #ffffff; padding: 12px; border-radius: 6px; border: 1px solid #ffe0b2; margin-bottom: 15px;">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-        <b style="color: #d84315;">Joriy bozorlik chasi:</b>
-        <span style="font-size: 16px; font-weight: bold; color: #2e7d32;" id="market-cart-total">Jami bozorlik summasi: 0 so'm</span>
-    </div>
-    <div id="market-cart-items" style="font-size: 13px; color: #555; max-height: 100px; overflow-y: auto; margin-bottom: 8px;">
-        <span style="font-style: italic;
-    </div>
-    <button class="btn btn-blue" style="font-size: 12px; padding: 4px 10px;" onclick="saveMarketSession()">Bozorlikni omborga saqlash va yakunlash</button>
-</div>
-
-    <!-- Bozorlik tarixi (Tarix va kim qo'shgani) -->
-    <h4 style="font-size: 14px; color: #d84315; margin-bottom: 8px;">📜 Bozorlik summasi tarixi</h4>
-    <div style="max-height: 200px; overflow-y: auto;">
-        <table style="background: white; width: 100%;">
-            <thead>
-                <tr>
-                    <th>Sana / Vaqt</th>
-                    <th>Kim qo'shdi?</th>
-                    <th>Mahsulotlar tafsiloti</th>
-                    <th>Jami Summa</th>
-                </tr>
-            </thead>
-            <tbody id="market-history-table-body">
-                <tr><td colspan="4" style="text-align: center; color: #777;">Tarix bo'sh</td></tr>
-            </tbody>
-        </table>
-    </div>
-</div>
-        <!-- DAROMAD -->
-        <div id="income" class="section-content">
-            <h2>Real vaqt rejimidagi daromad va tahlillar</h2>
-            <div style="margin-top: 15px; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px;">
-                <div class="metric-card">
-                    <h3>Naqd pul tushumi</h3>
-                    <p id="income-cash">0 so'm</p>
-                </div>
-                <div class="metric-card">
-                    <h3>Plastik karta tushumi</h3>
-                    <p id="income-card">0 so'm</p>
-                </div>
-                <div class="metric-card">
-                    <h3>Jami Tashqi Savdo Summasi</h3>
-                    <p id="income-total-sale">0 so'm</p>
-                </div>
-                <div class="metric-card">
-                    <h3>Sof Foyda</h3>
-                    <p id="income-net-profit" style="color: #1565c0;">0 so'm</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- TARIX -->
-        <div id="history" class="section-content">
-            <h2>Buyurtmalar Tarixi</h2>
-            <div style="margin-bottom: 15px;">
-                <input type="text" id="history-search-input" placeholder="Buyurtma raqami yoki stol bo'yicha qidirish..." oninput="renderHistory()">
-            </div>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Buyurtma №</th>
-                        <th>Stol</th>
-                        <th>Ofitsiant</th>
-                        <th>To'lov turi</th>
-                        <th>Summa</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody id="history-table-body"></tbody>
             </table>
         </div>
 

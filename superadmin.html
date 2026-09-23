@@ -688,30 +688,40 @@ function saveMarketSession() {
         let addedBy = marketCart[0].addedBy || "Admin";
         let detailsText = marketCart.map(i => `${i.name} (${i.quantity} ${i.unit || 'kg'} - ${(parseFloat(i.price) || 0).toLocaleString()} so'm)`).join(', ');
 
-        // Ombor bazasini olish
         let warehouseDatabase = JSON.parse(localStorage.getItem('admin_warehouse')) || [];
 
-        // 1. OMBORDAGI MAHSULOTLARNI YANGILASH VA BIRLIKLARNI MOSLASH
         marketCart.forEach(cartItem => {
             if (!cartItem || !cartItem.name) return;
 
-            let warehouseItem = warehouseDatabase.find(i => i && i.name && i.name.toLowerCase().trim() === cartItem.name.toLowerCase().trim());
+            let cleanCartName = cartItem.name.toLowerCase().trim();
+            let warehouseItem = warehouseDatabase.find(i => i && i.name && i.name.toLowerCase().trim() === cleanCartName);
             
             let qty = parseFloat(cartItem.quantity) || 0;
             let finalQtyToAdd = qty;
             
-            let targetUnit = (warehouseItem && warehouseItem.unit) ? warehouseItem.unit.toLowerCase() : 'kg';
-            let cartUnit = cartItem.unit ? cartItem.unit.toLowerCase() : 'kg';
+            let targetUnit = (warehouseItem && warehouseItem.unit) ? warehouseItem.unit.toLowerCase().trim() : 'kg';
+            let cartUnit = cartItem.unit ? cartItem.unit.toLowerCase().trim() : 'kg';
 
-            // Agar omborda "gramm (g)" bo'lib, siz "kg" da kiritgan bo'lsangiz (1000 ga ko'paytiramiz)
-            if ((targetUnit.includes('g') || targetUnit.includes('gramm') || targetUnit.includes('гр')) && 
-                (cartUnit.includes('kg') || cartUnit.includes('кг') || cartUnit.includes('kilogramm'))) {
-                finalQtyToAdd = qty * 1000; 
+            // Tekshiruv uchun konsolga chiqaramiz
+            console.log(`Mahsulot: ${cartItem.name} | Ombordagi birlik: "${targetUnit}" | Kiritilgan birlik: "${cartUnit}" | Miqdor: ${qty}`);
+
+            // KG ekanligini aniqlash
+            let isCartKg = cartUnit === 'kg' || cartUnit.includes('kilogramm') || cartUnit.includes('кг');
+            // Gramm ekanligini aniqlash (sizdagi 'gramm (g)' va 'gramm' larni to'liq ushlaydi)
+            let isCartGram = cartUnit.includes('g') || cartUnit.includes('gramm') || cartUnit.includes('гр');
+
+            let isTargetKg = targetUnit === 'kg' || targetUnit.includes('kilogramm') || targetUnit.includes('кг');
+            let isTargetGram = targetUnit.includes('g') || targetUnit.includes('gramm') || targetUnit.includes('гр');
+
+            // 1. Omborda GRAMM, lekin kiritishda KG bo'lsa -> 1000 ga ko'paytiramiz
+            if (isTargetGram && isCartKg) {
+                finalQtyToAdd = qty * 1000;
+                console.log("KG -> GRAMM ga o'tkazildi:", finalQtyToAdd);
             } 
-            // Agar omborda "kg" bo'lib, siz "gramm" da kiritgan bo'lsangiz (1000 ga bo'lamiz)
-            else if ((targetUnit.includes('kg') || targetUnit.includes('кг') || targetUnit.includes('kilogramm')) && 
-                     (cartUnit.includes('g') || cartUnit.includes('gramm') || cartUnit.includes('гр'))) {
+            // 2. Omborda KG, lekin kiritishda GRAMM bo'lsa -> 1000 ga bo'lamiz
+            else if (isTargetKg && isCartGram) {
                 finalQtyToAdd = qty / 1000;
+                console.log("GRAMM -> KG ga o'tkazildi:", finalQtyToAdd);
             }
 
             if (warehouseItem) {
@@ -726,10 +736,8 @@ function saveMarketSession() {
             }
         });
 
-        // Omborni saqlash
         localStorage.setItem('admin_warehouse', JSON.stringify(warehouseDatabase));
 
-        // 2. TARIXGA YOZISH VA LOCALSTORAGE'GA SAQLASH
         let marketHistory = JSON.parse(localStorage.getItem('restaurant_market_history')) || [];
         
         let sessionRecord = {
@@ -742,14 +750,13 @@ function saveMarketSession() {
         marketHistory.unshift(sessionRecord);
         localStorage.setItem('restaurant_market_history', JSON.stringify(marketHistory));
 
-        // 3. SAVATCHANI TOZALASH VA EKRANNI YANGILASH
         marketCart = [];
         
         if (typeof updateMarketCartUI === 'function') updateMarketCartUI();
         if (typeof renderWarehouse === 'function') renderWarehouse();
-        renderMarketHistory(); // Tarixni ekranga chiqarish
+        if (typeof renderMarketHistory === 'function') renderMarketHistory();
 
-        alert("Bozorlik muvaffaqiyatli omborga qo'shildi va tarixga yozildi!");
+        alert("Bozorlik muvaffaqiyatli saqlandi!");
 
     } catch (err) {
         console.error("Xatolik:", err);

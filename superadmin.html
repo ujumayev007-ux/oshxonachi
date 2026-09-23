@@ -1995,16 +1995,18 @@ function updateClock() {
         }
 
         function renderHistory() {
-            const tbody = document.getElementById('history-table-body');
-            const query = (document.getElementById('history-search-input') || {}).value || "";
-            let orders = ordersDatabase.filter(o => o.status === 'tolandi' || o.status === 'bekor_qilindi');
-            
-            let filtered = orders.filter(o => String(o.orderNumber || '').includes(query) || String(o.tableNumber || '').toLowerCase().includes(query.toLowerCase()));
+    const tbody = document.getElementById('history-table-body');
+    if (!tbody) return; // <-- Mana bu qatorni qo'shing, shunda element topilmasa xato bermaydi
+    
+    const query = (document.getElementById('history-search-input') || {}).value || "";
+    let orders = ordersDatabase.filter(o => o.status === 'tolandi' || o.status === 'bekor_qilindi');
+    
+    let filtered = orders.filter(o => String(o.orderNumber || '').includes(query) || String(o.tableNumber || '').toLowerCase().includes(query.toLowerCase()));
 
-            if (filtered.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 10px;">Tarix bo'sh</td></tr>`;
-                return;
-            }
+    if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 10px;">Tarix bo'sh</td></tr>`;
+        return;
+    }
 
             tbody.innerHTML = filtered.map(o => {
                 let sum = Number(o.totalSum || 0);

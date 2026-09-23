@@ -1767,10 +1767,8 @@ function renderWarehouse() {
     
     if (!tbody) return;
 
-    // Har bir mahsulotga o'zining asl indeksini biriktirib chiqamiz
     const indexedWarehouse = warehouseDatabase.map((w, idx) => ({ ...w, originalIndex: idx }));
     
-    // Qidiruv bo'yicha filtrlash
     const filteredWarehouse = indexedWarehouse.filter(w => 
         w.name.toLowerCase().includes(query.toLowerCase()) || 
         (w.group && w.group.toLowerCase().includes(query.toLowerCase()))

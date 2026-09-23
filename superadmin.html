@@ -1757,7 +1757,13 @@ function updateClock() {
             });
         }
 
-       function renderWarehouse() {
+     // 1. Skript boshida bazani localStorage'dan yuklab olamiz (Global o'zgaruvchi)
+let warehouseDatabase = JSON.parse(localStorage.getItem('admin_warehouse')) || [];
+
+function renderWarehouse() {
+    // Har safarrender qilishdan oldin localStorage'dan yangi ma'lumotni o'qib olamiz
+    warehouseDatabase = JSON.parse(localStorage.getItem('admin_warehouse')) || [];
+    
     const tbody = document.getElementById('warehouse-table-body');
     const query = (document.getElementById('warehouse-search-input') || {}).value || "";
     
@@ -1772,15 +1778,23 @@ function updateClock() {
         (w.group && w.group.toLowerCase().includes(query.toLowerCase()))
     );
 
+    if (filteredWarehouse.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #777;">Omborda mahsulot topilmadi</td></tr>`;
+        return;
+    }
+
     tbody.innerHTML = filteredWarehouse.map((w, i) => {
         let originalIndex = w.originalIndex;
+        // quantity yoki qty qaysi biri mavjud bo'lsa shuni olamiz
+        let currentQty = parseFloat(w.quantity) !== undefined ? parseFloat(w.quantity) : (parseFloat(w.qty) || 0);
+        
         return `
             <tr>
                 <td>${i + 1}</td>
                 <td><b>${w.name}</b></td>
                 <td><span style="background: #e1f5fe; padding: 3px 8px; border-radius: 4px; font-size: 12px; color: #0288d1;">${w.group || 'Umumiy'}</span></td>
-                <td><input type="number" value="${w.quantity}" style="width: 120px;"></td>
-                <td>${w.unit}</td>
+                <td><input type="number" value="${currentQty}" style="width: 120px;" step="any"></td>
+                <td>${w.unit || 'gramm (g)'}</td>
                 <td><button class="btn btn-blue" onclick="updateWarehouseQty(this, ${originalIndex})">Yangilash</button></td>
             </tr>
         `;
@@ -1788,7 +1802,6 @@ function updateClock() {
 }
 
 function updateWarehouseQty(buttonElement, index) {
-    // Bosilgan tugma turgan qatordan (tr) input maydonini to'g'ridan-to'g'ri topamiz
     const row = buttonElement.closest('tr');
     const inputEl = row.querySelector('input[type="number"]');
     
@@ -1799,14 +1812,12 @@ function updateWarehouseQty(buttonElement, index) {
 
     const val = Number(inputEl.value);
     if (!isNaN(val)) { 
-        warehouseDatabase[index].quantity = val; 
+        // Bazadagi qiymatni yangilaymiz (ham quantity, ham qty ga yozib qo'yamiz chalkashmasligi uchun)
+        warehouseDatabase[index].quantity = val;
+        warehouseDatabase[index].qty = val; 
         
-        // Ma'lumotlarni saqlash
-        if (typeof saveData === 'function') {
-            saveData();
-        } else {
-            localStorage.setItem('admin_warehouse', JSON.stringify(warehouseDatabase));
-        }
+        // Ma'lumotlarni localStorage'ga saqlash
+        localStorage.setItem('admin_warehouse', JSON.stringify(warehouseDatabase));
         
         // Ekranni yangilash
         if (typeof renderAll === 'function') {
@@ -1814,6 +1825,8 @@ function updateWarehouseQty(buttonElement, index) {
         } else {
             renderWarehouse();
         }
+        
+        alert("Muvaffaqiyatli yangilandi!");
     } else {
         alert("Iltimos, to'g'ri son kiriting!");
     }

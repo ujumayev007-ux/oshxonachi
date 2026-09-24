@@ -7,7 +7,24 @@
     "start": "node server.js"
   },
   "dependencies": {
+    "cors": "^2.8.5",
     "express": "^4.18.2",
+    "open": "^8.4.2",
     "socket.io": "^4.7.2"
+  },
+  "pkg": {
+    "scripts": [ "server.js" ],
+    "assets": [
+      "public/**/*",
+      "css/**/*",
+      "js/**/*",
+      "*.html",
+      "config/**/*",
+      "controllers/**/*",
+      "routes/**/*",
+      "sockets/**/*"
+    ],
+    "targets": [ "node18-win-x64" ],
+    "outputPath": "dist"
   }
 }

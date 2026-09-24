@@ -61,7 +61,16 @@
 
     <div id="main-panel">
         <div class="header">
-            <div id="realtime-clock" class="top-left-clock"></div>
+            <div id="realtime-clock" class="top-left-clock" style="display: flex; flex-direction: column; gap: 2px;">
+    <div style="display: flex; align-items: center;">
+        <img src="https://media.istockphoto.com/id/1219484396/vector/calendar-days-of-the-month-with-a-scheduled-reminder-and-a-spoon-and-fork.jpg?s=612x612&w=0&k=20&c=uesYSVqBEZvpTNFUwMOMyvClsn4nfpEd4U1hEeCZufc=" class="clock-icon">
+        <span id="clock-date"></span>
+    </div>
+    <div style="display: flex; align-items: center;">
+        <img src="https://static.vecteezy.com/system/resources/thumbnails/035/879/894/small/plate-with-clock-fork-and-knife-icon-lunch-time-eating-nutrition-regime-meal-time-and-diet-concept-cutlery-kitchen-concept-restaurant-menu-illustration-in-flat-style-vector.jpg" class="clock-icon">
+        <span id="clock-time"></span>
+    </div>
+</div>
             <div class="header-center">
                 <button id="folder-zal" class="folder-btn active" onclick="switchSection('zal')">Zal</button>
                 <button id="folder-xonalar" class="folder-btn" onclick="switchSection('xonalar')">Xonalar</button>
@@ -746,11 +755,14 @@
         }
 
         function initClock() { 
-            setInterval(() => { 
-                const now = new Date(); 
-                document.getElementById('realtime-clock').innerText = now.toLocaleDateString() + "\n" + now.toLocaleTimeString(); 
-            }, 1000); 
-        }
+    setInterval(() => { 
+        const now = new Date(); 
+        let dateEl = document.getElementById('clock-date');
+        let timeEl = document.getElementById('clock-time');
+        if (dateEl) dateEl.innerText = now.toLocaleDateString();
+        if (timeEl) timeEl.innerText = now.toLocaleTimeString();
+    }, 1000); 
+}
 
         function openHistory() { document.getElementById('history-modal').style.display = 'flex'; renderWaiterHistory(); }
         function closeHistory() { document.getElementById('history-modal').style.display = 'none'; }

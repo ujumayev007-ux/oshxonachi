@@ -43,6 +43,19 @@
         .qty-btn { padding: 2px 8px; background: #ddd; border: none; cursor: pointer; font-weight: bold; border-radius: 4px; }
         .tab-btn { padding: 6px 12px; border: none; background: #eee; cursor: pointer; border-radius: 4px; margin-right: 5px; margin-bottom: 5px; font-size: 13px; }
         .tab-btn.active { background: #2a5298; color: white; }
+        @keyframes floatIcon {
+            0% { transform: translateY(0px) scale(1); }
+            50% { transform: translateY(-4px) scale(1.05); }
+            100% { transform: translateY(0px) scale(1); }
+        }
+
+        .animated-icon {
+            width: 45px;
+            height: 45px;
+            object-fit: contain;
+            margin: 0 auto 5px auto;
+            animation: floatIcon 3s ease-in-out infinite;
+        }
     </style>
 </head>
 <body onclick="unlockAudioContext()"> <!-- Brauzer ovoz bloklashini oldini olish uchun -->
@@ -372,45 +385,50 @@
         }
 
         function renderTables() {
-            const grid = document.getElementById('tables-grid');
-            if (!grid) return;
-            grid.innerHTML = '';
-            
-            let count = activeSection === 'zal' ? 16 : 12;
-            let prefix = activeSection === 'zal' ? 'Stol #' : 'Xona #';
-            let tableLocks = JSON.parse(localStorage.getItem('waiter_table_locks')) || {};
+    const grid = document.getElementById('tables-grid');
+    if (!grid) return;
+    grid.innerHTML = '';
+    
+    let count = activeSection === 'zal' ? 16 : 12;
+    let prefix = activeSection === 'zal' ? 'Stol #' : 'Xona #';
+    let tableLocks = JSON.parse(localStorage.getItem('waiter_table_locks')) || {};
 
-            for (let i = 1; i <= count; i++) {
-                let tableKey = prefix + i;
-                let tableData = tablesState[tableKey];
-                let isCalling = activeCalls[tableKey]; 
-                let status = tableData ? (tableData.status || 'yangi') : 'bo\'sh';
-                let cardClass = 'table-card', statusText = 'BO\'SH', badgeClass = 'status-badge status-bosh';
+    // Stol va xonalar uchun siz bergan rasm havolalari:
+    let tableIconUrl = 'https://png.pngtree.com/png-clipart/20230722/ourmid/pngtree-cafe-chair-and-table-wood-png-image_8362502.png';
+    let roomIconUrl = 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ_8BUvN87Kd3QKHjmQi5a-GarxbTQHqQDYw35jQm57GSJnVHrwFDReNGk&s=10';
+    
+    let currentIconUrl = activeSection === 'zal' ? tableIconUrl : roomIconUrl;
 
-                let lockedBy = tableLocks[tableKey];
-                let lockIndicator = lockedBy ? `<div style="font-size:10px; color:#d9534f; font-weight:bold;">Band: ${lockedBy}</div>` : '';
+    for (let i = 1; i <= count; i++) {
+        let tableKey = prefix + i;
+        let tableData = tablesState[tableKey];
+        let isCalling = activeCalls[tableKey]; 
+        let status = tableData ? (tableData.status || 'yangi') : 'bo\'sh';
+        let cardClass = 'table-card', statusText = 'BO\'SH', badgeClass = 'status-badge status-bosh';
 
-                if (isCalling) { 
-                    cardClass += ' calling';
-                    statusText = '🔔 CHAQIRUV';
-                    badgeClass = 'status-badge status-chaqiruv';
-                } else if (tableData && tableData.status !== 'tolandi' && tableData.status !== 'bekor_qilindi') {
-                    if (status === 'qabul_qilindi') { cardClass += ' busy'; statusText = 'QABUL QILINDI'; badgeClass = 'status-badge status-qabul'; }
-                    else if (status === 'tayyorlanyapti') { cardClass += ' preparing'; statusText = 'TAYYORLANYAPTI'; badgeClass = 'status-badge status-jarayonda'; }
-                    else if (status === 'tayyor') { cardClass += ' ready'; statusText = 'TAYYOR'; badgeClass = 'status-badge status-tayyor'; }
-                    else { cardClass += ' busy'; statusText = 'YANGI'; badgeClass = 'status-badge status-yangi'; }
-                }
+        let lockedBy = tableLocks[tableKey];
+        let lockIndicator = lockedBy ? `<div style="font-size:10px; color:#d9534f; font-weight:bold;">Band: ${lockedBy}</div>` : '';
 
-                grid.innerHTML += `
-                    <div class="${cardClass}" onclick="openTableModal('${tableKey}')">
-                        <div style="font-size: 24px; margin-bottom: 5px;">🪑</div>
-                        <div style="font-weight: bold; font-size: 16px;">${tableKey}</div>
-                        ${lockIndicator}
-                        <div class="${badgeClass}">${statusText}</div>
-                    </div>`;
-            }
+        if (isCalling) { 
+            cardClass += ' calling';
+            statusText = '🔔 CHAQIRUV';
+            badgeClass = 'status-badge status-chaqiruv';
+        } else if (tableData && tableData.status !== 'tolandi' && tableData.status !== 'bekor_qilindi') {
+            if (status === 'qabul_qilindi') { cardClass += ' busy'; statusText = 'QABUL QILINDI'; badgeClass = 'status-badge status-qabul'; }
+            else if (status === 'tayyorlanyapti') { cardClass += ' preparing'; statusText = 'TAYYORLANYAPTI'; badgeClass = 'status-badge status-jarayonda'; }
+            else if (status === 'tayyor') { cardClass += ' ready'; statusText = 'TAYYOR'; badgeClass = 'status-badge status-tayyor'; }
+            else { cardClass += ' busy'; statusText = 'YANGI'; badgeClass = 'status-badge status-yangi'; }
         }
 
+        grid.innerHTML += `
+            <div class="${cardClass}" onclick="openTableModal('${tableKey}')">
+                <img src="${currentIconUrl}" class="animated-icon" alt="Icon">
+                <div style="font-weight: bold; font-size: 16px;">${tableKey}</div>
+                ${lockIndicator}
+                <div class="${badgeClass}">${statusText}</div>
+            </div>`;
+    }
+}
         function openTableModal(tableKey) {
             let tableLocks = JSON.parse(localStorage.getItem('waiter_table_locks')) || {};
             if (tableLocks[tableKey] && tableLocks[tableKey] !== activeWaiter && activeWaiter !== "Admin") {

@@ -136,7 +136,11 @@ io.on('connection', (socket) => {
     });
 });
 
+const open = require('open');
+
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
     console.log(`Server ishga tushdi: http://localhost:${PORT}`);
+    // Dastur ishga tushishi bilan brauzerni avtomatik ochadi:
+    open(`http://localhost:${PORT}`);
 });

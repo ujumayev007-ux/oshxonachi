@@ -2,9 +2,10 @@
   "name": "oshxonachi",
   "version": "1.0.0",
   "description": "Restoran Boshqaruv Tizimi",
-  "main": "server.js",
+  "main": "main.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "electron .",
+    "build": "electron-builder --win --x64"
   },
   "dependencies": {
     "cors": "^2.8.5",
@@ -12,19 +13,28 @@
     "open": "^8.4.2",
     "socket.io": "^4.7.2"
   },
-  "pkg": {
-    "scripts": [ "server.js" ],
-    "assets": [
+  "devDependencies": {
+    "electron": "^28.0.0",
+    "electron-builder": "^24.9.0"
+  },
+  "build": {
+    "appId": "com.oshxona.app",
+    "productName": "Oshxona Boshqaruv Tizimi",
+    "win": {
+      "target": "nsis"
+    },
+    "files": [
+      "server.js",
+      "main.js",
+      "package.json",
       "public/**/*",
-      "css/**/*",
-      "js/**/*",
-      "*.html",
       "config/**/*",
       "controllers/**/*",
       "routes/**/*",
       "sockets/**/*"
     ],
-    "targets": [ "node18-win-x64" ],
-    "outputPath": "dist"
+    "directories": {
+      "output": "dist"
+    }
   }
 }

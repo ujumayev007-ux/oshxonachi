@@ -2,10 +2,11 @@
   "name": "oshxonachi",
   "version": "1.0.0",
   "description": "Restoran Boshqaruv Tizimi",
-  "main": "main.js",
+  "main": "main-admin.js",
   "scripts": {
     "start": "electron .",
-    "build": "electron-builder --win --x64"
+    "build:admin": "electron-builder --win --x64 -c.main=main-admin.js -c.productName=\"Admin Boshqaruvi\"",
+    "build:waiter": "electron-builder --win --x64 -c.main=main-waiter.js -c.productName=\"Ofitsiant Paneli\""
   },
   "dependencies": {
     "cors": "^2.8.5",
@@ -25,7 +26,8 @@
     },
     "files": [
       "server.js",
-      "main.js",
+      "main-admin.js",
+      "main-waiter.js",
       "package.json",
       "public/**/*",
       "config/**/*",

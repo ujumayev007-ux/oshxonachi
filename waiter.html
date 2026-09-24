@@ -43,19 +43,18 @@
         .qty-btn { padding: 2px 8px; background: #ddd; border: none; cursor: pointer; font-weight: bold; border-radius: 4px; }
         .tab-btn { padding: 6px 12px; border: none; background: #eee; cursor: pointer; border-radius: 4px; margin-right: 5px; margin-bottom: 5px; font-size: 13px; }
         .tab-btn.active { background: #2a5298; color: white; }
-        @keyframes floatIcon {
-            0% { transform: translateY(0px) scale(1); }
-            50% { transform: translateY(-4px) scale(1.05); }
-            100% { transform: translateY(0px) scale(1); }
-        }
+       @keyframes spinIcon {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
 
-        .animated-icon {
-            width: 45px;
-            height: 45px;
-            object-fit: contain;
-            margin: 0 auto 5px auto;
-            animation: floatIcon 3s ease-in-out infinite;
-        }
+.animated-icon {
+    width: 45px;
+    height: 45px;
+    object-fit: contain;
+    margin: 0 auto 5px auto;
+    animation: spinIcon 4s linear infinite;
+}
     </style>
 </head>
 <body onclick="unlockAudioContext()"> <!-- Brauzer ovoz bloklashini oldini olish uchun -->

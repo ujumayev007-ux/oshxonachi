@@ -55,6 +55,18 @@
     margin: 0 auto 5px auto;
     animation: spinIcon 12s linear infinite;
 }
+@keyframes spinIcon {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+.clock-icon {
+    width: 16px;
+    height: 16px;
+    object-fit: contain;
+    vertical-align: middle;
+    margin-right: 4px;
+    animation: spinIcon 6s linear infinite;
+}
     </style>
 </head>
 <body onclick="unlockAudioContext()"> <!-- Brauzer ovoz bloklashini oldini olish uchun -->

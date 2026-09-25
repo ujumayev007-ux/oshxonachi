@@ -138,9 +138,14 @@ io.on('connection', (socket) => {
 
 const open = require('open');
 
-const PORT = process.env.PORT || 3000;
+// Terminaldan rejimni aniqlash (admin yoki waiter)
+const mode = process.argv[2] || 'admin'; 
+const PORT = process.env.PORT || (mode === 'admin' ? 3000 : 4000);
+
 server.listen(PORT, () => {
+    console.log(`--- DASTUR [${mode.toUpperCase()}] REJIMIDA ISHGA TUSHDI ---`);
     console.log(`Server ishga tushdi: http://localhost:${PORT}`);
+    
     // Dastur ishga tushishi bilan brauzerni avtomatik ochadi:
     open(`http://localhost:${PORT}`);
 });

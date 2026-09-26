@@ -1966,10 +1966,10 @@ function updateWarehouseQty(buttonElement, index) {
                             ${paymentHTML}
                         </div>
                         <div style="display: flex; gap: 5px; flex-direction: column;">
-                            <button class="btn" style="background: #ffb74d;" onclick="changeOrderStatus('${orderId}', 'qabul_qilindi')">Qabul</button>
-                            <button class="btn" style="background: #4fc3f7;" onclick="changeOrderStatus('${orderId}', 'tayyorlanyapti')">Jarayonda</button>
-                            <button class="btn btn-blue" onclick="changeOrderStatus('${orderId}', 'tayyor')">Tayyor</button>
-                            <button class="btn btn-red" style="margin-top: 10px;" onclick="changeOrderStatus('${orderId}', 'bekor_qilindi')">Bekor qilish</button>
+                            <button class="btn" style="background: #ffb74d;" onclick="('${orderId}', 'qabul_qilindi')">Qabul</button>
+                            <button class="btn" style="background: #4fc3f7;" onclick="('${orderId}', 'tayyorlanyapti')">Jarayonda</button>
+                            <button class="btn btn-blue" onclick="('${orderId}', 'tayyor')">Tayyor</button>
+                            <button class="btn btn-red" style="margin-top: 10px;" onclick="('${orderId}', 'bekor_qilindi')">Bekor qilish</button>
                         </div>
                     </div>`;
             }).join('');
@@ -1991,11 +1991,11 @@ function updateWarehouseQty(buttonElement, index) {
         renderAll();
 
         // Socket orqali ofitsiantlarga holat o'zgarganini xabar qilish
-        if (typeof socket !== 'undefined') {
-            socket.emit('update_order_status', { 
-                id: order.id || order.tableNumber, 
-                tableNumber: order.tableNumber, 
-                status: newStatus 
+       if (typeof socket !== 'undefined') {
+            socket.emit('change_status', { 
+                orderId: order.id, 
+                status: newStatus,
+                table: order.tableNumber || order.table
             });
         }
     }

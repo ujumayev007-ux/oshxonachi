@@ -1987,10 +1987,19 @@ function updateWarehouseQty(buttonElement, index) {
                     processOrderForKitchenPrinters(order);
                 }
 
-                syncOrdersToStorage();
-                renderAll();
-            }
+            syncOrdersToStorage();
+        renderAll();
+
+        // Socket orqali ofitsiantlarga holat o'zgarganini xabar qilish
+        if (typeof socket !== 'undefined') {
+            socket.emit('update_order_status', { 
+                id: order.id || order.tableNumber, 
+                tableNumber: order.tableNumber, 
+                status: newStatus 
+            });
         }
+    }
+}
 
         // ==========================================
         // YANGI QO'SHILGAN FUNKSIYALAR (KABOB, SOMSA, FAST FOOD VA OSHXONA BO'LIMLARI UCHUN)

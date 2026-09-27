@@ -675,7 +675,7 @@ function addMarketItemToWarehouse() {
 }
 
 // Savatcha ko'rinishini yangilash
-function updateMarketCartUI() {
+MarketCartUI() {
     let cartContainer = document.getElementById('market-cart-items');
     let totalSpan = document.getElementById('market-cart-total');
     if (!cartContainer || !totalSpan) return;
@@ -1987,6 +1987,7 @@ function updateWarehouseQty(buttonElement, index) {
                 }
 
             syncOrdersToStorage();
+                localStorage.setItem('trigger_sync', Date.now());
         renderAll();
 
         // Socket orqali ofitsiantlarga holat o'zgarganini xabar qilish

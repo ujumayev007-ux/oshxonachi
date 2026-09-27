@@ -537,7 +537,7 @@
                 <div style="display: grid; grid-template-columns: 1fr 2fr auto; gap: 10px; align-items: center; margin-bottom: 10px;">
                     <label><b>Kaboblar bo'limi printeri IP:</b></label>
                     <input type="text" id="ip-kabob" placeholder="Masalan: 192.168.1.51">
-                    <button class="btn btn-blue" onclick="savePrinterIP('kabob')"></button>
+                    <button class="btn btn-blue" onclick="savePrinterIP('kabob')">Saqlash</button>
                 </div>
                 <div style="display: grid; grid-template-columns: 1fr 2fr auto; gap: 10px; align-items: center; margin-bottom: 10px;">
                     <label><b>Somsalar bo'limi printeri IP:</b></label>
@@ -1406,7 +1406,7 @@ window.addEventListener('storage', function(e) {
                     { id: 181, category: "Ichimliklar", name: "Kompot (quritilgan mevalardan yoki olchali)", internal_price: 5000, sale_price: 10000, is_visible: true },
                     { id: 182, category: "Ichimliklar", name: "Mors (reza mevali salqin ichimlik)", internal_price: 6000, sale_price: 12000, is_visible: true },
                     { id: 183, category: "Ichimliklar", name: "Kofe (Americano)", internal_price: 8000, sale_price: 15000, is_visible: true },
-                    { id: 184, category: "Ichimliklar", name: "Kofe (Cappuccino)", internal_price: 10000, sale_price: 18000, is_visible: true }
+                    { id: 184, category: "Ichimliklar", name: "Kofe (Cappuccino)", internal_price: 10000, sale_price: 18000, is_visible: true },
                 ];
                 
                 let storedMenu = JSON.parse(localStorage.getItem('admin_menu'));

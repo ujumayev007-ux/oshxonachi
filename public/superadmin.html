@@ -2292,15 +2292,17 @@ function updateWarehouseQty(buttonElement, index) {
 });
        
 
-       function syncOrdersToStorage() {
+     function syncOrdersToStorage() {
     try {
         let data = JSON.stringify(ordersDatabase);
         localStorage.setItem('admin_orders', data);
         localStorage.setItem('restaurant_orders', data);
-        localStorage.setItem('active_orders', data); // Ofitsant paneli o'qiydigan asosiy kalit
-        localStorage.setItem('orders', data);         // Ofitsant paneli o'qiydigan yana bir kalit
-        localStorage.setItem('trigger_sync', Date.now()); // Ofitsantning storage eventini majburiy chaqirish uchun
-    } catch (e) {}
+        localStorage.setItem('active_orders', data);
+        localStorage.setItem('orders', data);
+        localStorage.setItem('trigger_sync', Date.now());
+    } catch (e) {
+        console.error("Xatolik:", e);
+    }
 }
     </script>
 </body>

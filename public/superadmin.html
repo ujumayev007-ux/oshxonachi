@@ -1555,50 +1555,60 @@ function updateClock() {
         </div>
     `).join('');
 }
-        function loadOrdersFromStorage() {
-            try {
-                let waiterOrders = JSON.parse(localStorage.getItem('waiter_orders')) || [];
-                let activeOrders = JSON.parse(localStorage.getItem('active_orders')) || [];
-                let adminOrders = JSON.parse(localStorage.getItem('admin_orders')) || [];
-                let combined = [...waiterOrders, ...activeOrders, ...adminOrders];
-                let uniqueMap = new Map();
-                
-                combined.forEach(o => {
-                    let key = String(o.tableNumber || o.id);
-                    if (!key || key === 'undefined') return;
-                    if (!o.orderNumber) o.orderNumber = Math.floor(10000 + Math.random() * 90000).toString();
-                    
-                    if (uniqueMap.has(key)) {
-                        let existing = uniqueMap.get(key);
-                        uniqueMap.set(key, { 
-                            ...existing, 
-                            ...o, 
-                            items: o.items && o.items.length > 0 ? o.items : existing.items,
-                            isPrinted: o.isPrinted !== undefined ? o.isPrinted : existing.isPrinted
-                        });
-                    } else {
-                        uniqueMap.set(key, o);
-                    }
+       function loadOrdersFromStorage() {
+    try {
+        let waiterOrders = JSON.parse(localStorage.getItem('waiter_orders')) || [];
+        let activeOrders = JSON.parse(localStorage.getItem('active_orders')) || [];
+        let adminOrders = JSON.parse(localStorage.getItem('admin_orders')) || [];
+        let combined = [...waiterOrders, ...activeOrders, ...adminOrders];
+        let uniqueMap = new Map();
+        
+        combined.forEach(o => {
+            // Asosiy kalit sifatida ID yoki orderId ishlatamiz (tableNumber emas!)
+            let key = String(o.id || o.orderId || (o.tableNumber + '_' + Date.now()));
+            if (!key || key === 'undefined') return;
+            if (!o.orderNumber) o.orderNumber = Math.floor(10000 + Math.random() * 90000).toString();
+            
+            if (uniqueMap.has(key)) {
+                let existing = uniqueMap.get(key);
+                uniqueMap.set(key, { 
+                    ...existing, 
+                    ...o, 
+                    items: o.items && o.items.length > 0 ? o.items : existing.items,
+                    isPrinted: o.isPrinted !== undefined ? o.isPrinted : existing.isPrinted
                 });
-                ordersDatabase = Array.from(uniqueMap.values());
-            } catch (e) { ordersDatabase = []; }
-        }
-
-        function upsertOrder(incomingData) {
-            let targetKey = String(incomingData.tableNumber || incomingData.id || incomingData.orderId);
-            let index = ordersDatabase.findIndex(o => String(o.tableNumber || o.id) === targetKey);
-            if (index !== -1) {
-                ordersDatabase[index] = { 
-                    ...ordersDatabase[index], 
-                    ...incomingData, 
-                    items: incomingData.items && incomingData.items.length > 0 ? incomingData.items : ordersDatabase[index].items,
-                    isPrinted: incomingData.isPrinted !== undefined ? incomingData.isPrinted : ordersDatabase[index].isPrinted
-                };
             } else {
-                ordersDatabase.push(incomingData);
+                uniqueMap.set(key, o);
             }
-            syncOrdersToStorage();
-        }
+        });
+        ordersDatabase = Array.from(uniqueMap.values());
+    } catch (e) { 
+        console.error("Load orders error:", e);
+        ordersDatabase = []; 
+    }
+}
+        function upsertOrder(incomingData) {
+    if (!incomingData) return;
+    
+    // Unikal ID ni aniqlab olamiz
+    let targetId = String(incomingData.id || incomingData.orderId);
+    
+    let index = ordersDatabase.findIndex(o => String(o.id || o.orderId) === targetId);
+    
+    if (index !== -1) {
+        ordersDatabase[index] = { 
+            ...ordersDatabase[index], 
+            ...incomingData, 
+            items: incomingData.items && incomingData.items.length > 0 ? incomingData.items : ordersDatabase[index].items,
+            isPrinted: incomingData.isPrinted !== undefined ? incomingData.isPrinted : ordersDatabase[index].isPrinted
+        };
+    } else {
+        ordersDatabase.unshift(incomingData); // Yangi buyurtmani boshiga qo'shamiz
+    }
+    
+    syncOrdersToStorage();
+    renderAll(); // Ekranni yangilash uchun shart
+}
 
    function renderAdvancedStats() {
     let orders = [];

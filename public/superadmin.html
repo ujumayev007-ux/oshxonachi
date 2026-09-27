@@ -1989,7 +1989,8 @@ function updateWarehouseQty(buttonElement, index) {
             syncOrdersToStorage();
                 localStorage.setItem('trigger_sync', Date.now());
         renderAll();
-
+} // <-- Mana bu qavs if (order) ni yopishi uchun kerak edi
+}
         // Socket orqali ofitsiantlarga holat o'zgarganini xabar qilish
        if (typeof socket !== 'undefined') {
             socket.emit('change_status', { 

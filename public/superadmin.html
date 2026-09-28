@@ -861,7 +861,7 @@ function updateTotalMarketSum(total) {
 
         socket.on('connect', () => {
             console.log("Serverga muvaffaqiyatli ulandi!");
-            let statusBadge = document.getElementById('status-badge'); // yoki ID qanday nomlangan bo'lsa
+            let statusBadge = document.getElementById('statusBadge'); // yoki ID qanday nomlangan bo'lsa
             if (statusBadge) {
                 statusBadge.textContent = 'Ulangan';
                 statusBadge.className = 'px-3 py-1 text-sm rounded-full bg-green-100 text-green-600 font-medium';
@@ -870,7 +870,7 @@ function updateTotalMarketSum(total) {
 
         socket.on('connect_error', (err) => {
             console.error("Ulanishda xatolik:", err);
-            let statusBadge = document.getElementById('status-badge');
+            let statusBadge = document.getElementById('statusBadge');
             if (statusBadge) {
                 statusBadge.textContent = 'Xatolik!';
                 statusBadge.className = 'px-3 py-1 text-sm rounded-full bg-red-100 text-red-600 font-medium';

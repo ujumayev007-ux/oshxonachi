@@ -854,36 +854,24 @@ function updateTotalMarketSum(total) {
     renderMarketHistory();
     renderAll();
 
-    if (typeof io !== 'undefined') {
-        const socket = io('https://oshxonachi.onrender.com', {
-    transports: ['websocket', 'polling'],
-    reconnection: true,
-    reconnectionAttempts: 5,
-    reconnectionDelay: 1000
-});
-
-       socket.on('connect', () => {
-    console.log("Serverga muvaffaqiyatli ulandi!");
-    let statusBadge = document.getElementById('connection-status'); // <-- 'connection-status' qilindi
-    if (statusBadge) {
-        statusBadge.textContent = 'Ulangan';
-        statusBadge.className = 'px-3 py-1 text-sm rounded-full bg-green-100 text-green-600 font-medium';
-    }
-});
-
-        socket.on('connect_error', (err) => {
-    console.error("Ulanishda xatolik:", err);
-    let statusBadge = document.getElementById('connection-status'); // <-- SHUNI HAM O'ZGARTIRING
-    if (statusBadge) {
-        statusBadge.textContent = 'Xatolik!';
-        statusBadge.className = 'px-3 py-1 text-sm rounded-full bg-red-100 text-red-600 font-medium';
-    }
-});
-
-        socket.on('new_order', (data) => {
-            if (!data) return;
-            upsertOrder(data);
+    window.onload = function() {
+    loadInitialData();
             renderAll();
+
+            if (typeof io !== 'undefined') {
+                socket = io('https://oshxonachi.onrender.com');
+
+                socket.on('connect', () => {
+                    if (statusBadge) {
+                        statusBadge.textContent = 'Ulangan';
+                        statusBadge.className = 'px-3 py-1 text-sm rounded-full bg-green-100 text-green-600 font-medium';
+                    }
+                });
+
+                socket.on('new_order', (data) => {
+                    if (!data) return;
+                    upsertOrder(data);
+                    renderAll();
 
             if(data.items && data.items.some(i => i.name && (i.name.toLowerCase().includes('osh') || i.category === 'Kiloli osh'))) {
                 let oshItem = data.items.find(i => i.name.toLowerCase().includes('osh') || i.category === 'Kiloli osh');

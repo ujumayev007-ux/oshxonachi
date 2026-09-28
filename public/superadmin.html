@@ -1995,23 +1995,30 @@ function updateWarehouseQty(buttonElement, index) {
                     </div>`;
             }).join('');
         }
+function changeOrderStatus(id, newStatus) {
+    let order = ordersDatabase.find(o => String(o.tableNumber || o.id) === String(id));
+    if (order) {
+        order.status = newStatus;
+        
+        // QABUL QILINGANDA YOKI TAYYORLANMOQDA BO'LGANDA KATEGORIYALARGA BO'LIB PRINTERGA YUBORISH MANTIQI
+        if (newStatus === 'qabul_qilindi' || newStatus === 'tayyorlanyapti') {
+            order.isPrinted = true;
+            processOrderForKitchenPrinters(order);
+        }
 
-         function changeOrderStatus(id, newStatus) {
-            let order = ordersDatabase.find(o => String(o.tableNumber || o.id) === String(id));
-            if (order) {
-                order.status = newStatus;
-                
-                // QABUL QILINGANDA YOKI TAYYORLANMOQDA BO'LGANDA KATEGORIYALARGA BO'LIB PRINTERGA YUBORISH MANTIQI
-                if (newStatus === 'qabul_qilindi' || newStatus === 'tayyorlanyapti') {
-                    order.isPrinted = true;
-                    // Yangi qo'shilgan talab bo'yicha filtrlash va virtual chek chiqarish
-                    processOrderForKitchenPrinters(order);
-                }
-
-            syncOrdersToStorage();
-                localStorage.setItem('trigger_sync', Date.now());
+        syncOrdersToStorage();
+        localStorage.setItem('trigger_sync', Date.now());
         renderAll();
-} // <-- Mana bu qavs if (order) ni yopishi uchun kerak edi
+
+        // Socket orqali ofitsiantlarga holat o'zgarganini xabar qilish (if(order) ichida bo'lishi shart!)
+        if (typeof socket !== 'undefined' && socket) {
+            socket.emit('change_status', { 
+                orderId: order.id, 
+                status: newStatus,
+                table: order.tableNumber || order.table
+            });
+        }
+    } // <-- if (order) ning yopilishi 
 }
         // Socket orqali ofitsiantlarga holat o'zgarganini xabar qilish
        if (typeof socket !== 'undefined') {

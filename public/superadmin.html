@@ -849,42 +849,54 @@ function updateTotalMarketSum(total) {
 }
 
 // Sahifa to'liq yuklanganda.
-     window.onload = function() {
+window.onload = function() {
     loadInitialData();
     renderMarketHistory();
     renderAll();
 
-    window.onload = function() {
-    loadInitialData();
+    if (typeof io !== 'undefined') {
+        const socket = io('https://oshxonachi.onrender.com', {
+            transports: ['websocket', 'polling'],
+            reconnection: true,
+            reconnectionAttempts: 5,
+            reconnectionDelay: 1000
+        });
+
+        socket.on('connect', () => {
+            console.log("Serverga muvaffaqiyatli ulandi!");
+            let statusBadge = document.getElementById('connection-status');
+            if (statusBadge) {
+                statusBadge.textContent = 'Ulangan';
+                statusBadge.className = 'px-3 py-1 text-sm rounded-full bg-green-100 text-green-600 font-medium';
+            }
+        });
+
+        socket.on('connect_error', (err) => {
+            console.error("Ulanishda xatolik:", err);
+            let statusBadge = document.getElementById('connection-status');
+            if (statusBadge) {
+                statusBadge.textContent = 'Xatolik!';
+                statusBadge.className = 'px-3 py-1 text-sm rounded-full bg-red-100 text-red-600 font-medium';
+            }
+        });
+
+        socket.on('new_order', (data) => {
+            if (!data) return;
+            upsertOrder(data);
             renderAll();
 
-            if (typeof io !== 'undefined') {
-                socket = io('https://oshxonachi.onrender.com');
-
-                socket.on('connect', () => {
-                    if (statusBadge) {
-                        statusBadge.textContent = 'Ulangan';
-                        statusBadge.className = 'px-3 py-1 text-sm rounded-full bg-green-100 text-green-600 font-medium';
-                    }
-                });
-
-                socket.on('new_order', (data) => {
-                    if (!data) return;
-                    upsertOrder(data);
-                    renderAll();
-
-            if(data.items && data.items.some(i => i.name && (i.name.toLowerCase().includes('osh') || i.category === 'Kiloli osh'))) {
+            if (data.items && data.items.some(i => i.name && (i.name.toLowerCase().includes('osh') || i.category === 'Kiloli osh'))) {
                 let oshItem = data.items.find(i => i.name.toLowerCase().includes('osh') || i.category === 'Kiloli osh');
                 let nameEl = document.getElementById('tv-order-name');
                 let metaEl = document.getElementById('tv-order-meta');
 
-                if(nameEl) nameEl.innerText = oshItem.name;
-                if(metaEl) metaEl.innerText = `Stol #${data.tableNumber || '4'} (${data.waiter || 'Ofitsiant'})`;
+                if (nameEl) nameEl.innerText = oshItem.name;
+                if (metaEl) metaEl.innerText = `Stol #${data.tableNumber || '4'} (${data.waiter || 'Ofitsiant'})`;
 
-                if(typeof playVoiceAnnouncement === 'function') {
+                if (typeof playVoiceAnnouncement === 'function') {
                     playVoiceAnnouncement(`${data.tableNumber || '4'}-stolga ${oshItem.name} buyurtmasi qabul qilindi.`);
                 }
-                if(typeof startOshSimulation === 'function') {
+                if (typeof startOshSimulation === 'function') {
                     startOshSimulation();
                 }
             }
@@ -894,16 +906,15 @@ function updateTotalMarketSum(total) {
     }
 };
 
-        // OVOZLI XABARLAR BERISH FUNKSIYASI (SpeechSynthesis)
-        function playVoiceAnnouncement(text) {
-            if ('speechSynthesis' in window) {
-                let utterance = new SpeechSynthesisUtterance(text);
-                utterance.lang = 'uz-UZ';
-                utterance.rate = 1.0;
-                window.speechSynthesis.speak(utterance);
-            }
-        }
-
+// OVOZLI XABARLAR BERISH FUNKSIYASI (SpeechSynthesis)
+function playVoiceAnnouncement(text) {
+    if ('speechSynthesis' in window) {
+        let utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'uz-UZ';
+        utterance.rate = 1.0;
+        window.speechSynthesis.speak(utterance);
+    }
+}
         // OSH TV EKRAN SIMULYATSIYA VA OVOZLI OGOHLANTirish LOGIKASI
         function startOshSimulation() {
             if (oshSimTimer) clearInterval(oshSimTimer);
